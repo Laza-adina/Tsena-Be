@@ -1,0 +1,25 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  background: #fafafa;
+  color: #111;
+}
+
+input, textarea, select {
+  color: #111;
+  background: #fff;
+  font-family: system-ui, sans-serif;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #aaa;
+}
+
+a {
+  color: inherit;
+}
