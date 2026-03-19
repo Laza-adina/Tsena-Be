@@ -1,0 +1,201 @@
+/* PublicShopPage.module.css */
+
+/* ── Page ── */
+.page {
+  min-height: 100vh;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px 48px;
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  position: relative;
+}
+
+/* ── Fond thématique ── */
+.bgGradient {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+}
+
+/* ── États loading / notFound ── */
+.centered {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: #f5f5f5;
+}
+
+.stateText {
+  color: #666;
+  font-size: 14px;
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 2.5px solid rgba(0, 0, 0, 0.1);
+  border-top-color: #555;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.avatarWrap {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  padding: 3px;
+  margin-bottom: 14px;
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.shopName {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  line-height: 1.2;
+}
+
+.shopDesc {
+  font-size: 14px;
+  margin: 0 0 18px;
+  max-width: 400px;
+  line-height: 1.6;
+}
+
+/* ── Boutons sociaux ── */
+.socialRow {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.socialBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  border: 1.5px solid transparent;
+  transition: background 0.18s, transform 0.12s;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.socialBtn:active {
+  transform: scale(0.97);
+}
+
+.socialBtnWa {
+  background: rgba(255, 255, 255, 0.35);
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+.socialBtnWa:hover {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+/* ── Séparateur ── */
+.divider {
+  height: 1px;
+  margin-bottom: 28px;
+}
+
+/* ── Grille produits ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* ── Empty ── */
+.emptyText {
+  text-align: center;
+  font-size: 14px;
+  padding: 40px 0;
+}
+
+/* ── Footer ── */
+.powered {
+  text-align: center;
+  font-size: 11px;
+  margin-top: 48px;
+}
+
+/* ─────────────────────────────────────────
+   RESPONSIVE
+───────────────────────────────────────── */
+
+/* Large desktop : max 4 colonnes */
+@media (min-width: 1200px) {
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Desktop standard : 3 colonnes */
+@media (max-width: 1199px) and (min-width: 769px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Tablette : 2 colonnes */
+@media (max-width: 768px) and (min-width: 481px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .page {
+    padding: 28px 18px 40px;
+  }
+}
+
+/* Mobile : 1 seule colonne */
+@media (max-width: 480px) {
+  .page {
+    padding: 20px 14px 36px;
+    max-width: 100%;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .shopName {
+    font-size: 19px;
+  }
+
+  .shopDesc {
+    font-size: 13px;
+  }
+}
