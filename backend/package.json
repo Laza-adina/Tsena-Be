@@ -4,7 +4,7 @@
     "description": "Keyros SaaS - Mini boutique Madagascar",
     "main": "src/index.js",
     "scripts": {
-      "start": "node backend/src/index.js",
+      "start": "node src/index.js",
       "dev": "nodemon backend/src/index.js"
     },
     "dependencies": {
