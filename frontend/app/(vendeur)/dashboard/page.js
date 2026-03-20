@@ -22,9 +22,10 @@ export default function DashboardPage() {
   const fetchStats = async () => {
     try {
       const { data } = await api.get('/stats');
+      console.log('STATS RESPONSE:', JSON.stringify(data));
       setStats(data.stats);
-    } catch {
-      // silencieux
+    } catch (err) {
+      console.log('STATS ERROR:', err);
     } finally {
       setLoading(false);
     }
@@ -62,28 +63,29 @@ export default function DashboardPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#fafafa', fontFamily: 'system-ui, sans-serif' }}>
 
-      {/* Navbar */}
-      <div style={{ background: '#fff', borderBottom: '1px solid #e5e5e5', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '56px' }}>
-        <span style={{ fontWeight: '700', fontSize: '16px', color: '#111' }}>Keyros</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-          <a href="/dashboard/produits" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>Produits</a>
-          <a href="/dashboard/stats" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>Stats</a>
-          <a href="/dashboard/profil" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>Profil</a>
-          <a href="/dashboard/qrcode" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>QR Code</a>
-          <a href="/dashboard/abonnement" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>
-            <span>Abonnement</span>
-          </a>
-          <button
-            onClick={handleLogout}
-            style={{ fontSize: '13px', color: '#555', background: 'none', border: 'none', cursor: 'pointer' }}
-          >
-            Deconnexion
-          </button>
-        </div>
-      </div>
+   {/* Navbar */}
+<div style={{ background: '#ccd5ae', borderBottom: '1px solid #E9EDC9', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '56px' }}>
+  <span style={{ fontWeight: '700', fontSize: '16px', color: '#3D4A2A', fontFamily: 'Georgia, serif' }}>
+    Tsen@be
+    <span style={{ fontSize: '11px', fontWeight: '400', color: '#3D4A2A', marginLeft: '6px' }}>by Keyros</span>
+  </span>
+  <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+    <a href="/dashboard/produits" style={{ fontSize: '13px', color: '#3D4A2A', textDecoration: 'none' }}><span>Produits</span></a>
+    <a href="/dashboard/stats" style={{ fontSize: '13px', color: '#3D4A2A', textDecoration: 'none' }}><span>Stats</span></a>
+    <a href="/dashboard/profil" style={{ fontSize: '13px', color: '#3D4A2A', textDecoration: 'none' }}><span>Profil</span></a>
+    <a href="/dashboard/qrcode" style={{ fontSize: '13px', color: '#3D4A2A', textDecoration: 'none' }}><span>QR Code</span></a>
+    <a href="/dashboard/abonnement" style={{ fontSize: '13px', color: '#3D4A2A', textDecoration: 'none' }}><span>Abonnement</span></a>
+    <button
+      onClick={handleLogout}
+      style={{ fontSize: '13px', color: '#3D4A2A', background: '#CCD5AE', border: 'none', borderRadius: '6px', padding: '6px 14px', cursor: 'pointer', fontFamily: 'Georgia, serif', fontWeight: '600' }}
+    >
+      <span>Deconnexion</span>
+    </button>
+  </div>
+</div>
 
       {/* Contenu */}
-      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '32px 24px' }}>
+      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '32px 24px', }}>
 
         {/* Titre */}
         <div style={{ marginBottom: '24px' }}>
@@ -110,7 +112,7 @@ export default function DashboardPage() {
               Vues (30j)
             </p>
             <p style={{ fontSize: '24px', fontWeight: '700', margin: 0, color: '#111' }}>
-              {stats?.views || 0}
+            {stats?.last30Days?.pageViews || 0}
             </p>
           </div>
 
@@ -119,7 +121,7 @@ export default function DashboardPage() {
               Clics WhatsApp
             </p>
             <p style={{ fontSize: '24px', fontWeight: '700', margin: 0, color: '#111' }}>
-              {stats?.whatsappClicks || 0}
+            {stats?.last30Days?.whatsappClicks || 0}
             </p>
           </div>
 

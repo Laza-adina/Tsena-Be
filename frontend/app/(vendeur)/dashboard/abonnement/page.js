@@ -16,9 +16,23 @@ export default function AbonnementPage() {
   useEffect(() => {
     const session = getSession();
     if (!session) { router.push('/login'); return; }
-    setUser(session.user);
-    fetchHistory();
+    fetchProfile();
   }, []);
+  
+  const fetchProfile = async () => {
+    try {
+      const { data: meData } = await api.get('/auth/me');
+      const u = meData.user;
+      setUser({
+        ...getSession().user,
+        plan: u.plan,
+        planExpiresAt: u.plan_expires_at
+      });
+      fetchHistory();
+    } catch {
+      setLoading(false);
+    }
+  };
 
   const fetchHistory = async () => {
     try {
@@ -69,9 +83,9 @@ export default function AbonnementPage() {
     <div style={{ minHeight: '100vh', background: '#fafafa', fontFamily: 'system-ui, sans-serif' }}>
 
       {/* Navbar */}
-      <div style={{ background: '#fff', borderBottom: '1px solid #e5e5e5', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '56px' }}>
+      <div style={{ background: '#ccd5ae', borderBottom: '1px solid #e5e5e5', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '56px' }}>
         <a href="/dashboard" style={{ fontWeight: '700', fontSize: '16px', color: '#111', textDecoration: 'none' }}>
-          <span>Keyros</span>
+          <span>Tsen@be</span>
         </a>
         <div style={{ display: 'flex', gap: '24px' }}>
           <a href="/dashboard" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>
@@ -92,35 +106,82 @@ export default function AbonnementPage() {
           Abonnement
         </h1>
 
-        {/* Plan actuel */}
-        <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '8px', padding: '20px', marginBottom: '24px' }}>
-          <p style={{ fontSize: '12px', color: '#999', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            Plan actuel
-          </p>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <p style={{ fontSize: '18px', fontWeight: '700', color: '#111', margin: '0 0 4px' }}>
-                {planLabel[user?.plan] || user?.plan}
-              </p>
-              {user?.planExpiresAt && (
-                <p style={{ fontSize: '13px', color: '#999', margin: 0 }}>
-                  Expire le {new Date(user.planExpiresAt).toLocaleDateString('fr-FR')}
-                </p>
-              )}
-            </div>
-            {user?.planExpiresAt && user?.plan !== 'expired' && (
-              <div style={{ textAlign: 'right' }}>
-                <p style={{ fontSize: '32px', fontWeight: '700', color: '#111', margin: 0 }}>
-                  {daysLeft}
-                </p>
-                <p style={{ fontSize: '12px', color: '#999', margin: 0 }}>
-                  jours restants
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
+       {/* Plan actuel */}
+<div style={{ background: '#fff', border: '1px solid #E9EDC9', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
+  <p style={{ fontSize: '11px', color: '#6A7A52', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: '600' }}>
+    Plan actuel
+  </p>
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+        <p style={{ fontSize: '20px', fontWeight: '700', color: '#3D4A2A', margin: 0, fontFamily: 'Georgia, serif' }}>
+          {user?.plan === 'monthly' ? 'Mensuel'
+           : user?.plan === 'annual' ? 'Annuel'
+           : user?.plan === 'trial' ? "Periode d'essai"
+           : 'Expire'}
+        </p>
+        <span style={{
+          fontSize: '11px', fontWeight: '600', padding: '3px 10px', borderRadius: '20px',
+          background: user?.plan === 'monthly' ? '#f0fff4'
+            : user?.plan === 'annual' ? '#f0f4ff'
+            : user?.plan === 'trial' ? '#fffbe6'
+            : '#fff0f0',
+          color: user?.plan === 'monthly' ? '#060'
+            : user?.plan === 'annual' ? '#1D4ED8'
+            : user?.plan === 'trial' ? '#b8860b'
+            : '#c00'
+        }}>
+          {user?.plan === 'monthly' ? 'ACTIF'
+           : user?.plan === 'annual' ? 'ACTIF'
+           : user?.plan === 'trial' ? 'ESSAI'
+           : 'EXPIRE'}
+        </span>
+      </div>
 
+      {/* Prix selon le plan */}
+      {user?.plan === 'monthly' && (
+        <p style={{ fontSize: '13px', color: '#6A7A52', margin: '0 0 4px' }}>
+          10 000 Ar / mois
+        </p>
+      )}
+      {user?.plan === 'annual' && (
+        <p style={{ fontSize: '13px', color: '#6A7A52', margin: '0 0 4px' }}>
+          100 000 Ar / an
+        </p>
+      )}
+
+      {user?.planExpiresAt && (
+        <p style={{ fontSize: '13px', color: '#6A7A52', margin: 0 }}>
+          {user?.plan === 'trial' ? 'Essai expire le' : 'Renouvellement le'}{' '}
+          {new Date(user.planExpiresAt).toLocaleDateString('fr-FR')}
+        </p>
+      )}
+    </div>
+
+    {user?.planExpiresAt && user?.plan !== 'expired' && (
+      <div style={{ textAlign: 'right', background: '#ffffff', borderRadius: '10px', padding: '12px 20px' }}>
+        <p style={{ fontSize: '36px', fontWeight: '700', color: '#fffff', margin: 0, lineHeight: 1, fontFamily: 'Georgia, serif' }}>
+          {daysLeft}
+        </p>
+        <p style={{ fontSize: '12px', color: '#6A7A52', margin: '4px 0 0' }}>
+          jours restants
+        </p>
+      </div>
+    )}
+  </div>
+
+  {/* Message selon le plan */}
+  {user?.plan === 'expired' && (
+    <div style={{ marginTop: '16px', padding: '12px', background: '#fff0f0', borderRadius: '8px', fontSize: '13px', color: '#c00' }}>
+      Votre abonnement est expire. Contactez-nous pour renouveler.
+    </div>
+  )}
+  {user?.plan === 'trial' && daysLeft <= 3 && (
+    <div style={{ marginTop: '16px', padding: '12px', background: '#fffbe6', borderRadius: '8px', fontSize: '13px', color: '#b8860b' }}>
+      Votre essai expire dans {daysLeft} jour(s). Contactez-nous pour continuer.
+    </div>
+  )}
+</div>
         {/* Offres */}
         <p style={{ fontSize: '13px', fontWeight: '600', color: '#111', margin: '0 0 12px' }}>
           Nos offres

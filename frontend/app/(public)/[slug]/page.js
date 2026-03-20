@@ -257,7 +257,7 @@ export default function PublicShopPage() {
       {/* Footer */}
       {!vendor.isPremium && (
         <p style={{ textAlign: 'center', fontSize: '11px', color: T.textMuted, padding: '24px', marginTop: '16px' }}>
-          Powered by Tsen@be
+          Powered by Keyros
         </p>
       )}
     </div>

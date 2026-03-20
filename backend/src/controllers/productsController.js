@@ -9,7 +9,7 @@ const autoRef = (index) => `REF-${String(index).padStart(4, '0')}`;
 // "Salama, mbola misy ve ilay produit REF-001 ?"
 const buildWhatsappLink = (whatsapp, productRef, productName) => {
   const msg = encodeURIComponent(
-    `Salama 👋, mbola misy ve ilay produit *${productRef}* - ${productName} ?`
+    `Salama e!!!, mbola misy ve ilay produit *${productRef}* - ${productName} ?`
   );
   return `https://wa.me/${whatsapp}?text=${msg}`;
 };
@@ -268,15 +268,15 @@ exports.getStats = async (req, res) => {
       .select('id', { count: 'exact', head: true })
       .eq('user_id', req.user.id);
 
-    res.json({
-      stats: {
-        last30Days: {
-          pageViews:      (views || []).filter(v => v.event_type === 'page_view').length,
-          whatsappClicks: (views || []).filter(v => v.event_type === 'whatsapp_click').length
-        },
-        productCount: productCount || 0
-      }
-    });
+      res.json({
+        stats: {
+          last30Days: {
+            pageViews:      (views || []).filter(v => v.event_type === 'page_view').length,
+            whatsappClicks: (views || []).filter(v => v.event_type === 'whatsapp_click').length
+          },
+          productCount: productCount || 0
+        }
+      });
   } catch {
     res.status(500).json({ error: 'Erreur serveur.' });
   }

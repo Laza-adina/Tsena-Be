@@ -245,18 +245,35 @@ export default function AdminVendeursPage() {
                     <td style={{ padding: '14px 16px', fontSize: '13px', color: '#555' }}>{v.email}</td>
                     <td style={{ padding: '14px 16px', fontSize: '13px', color: '#555' }}>{v.whatsapp || '-'}</td>
                     <td style={{ padding: '14px 16px' }}>
-                    <button
-                        onClick={() => handlePlan(v.id, v.plan)}
-                        style={{
-                          fontSize: '11px', fontWeight: '500',
-                          padding: '4px 10px', borderRadius: '4px', cursor: 'pointer',
-                          background: v.plan === 'active' ? '#111' : v.plan === 'trial' ? '#f5f5e0' : '#fff0f0',
-                          color: v.plan === 'active' ? '#fff' : v.plan === 'trial' ? '#666' : '#c00',
-                          border: 'none'
-                        }}
-                    >
-                        <span>{v.plan === 'active' ? 'Actif' : v.plan === 'trial' ? 'Essai' : 'Expire'}</span>
-                      </button>
+                    <div>
+  <span style={{
+    fontSize: '11px', fontWeight: '600',
+    padding: '3px 10px', borderRadius: '20px', display: 'inline-block',
+    background: v.plan === 'monthly' ? '#f0fff4'
+      : v.plan === 'annual' ? '#f0f4ff'
+      : v.plan === 'trial' ? '#fffbe6'
+      : '#fff0f0',
+    color: v.plan === 'monthly' ? '#060'
+      : v.plan === 'annual' ? '#1D4ED8'
+      : v.plan === 'trial' ? '#b8860b'
+      : '#c00'
+  }}>
+    {v.plan === 'monthly' ? 'Mensuel'
+      : v.plan === 'annual' ? 'Annuel'
+      : v.plan === 'trial' ? 'Essai'
+      : 'Expire'}
+  </span>
+  {v.plan === 'trial' && v.plan_expires_at && (
+    <p style={{ fontSize: '11px', color: '#999', margin: '3px 0 0' }}>
+      {Math.max(0, Math.ceil((new Date(v.plan_expires_at) - new Date()) / (1000 * 60 * 60 * 24)))} jours
+    </p>
+  )}
+  {(v.plan === 'monthly' || v.plan === 'annual') && v.plan_expires_at && (
+    <p style={{ fontSize: '11px', color: '#999', margin: '3px 0 0' }}>
+      expire le {new Date(v.plan_expires_at).toLocaleDateString('fr-FR')}
+    </p>
+  )}
+</div>
                     </td>
                     <td style={{ padding: '14px 16px' }}>
                       <button

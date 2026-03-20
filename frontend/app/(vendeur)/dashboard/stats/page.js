@@ -27,9 +27,9 @@ export default function StatsPage() {
   };
 
   const chartData = [
-    { label: 'Vues', value: stats?.last30Days?.pageViews || 0 },
-    { label: 'Clics WA', value: stats?.last30Days?.whatsappClicks || 0 },
-    { label: 'Produits', value: stats?.productCount || 0 },
+    { label: 'Vues',     value: stats?.last30Days?.pageViews || 0 },
+  { label: 'Clics WA', value: stats?.last30Days?.whatsappClicks || 0 },
+  { label: 'Produits', value: stats?.productCount || 0 },
   ];
 
   if (loading) return (
@@ -41,9 +41,9 @@ export default function StatsPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#fafafa', fontFamily: 'system-ui, sans-serif' }}>
 
-      <div style={{ background: '#fff', borderBottom: '1px solid #e5e5e5', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '56px' }}>
+      <div style={{ background: '#ccd5ae', borderBottom: '1px solid #e5e5e5', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '56px' }}>
         <a href="/dashboard" style={{ fontWeight: '700', fontSize: '16px', color: '#111', textDecoration: 'none' }}>
-          <span>Keyros</span>
+          <span>Tsen@be</span>
         </a>
         <div style={{ display: 'flex', gap: '24px' }}>
           <a href="/dashboard" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>
@@ -66,9 +66,9 @@ export default function StatsPage() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
           {[
-            { label: 'Vues (30j)',        value: stats?.last30Days?.pageViews || 0 },
-            { label: 'Clics WhatsApp (30j)', value: stats?.last30Days?.whatsappClicks || 0 },
-            { label: 'Produits',          value: stats?.productCount || 0 },
+           { label: 'Vues (30j)',           value: stats?.last30Days?.pageViews || 0 },
+           { label: 'Clics WhatsApp (30j)', value: stats?.last30Days?.whatsappClicks || 0 },
+           { label: 'Produits',             value: stats?.productCount || 0 },
           ].map(s => (
             <div key={s.label} style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '8px', padding: '20px' }}>
               <p style={{ fontSize: '12px', color: '#999', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>

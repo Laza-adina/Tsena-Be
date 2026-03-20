@@ -7,7 +7,6 @@ const authVendeur = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log('DECODED:', decoded);
 
     if (decoded.role !== 'vendeur') return res.status(403).json({ error: 'Accès refusé.' });
 
@@ -18,24 +17,25 @@ const authVendeur = async (req, res, next) => {
       .eq('id', decoded.id)
       .single();
 
-    console.log('USER FROM DB:', user);
-    console.log('DB ERROR:', error);
-
     if (!user || !user.is_active) {
-      console.log('BLOCKED: inactive');
       return res.status(403).json({ error: 'Compte désactivé.', disabled: true });
     }
 
+    // Bloquer uniquement si plan = 'expired'
     if (user.plan === 'expired') {
-      console.log('BLOCKED: expired');
-      return res.status(403).json({ error: 'Période d\'essai terminée.', expired: true });
+      return res.status(403).json({ error: 'Votre abonnement est terminé. Contactez le support.', expired: true });
     }
 
-    console.log('AUTH OK');
+    // Bloquer si trial expiré
+    if (user.plan === 'trial' && user.plan_expires_at && new Date(user.plan_expires_at) < new Date()) {
+      return res.status(403).json({ error: 'Votre periode d\'essai est terminée. Contactez le support.', expired: true });
+    }
+
+    // monthly et annual — laisser passer même si plan_expires_at est dépassé
+    // (c'est l'admin qui gère manuellement)
     req.user = decoded;
     next();
   } catch (err) {
-    console.log('AUTH CATCH ERROR:', err.message);
     return res.status(403).json({ error: 'Token invalide ou expiré.' });
   }
 };

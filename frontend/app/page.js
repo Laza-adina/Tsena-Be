@@ -209,11 +209,11 @@ export default function LandingPage() {
         <div style={{ maxWidth: '860px', margin: '0 auto' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '40px', marginBottom: '48px' }}>
             <div>
-              <p style={{ fontSize: '20px', fontWeight: '700', color: C.cream, margin: '0 0 12px' }}>Keyros</p>
+              <p style={{ fontSize: '20px', fontWeight: '700', color: C.cream, margin: '0 0 12px' }}>Tsen<span style={{ color: '#ccd5ae' }}>@</span>be</p>
               <p style={{ fontSize: '14px', color: C.main, lineHeight: '1.8', margin: '0 0 20px' }}>
                 La plateforme de mini-boutiques pour les vendeurs malgaches. Simple, rapide, adapte a votre quotidien.
               </p>
-              <a href="https://wa.me/261340000000" rel="noreferrer" target="_blank" style={{ fontSize: '13px', color: C.caramel, textDecoration: 'none' }}>
+              <a href="https://wa.me/261345159568" rel="noreferrer" target="_blank" style={{ fontSize: '13px', color: C.caramel, textDecoration: 'none' }}>
                 <span>Nous contacter sur WhatsApp</span>
               </a>
             </div>
@@ -237,7 +237,7 @@ export default function LandingPage() {
                 Contact
               </p>
               {[
-                { label: 'WhatsApp', href: 'https://wa.me/261340000000' },
+                { label: 'WhatsApp', href: 'https://wa.me/261345159568' },
                 { label: 'Facebook', href: '#' }
               ].map(link => (
                 <a key={link.label} href={link.href} rel="noreferrer" target="_blank" style={{ display: 'block', fontSize: '13px', color: C.light, textDecoration: 'none', marginBottom: '12px' }}>
@@ -247,8 +247,8 @@ export default function LandingPage() {
             </div>
           </div>
           <div style={{ borderTop: `1px solid #4A5A32`, paddingTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <p style={{ fontSize: '12px', color: C.muted, margin: 0 }}>Keyros 2024. Tous droits reserves.</p>
-            <p style={{ fontSize: '12px', color: C.muted, margin: 0 }}>Fait a Madagascar</p>
+            <p style={{ fontSize: '12px', color: C.muted, margin: 0 }}>powered by kyros.</p>
+            <p style={{ fontSize: '12px', color: C.muted, margin: 0 }}>Madagascar</p>
           </div>
         </div>
       </footer>
