@@ -68,7 +68,7 @@ export default function PublicShopPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: T.background, fontFamily: 'system-ui, sans-serif' }}>
+    <div className={styles.page}>
 
       {/* ── Fond thématique fixe ── */}
       <div className={styles.bgGradient} style={{ background: c.background }} />

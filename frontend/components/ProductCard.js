@@ -55,14 +55,15 @@ const Modal = ({ product, theme, onClose, handleWhatsapp }) => {
           transition={{ type: 'spring', damping: 26, stiffness: 320 }}
           style={{
             position: 'relative',
-            background: c.surface,
+            background: c.background,
+            opacity: 1,
             width: '100%',
             maxWidth: '980px',
             maxHeight: '90vh',
             borderRadius: '26px',
             overflow: 'hidden',
             display: 'flex',
-            boxShadow: '0 30px 70px rgba(0,0,0,0.25)',
+            boxShadow: '0 30px 70px rgba(0,0,0,0.35)',
             flexDirection: 'row',
             pointerEvents: 'auto',
           }}
