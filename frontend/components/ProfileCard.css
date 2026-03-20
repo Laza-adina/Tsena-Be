@@ -31,24 +31,10 @@
   width: 100%;
 }
 
-/* ── Glow derrière ── */
+/* ── Glow derrière (supprimé/invisible) ── */
 .pc-behind {
-  position: absolute;
-  inset: -20px;
-  z-index: 0;
-  pointer-events: none;
-  background: radial-gradient(
-    circle at var(--pointer-x) var(--pointer-y),
-    var(--behind-glow-color) 0%,
-    transparent var(--behind-glow-size)
-  );
-  filter: blur(40px) saturate(1.2);
-  opacity: calc(0.75 * var(--card-opacity));
-  transition: opacity 250ms ease;
+  display: none;
 }
-
-.pc-wrapper:hover  { --card-opacity: 1; }
-.pc-wrapper.active { --card-opacity: 1; }
 
 /* ── Shell ── */
 .pc-shell {
@@ -57,36 +43,17 @@
   width: 100%;
 }
 
-/* ── Card principale — fond transparent ── */
+/* ── Card principale — fusionnée ── */
 .pc-card {
   width: 100%;
-  min-height: 480px;
+  min-height: auto;
   box-sizing: border-box;
-  border-radius: var(--card-radius);
   position: relative;
   overflow: hidden;
   isolation: isolate;
-
-  background: var(--pc-glass-bg, rgba(255, 255, 255, 0.13));
-  backdrop-filter: blur(32px) saturate(160%);
-  -webkit-backdrop-filter: blur(32px) saturate(160%);
-  border: 1px solid transparent;
-  box-shadow: 0 8px 40px var(--pc-shadow, rgba(0, 0, 0, 0.14));
-
-  transition: transform 1s ease, box-shadow 0.3s ease;
-  transform: translateZ(0) rotateX(0deg) rotateY(0deg);
-  backface-visibility: hidden;
-}
-
-.pc-card:hover,
-.pc-shell.active .pc-card {
-  transition: none;
-  transform: translateZ(0) rotateX(var(--rotate-y)) rotateY(var(--rotate-x));
-  box-shadow: 0 16px 56px rgba(0, 0, 0, 0.18);
-}
-
-.pc-shell.entering .pc-card {
-  transition: transform 180ms ease-out;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 /* ── Corps du contenu ── */
@@ -140,7 +107,6 @@
   margin: 0 0 10px;
   text-align: center;
   line-height: 1.25;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
   letter-spacing: -0.01em;
 }
 
@@ -170,9 +136,11 @@
 /* ── Liste contacts ── */
 .pc-contacts {
   width: 100%;
+  max-width: 360px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  margin: 0 auto;
 }
 
 /* ── Bouton contact ── */
@@ -180,11 +148,11 @@
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 11px 14px;
+  gap: 14px;
+  padding: 14px 16px;
   background: var(--pc-row-bg, rgba(255, 255, 255, 0.10));
   border: 1px solid var(--pc-row-border, rgba(255, 255, 255, 0.20));
-  border-radius: 14px;
+  border-radius: 16px;
   cursor: pointer;
   text-align: left;
   transition: background 0.18s ease, border-color 0.18s, transform 0.12s;
@@ -195,15 +163,6 @@
 }
 
 /* reflet interne sur les boutons */
-.pc-contact-row::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 50%;
-  background: linear-gradient(180deg, rgba(255,255,255,0.10) 0%, transparent 100%);
-  border-radius: 14px 14px 0 0;
-  pointer-events: none;
-}
 
 .pc-contact-row:hover {
   background: var(--pc-row-hover, rgba(255, 255, 255, 0.20));
@@ -216,9 +175,9 @@
 
 /* ── Icônes contact ── */
 .pc-contact-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -277,19 +236,19 @@
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
-  .pc-logo    { width: 80px; height: 80px; }
-  .pc-logo-placeholder { width: 80px; height: 80px; }
-  .pc-name    { font-size: 18px; }
+  .pc-logo    { width: 72px; height: 72px; }
+  .pc-logo-placeholder { width: 72px; height: 72px; }
+  .pc-name    { font-size: 19px; }
 }
 
 @media (max-width: 640px) {
-  .pc-card    { min-height: 100svh; }
+  .pc-card    { min-height: auto; }
   .pc-body    {
-    padding: 48px 28px 36px;
+    padding: 32px 16px 24px;
     justify-content: center;
   }
-  .pc-logo    { width: 72px; height: 72px; }
-  .pc-logo-placeholder { width: 72px; height: 72px; }
+  .pc-logo    { width: 80px; height: 80px; }
+  .pc-logo-placeholder { width: 80px; height: 80px; }
   .pc-name    { font-size: 17px; }
   .pc-desc    { font-size: 12px; margin-bottom: 18px; }
   .pc-contact-row { padding: 10px 12px; }
