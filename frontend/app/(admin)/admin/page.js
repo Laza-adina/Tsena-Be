@@ -52,10 +52,10 @@ export default function AdminDashboard() {
   };
 
   const chartData = [
-    { label: 'Total',   value: stats?.totalVendors   || 0 },
-    { label: 'Premium', value: stats?.premiumVendors  || 0 },
-    { label: 'Gratuit', value: stats?.freeVendors     || 0 },
-    { label: 'Produits', value: stats?.totalProducts  || 0 },
+    { label: 'Total',    value: stats?.totalVendors   || 0 },
+    { label: 'Actifs',   value: stats?.premiumVendors  || 0 },
+    { label: 'En essai', value: stats?.freeVendors     || 0 },
+    { label: 'Produits', value: stats?.totalProducts   || 0 },
   ];
 
   const cardStyle = {
@@ -88,6 +88,9 @@ export default function AdminDashboard() {
         <span style={{ fontWeight: '700', fontSize: '15px', color: '#fff' }}>Keyros Admin</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
           <a href="/admin/vendeurs" style={{ fontSize: '13px', color: '#aaa', textDecoration: 'none' }}>Vendeurs</a>
+          <a href="/admin/abonnements" style={{ fontSize: '13px', color: '#aaa', textDecoration: 'none' }}>
+          <span>Abonnements</span>
+        </a>
           <button
             onClick={handleLogout}
             style={{ fontSize: '13px', color: '#aaa', background: 'none', border: 'none', cursor: 'pointer' }}

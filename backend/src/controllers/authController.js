@@ -3,21 +3,19 @@ const bcrypt = require('bcryptjs');
 const jwt    = require('jsonwebtoken');
 const db     = require('../config/supabase');
 
-// Génère un slug propre depuis un nom de boutique
-const toSlug = (name) =>
-  name.toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim().replace(/\s+/g, '-').replace(/-+/g, '-');
+const toSlug = (text) =>
+  text.toLowerCase().trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
 
-const signToken = (user) =>
+const generateToken = (user) =>
   jwt.sign(
     { id: user.id, email: user.email, shopSlug: user.shop_slug, role: 'vendeur' },
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
   );
 
-// ─── POST /api/auth/signup ─────────────────────────────────
 exports.signup = async (req, res) => {
   try {
     const { email, password, shopName, whatsapp } = req.body;
@@ -27,33 +25,40 @@ exports.signup = async (req, res) => {
     if (password.length < 6)
       return res.status(400).json({ error: 'Mot de passe minimum 6 caractères.' });
 
-    // Email déjà pris ?
     const { data: exists } = await db.from('users').select('id').eq('email', email).maybeSingle();
     if (exists) return res.status(409).json({ error: 'Cet email est déjà utilisé.' });
 
-    // Générer slug unique
     let slug = toSlug(shopName);
     const { data: slugExists } = await db.from('users').select('id').eq('shop_slug', slug).maybeSingle();
     if (slugExists) slug = `${slug}-${Date.now().toString(36)}`;
 
     const hashed = await bcrypt.hash(password, 10);
 
+    const trialExpires = new Date();
+    trialExpires.setDate(trialExpires.getDate() + 7);
+
     const { data: user, error } = await db
       .from('users')
-      .insert([{ email, password: hashed, shop_name: shopName, shop_slug: slug, whatsapp: whatsapp || null }])
-      .select('id, email, shop_name, shop_slug, plan')
+      .insert([{
+        email, password: hashed,
+        shop_name: shopName, shop_slug: slug,
+        whatsapp: whatsapp || null,
+        plan: 'trial',
+        plan_expires_at: trialExpires.toISOString()
+      }])
+      .select('id, email, shop_name, shop_slug, plan, plan_expires_at')
       .single();
 
     if (error) throw error;
 
     return res.status(201).json({
       message: 'Compte créé !',
-      token: signToken(user),
+      token: generateToken(user),
       user: {
         id: user.id, email: user.email,
         shopName: user.shop_name, shopSlug: user.shop_slug,
         shopUrl: `${process.env.FRONTEND_URL}/${user.shop_slug}`,
-        plan: user.plan
+        plan: user.plan, planExpiresAt: user.plan_expires_at
       }
     });
   } catch (err) {
@@ -62,7 +67,6 @@ exports.signup = async (req, res) => {
   }
 };
 
-// ─── POST /api/auth/login ──────────────────────────────────
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -77,7 +81,7 @@ exports.login = async (req, res) => {
 
     return res.json({
       message: 'Connexion réussie !',
-      token: signToken(user),
+      token: generateToken(user),
       user: {
         id: user.id, email: user.email,
         shopName: user.shop_name, shopSlug: user.shop_slug,
@@ -93,7 +97,6 @@ exports.login = async (req, res) => {
   }
 };
 
-// ─── GET /api/auth/me ──────────────────────────────────────
 exports.getMe = async (req, res) => {
   try {
     const { data: user } = await db
@@ -108,12 +111,11 @@ exports.getMe = async (req, res) => {
   }
 };
 
-// ─── PUT /api/auth/profile ─────────────────────────────────
 exports.updateProfile = async (req, res) => {
   try {
     const { shopName, description, whatsapp, facebookUrl, profileImageUrl } = req.body;
     const updates = {};
-    if (shopName)            updates.shop_name = shopName;
+    if (shopName)                  updates.shop_name = shopName;
     if (description !== undefined) updates.description = description;
     if (whatsapp !== undefined)    updates.whatsapp = whatsapp;
     if (facebookUrl !== undefined) updates.facebook_url = facebookUrl;

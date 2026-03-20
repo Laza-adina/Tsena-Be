@@ -8,6 +8,7 @@ const admin   = require('../controllers/adminController');
 const upload_ctrl = require('../controllers/uploadController');
 const upload      = require('../middleware/upload');
 const qrcode = require('../controllers/qrcodeController');
+const subs = require('../controllers/subscriptionsController');
 // ════════════════════════════════
 // PUBLIC — pas de token requis
 // ════════════════════════════════
@@ -29,6 +30,7 @@ router.post('/admin/login',           admin.adminLogin);
 
 router.get('/auth/me',                authVendeur, auth.getMe);
 router.put('/auth/profile',           authVendeur, auth.updateProfile);
+router.get('/subscriptions/history', authVendeur, subs.getMySubscriptions);
 
 router.get('/products',               authVendeur, shop.getMyProducts);
 router.post('/products',              authVendeur, shop.createProduct);
@@ -55,5 +57,8 @@ router.get('/admin/vendors/:id',      authAdmin, admin.getVendorDetail);
 router.put('/admin/vendors/:id/plan', authAdmin, admin.updatePlan);
 router.put('/admin/vendors/:id/toggle', authAdmin, admin.toggleVendor);
 router.delete('/admin/vendors/:id',   authAdmin, admin.deleteVendor);
+router.get('/admin/subscriptions',              authAdmin, subs.getAllSubscriptions);
+router.put('/admin/vendors/:id/activate', authAdmin, subs.activateVendor);
+
 
 module.exports = router;

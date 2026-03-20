@@ -43,19 +43,19 @@ exports.createProduct = async (req, res) => {
     // Vérifier limite plan gratuit (5 produits max)
     const { data: vendor } = await db.from('users').select('plan').eq('id', req.user.id).single();
 
-    if (vendor?.plan === 'free') {
-      const { count } = await db
-        .from('products')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', req.user.id);
+    // if (vendor?.plan === 'free') {
+    //   const { count } = await db
+    //     .from('products')
+    //     .select('id', { count: 'exact', head: true })
+    //     .eq('user_id', req.user.id);
 
-      if (count >= 5) {
-        return res.status(403).json({
-          error: 'Limite du plan gratuit atteinte (5 produits max). Passez en Premium pour un catalogue illimité.',
-          upgradeRequired: true
-        });
-      }
-    }
+    //   if (count >= 5) {
+    //     return res.status(403).json({
+    //       error: 'Limite du plan gratuit atteinte (5 produits max). Passez en Premium pour un catalogue illimité.',
+    //       upgradeRequired: true
+    //     });
+    //   }
+    // }
 
     // Générer une référence auto si non fournie
     const { count: total } = await db

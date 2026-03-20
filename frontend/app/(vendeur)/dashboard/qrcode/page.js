@@ -45,13 +45,20 @@ export default function QRCodePage() {
   return (
     <div style={{ minHeight: '100vh', background: '#fafafa', fontFamily: 'system-ui, sans-serif' }}>
 
-      {/* Navbar */}
       <div style={{ background: '#fff', borderBottom: '1px solid #e5e5e5', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '56px' }}>
-        <a href="/dashboard" style={{ fontWeight: '700', fontSize: '16px', color: '#111', textDecoration: 'none' }}>Keyros</a>
+        <a href="/dashboard" style={{ fontWeight: '700', fontSize: '16px', color: '#111', textDecoration: 'none' }}>
+          <span>Keyros</span>
+        </a>
         <div style={{ display: 'flex', gap: '24px' }}>
-          <a href="/dashboard" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>Accueil</a>
-          <a href="/dashboard/produits" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>Produits</a>
-          <a href="/dashboard/profil" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>Profil</a>
+          <a href="/dashboard" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>
+            <span>Accueil</span>
+          </a>
+          <a href="/dashboard/produits" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>
+            <span>Produits</span>
+          </a>
+          <a href="/dashboard/profil" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>
+            <span>Profil</span>
+          </a>
         </div>
       </div>
 
@@ -79,16 +86,8 @@ export default function QRCodePage() {
             onClick={handleDownload}
             style={{ padding: '10px 20px', background: '#111', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}
           >
-            Telecharger en PNG
+            <span>Telecharger en PNG</span>
           </button>
-          
-            href={`/api/qrcode/${slug}/image`}
-            rel="noreferrer"
-            target="_blank"
-            style={{ padding: '10px 20px', background: '#fff', color: '#111', border: '1px solid #e5e5e5', borderRadius: '6px', fontSize: '13px', fontWeight: '500', textDecoration: 'none' }}
-            <a>
-            Ouvrir l'image
-          </a>
         </div>
       </div>
     </div>

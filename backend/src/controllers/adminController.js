@@ -26,9 +26,10 @@ exports.adminLogin = async (req, res) => {
       { expiresIn: '1d' }
     );
 
-    res.json({ token, admin: { id: admin.id, email: admin.email, name: admin.name, role: admin.role } });
-  } catch {
-    res.status(500).json({ error: 'Erreur serveur.' });
+    return res.json({ token, admin: { id: admin.id, email: admin.email, name: admin.name, role: admin.role } });
+  } catch (err) {
+    console.error('ADMIN LOGIN ERROR:', err);
+    return res.status(500).json({ error: 'Erreur serveur.' });
   }
 };
 
@@ -68,7 +69,7 @@ exports.getDashboard = async (req, res) => {
       { data: recentVendors }
     ] = await Promise.all([
       db.from('users').select('id', { count: 'exact', head: true }),
-      db.from('users').select('id', { count: 'exact', head: true }).eq('plan', 'premium'),
+      db.from('users').select('id', { count: 'exact', head: true }).eq('plan', 'active'),
       db.from('products').select('id', { count: 'exact', head: true }),
       db.from('users')
         .select('id, email, shop_name, shop_slug, plan, is_active, created_at')

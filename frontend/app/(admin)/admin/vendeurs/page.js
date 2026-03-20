@@ -115,7 +115,10 @@ export default function AdminVendeursPage() {
       <div style={{ background: '#111', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '56px' }}>
         <a href="/admin" style={{ fontWeight: '700', fontSize: '15px', color: '#fff', textDecoration: 'none' }}>Keyros Admin</a>
         <a href="/admin" style={{ fontSize: '13px', color: '#aaa', textDecoration: 'none' }}>Dashboard</a>
-      </div>
+        <a href="/admin/abonnements" style={{ fontSize: '13px', color: '#aaa', textDecoration: 'none' }}>
+        <span>Abonnements</span>
+      </a>
+            </div>
 
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '32px 24px' }}>
 
@@ -166,8 +169,9 @@ export default function AdminVendeursPage() {
               <div>
                 <label style={labelStyle}>Plan</label>
                 <select value={form.plan} onChange={e => setForm({ ...form, plan: e.target.value })} style={{ ...inputStyle }}>
-                  <option value="free">Gratuit</option>
-                  <option value="premium">Premium</option>
+                  <option value="trial">Essai (7 jours)</option>
+                  <option value="active">Actif</option>
+                  <option value="expired">Expiré</option>
                 </select>
               </div>
             </div>
@@ -224,11 +228,11 @@ export default function AdminVendeursPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid #e5e5e5' }}>
-                  {['Boutique', 'Email', 'WhatsApp', 'Plan', 'Statut', 'Actions'].map(h => (
-                    <th key={h} style={{ padding: '12px 16px', fontSize: '12px', fontWeight: '600', color: '#999', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      {h}
-                    </th>
-                  ))}
+                {['Boutique', 'Email', 'WhatsApp', 'Plan', 'Statut', 'Actions'].map(h => (
+                  <th key={h} style={{ padding: '12px 16px', fontSize: '12px', fontWeight: '600', color: '#999', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <span>{h}</span>
+                  </th>
+                ))}
                 </tr>
               </thead>
               <tbody>
@@ -241,17 +245,17 @@ export default function AdminVendeursPage() {
                     <td style={{ padding: '14px 16px', fontSize: '13px', color: '#555' }}>{v.email}</td>
                     <td style={{ padding: '14px 16px', fontSize: '13px', color: '#555' }}>{v.whatsapp || '-'}</td>
                     <td style={{ padding: '14px 16px' }}>
-                      <button
+                    <button
                         onClick={() => handlePlan(v.id, v.plan)}
                         style={{
                           fontSize: '11px', fontWeight: '500',
                           padding: '4px 10px', borderRadius: '4px', cursor: 'pointer',
-                          background: v.plan === 'premium' ? '#111' : '#f5f5f5',
-                          color: v.plan === 'premium' ? '#fff' : '#555',
+                          background: v.plan === 'active' ? '#111' : v.plan === 'trial' ? '#f5f5e0' : '#fff0f0',
+                          color: v.plan === 'active' ? '#fff' : v.plan === 'trial' ? '#666' : '#c00',
                           border: 'none'
                         }}
-                      >
-                        {v.plan}
+                    >
+                        <span>{v.plan === 'active' ? 'Actif' : v.plan === 'trial' ? 'Essai' : 'Expire'}</span>
                       </button>
                     </td>
                     <td style={{ padding: '14px 16px' }}>
@@ -270,17 +274,39 @@ export default function AdminVendeursPage() {
                     </td>
                     <td style={{ padding: '14px 16px' }}>
                       <div style={{ display: 'flex', gap: '6px' }}>
-                        
+                        <a
                           href={`/admin/vendeurs/${v.id}`}
-                          style={{ fontSize: '12px', padding: '5px 10px', border: '1px solid #e5e5e5', borderRadius: '4px', color: '#333', textDecoration: 'none' }}
-                        <a>
-                          Detail
+                          style={{ 
+                            fontSize: '12px', 
+                            padding: '5px 10px', 
+                            border: '1px solid #e5e5e5', 
+                            borderRadius: '4px', 
+                            color: '#333', 
+                            textDecoration: 'none', 
+                            display: 'inline-block',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          <span>Detail</span>
                         </a>
+
                         <button
                           onClick={() => handleDelete(v.id)}
-                          style={{ fontSize: '12px', padding: '5px 10px', border: '1px solid #fcc', borderRadius: '4px', color: '#c00', background: '#fff', cursor: 'pointer' }}
+                          style={{ 
+                            fontSize: '12px', 
+                            padding: '5px 10px', 
+                            border: '1px solid #fcc', 
+                            borderRadius: '4px', 
+                            color: '#c00', 
+                            background: '#fff', 
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseEnter={e => e.target.style.background = '#fff0f0'}
+                          onMouseLeave={e => e.target.style.background = '#fff'}
                         >
-                          Supprimer
+                          <span>Supprimer</span>
                         </button>
                       </div>
                     </td>

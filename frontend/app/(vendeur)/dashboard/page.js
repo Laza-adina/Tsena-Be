@@ -70,6 +70,9 @@ export default function DashboardPage() {
           <a href="/dashboard/stats" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>Stats</a>
           <a href="/dashboard/profil" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>Profil</a>
           <a href="/dashboard/qrcode" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>QR Code</a>
+          <a href="/dashboard/abonnement" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>
+            <span>Abonnement</span>
+          </a>
           <button
             onClick={handleLogout}
             style={{ fontSize: '13px', color: '#555', background: 'none', border: 'none', cursor: 'pointer' }}
@@ -171,19 +174,14 @@ export default function DashboardPage() {
         </div>
 
         {/* Banner upgrade si free */}
-        {user?.plan === 'free' && (
-          <div style={{ marginTop: '24px', padding: '16px 20px', background: '#111', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <p style={{ fontSize: '14px', fontWeight: '600', color: '#fff', margin: '0 0 2px' }}>
-                Passez en Premium
-              </p>
-              <p style={{ fontSize: '13px', color: '#aaa', margin: 0 }}>
-                Catalogue illimite, sans logo Keyros, QR Code
-              </p>
-            </div>
-            <span style={{ fontSize: '13px', color: '#fff', fontWeight: '500', whiteSpace: 'nowrap' }}>
-              10 000 Ar / mois
-            </span>
+        {user?.plan === 'trial' && (
+          <div style={{ marginTop: '24px', padding: '16px 20px', background: '#000', border: '1px solid #e5e5e5', borderRadius: '8px' }}>
+            <p style={{ fontSize: '14px', fontWeight: '600', color: '#fff', margin: '0 0 2px' }}>
+              Periode d'essai
+            </p>
+            <p style={{ fontSize: '13px', color: '#fff', margin: 0 }}>
+              Votre essai gratuit expire le {new Date(user?.planExpiresAt).toLocaleDateString('fr-FR')}
+            </p>
           </div>
         )}
 
