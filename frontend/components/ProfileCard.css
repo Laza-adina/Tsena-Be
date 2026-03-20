@@ -31,24 +31,10 @@
   width: 100%;
 }
 
-/* ── Glow derrière ── */
+/* ── Glow derrière (supprimé/invisible) ── */
 .pc-behind {
-  position: absolute;
-  inset: -20px;
-  z-index: 0;
-  pointer-events: none;
-  background: radial-gradient(
-    circle at var(--pointer-x) var(--pointer-y),
-    var(--behind-glow-color) 0%,
-    transparent var(--behind-glow-size)
-  );
-  filter: blur(40px) saturate(1.2);
-  opacity: calc(0.75 * var(--card-opacity));
-  transition: opacity 250ms ease;
+  display: none;
 }
-
-.pc-wrapper:hover  { --card-opacity: 1; }
-.pc-wrapper.active { --card-opacity: 1; }
 
 /* ── Shell ── */
 .pc-shell {
@@ -57,36 +43,17 @@
   width: 100%;
 }
 
-/* ── Card principale — fond transparent ── */
+/* ── Card principale — fusionnée ── */
 .pc-card {
   width: 100%;
-  min-height: 480px;
+  min-height: auto;
   box-sizing: border-box;
-  border-radius: var(--card-radius);
   position: relative;
   overflow: hidden;
   isolation: isolate;
-
-  background: var(--pc-glass-bg, rgba(255, 255, 255, 0.13));
-  backdrop-filter: blur(32px) saturate(160%);
-  -webkit-backdrop-filter: blur(32px) saturate(160%);
-  border: 1px solid transparent;
-  box-shadow: 0 8px 40px var(--pc-shadow, rgba(0, 0, 0, 0.14));
-
-  transition: transform 1s ease, box-shadow 0.3s ease;
-  transform: translateZ(0) rotateX(0deg) rotateY(0deg);
-  backface-visibility: hidden;
-}
-
-.pc-card:hover,
-.pc-shell.active .pc-card {
-  transition: none;
-  transform: translateZ(0) rotateX(var(--rotate-y)) rotateY(var(--rotate-x));
-  box-shadow: 0 16px 56px rgba(0, 0, 0, 0.18);
-}
-
-.pc-shell.entering .pc-card {
-  transition: transform 180ms ease-out;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 /* ── Corps du contenu ── */
@@ -140,7 +107,6 @@
   margin: 0 0 10px;
   text-align: center;
   line-height: 1.25;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
   letter-spacing: -0.01em;
 }
 
@@ -277,19 +243,19 @@
 
 /* ── Responsive ── */
 @media (max-width: 900px) {
-  .pc-logo    { width: 80px; height: 80px; }
-  .pc-logo-placeholder { width: 80px; height: 80px; }
-  .pc-name    { font-size: 18px; }
+  .pc-logo    { width: 72px; height: 72px; }
+  .pc-logo-placeholder { width: 72px; height: 72px; }
+  .pc-name    { font-size: 19px; }
 }
 
 @media (max-width: 640px) {
-  .pc-card    { min-height: 100svh; }
+  .pc-card    { min-height: auto; }
   .pc-body    {
-    padding: 48px 28px 36px;
+    padding: 32px 16px 24px;
     justify-content: center;
   }
-  .pc-logo    { width: 72px; height: 72px; }
-  .pc-logo-placeholder { width: 72px; height: 72px; }
+  .pc-logo    { width: 80px; height: 80px; }
+  .pc-logo-placeholder { width: 80px; height: 80px; }
   .pc-name    { font-size: 17px; }
   .pc-desc    { font-size: 12px; margin-bottom: 18px; }
   .pc-contact-row { padding: 10px 12px; }
