@@ -18,7 +18,6 @@ app.use(cors({
       'http://localhost:3001'
     ].filter(Boolean);
 
-    // Autoriser les requêtes sans origin (Postman, mobile)
     if (!origin) return callback(null, true);
 
     if (allowed.includes(origin) || origin.endsWith('.vercel.app')) {
