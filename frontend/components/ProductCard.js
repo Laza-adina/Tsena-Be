@@ -6,20 +6,23 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowRight } from 'lucide-react';
 
 const Modal = ({ product, theme, onClose, handleWhatsapp }) => {
-  const c = theme?.colors ?? {
-    primary:    '#1D4ED8',
-    surface:    '#ffffff',
-    text:       '#1e293b',
-    textMuted:  '#64748b',
-    accent:     '#F97316',
-  };
+  const [mounted, setMounted] = useState(false);
+
+  const c = theme?.colors ?? {};
 
   useEffect(() => {
+    setMounted(true);
     document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
+    return () => { document.body.style.overflow = 'auto'; };
   }, []);
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  if (!mounted) return null;
 
   return createPortal(
     <AnimatePresence mode="wait">
@@ -28,41 +31,47 @@ const Modal = ({ product, theme, onClose, handleWhatsapp }) => {
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: '24px', zIndex: 99999,
         fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
+        pointerEvents: 'none',
       }}>
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}
+          transition={{ duration: 0.25 }}
+          style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(0,0,0,0.55)',
+            backdropFilter: 'blur(6px)',
+          }}
           onClick={onClose}
         />
 
-        {/* Modal Content */}
+        {/* Modal */}
         <motion.div
-          initial={{ opacity: 0, y: 50, scale: 0.95 }}
+          initial={{ opacity: 0, y: 40, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          exit={{ opacity: 0, scale: 0.96, y: 30 }}
+          transition={{ type: 'spring', damping: 26, stiffness: 320 }}
           style={{
             position: 'relative',
             background: c.surface,
             width: '100%',
-            maxWidth: '900px',
+            maxWidth: '980px',
             maxHeight: '90vh',
-            borderRadius: '24px',
+            borderRadius: '26px',
             overflow: 'hidden',
             display: 'flex',
-            boxShadow: '0 24px 48px rgba(0,0,0,0.2)',
+            boxShadow: '0 30px 70px rgba(0,0,0,0.25)',
             flexDirection: 'row',
+            pointerEvents: 'auto',
           }}
           onClick={e => e.stopPropagation()}
         >
-          <div className="modal-inner" style={{
-            display: 'flex', flexDirection: 'row', width: '100%', overflow: 'hidden'
-          }}>
-            {/* Image section */}
-            <div style={{ width: '45%', position: 'relative', minHeight: '300px', background: 'rgba(0,0,0,0.04)' }}>
+          <div className="modal-inner" style={{ display: 'flex', flexDirection: 'row', width: '100%', overflow: 'hidden' }}>
+
+            {/* Image */}
+            <div style={{ width: '45%', position: 'relative', minHeight: '320px', background: 'rgba(0,0,0,0.06)' }}>
               {product.image_url ? (
                 <img
                   src={product.image_url}
@@ -86,21 +95,28 @@ const Modal = ({ product, theme, onClose, handleWhatsapp }) => {
               )}
             </div>
 
-            {/* Content section */}
+            {/* Contenu */}
             <div style={{
-              width: '55%', padding: '40px',
+              width: '55%', padding: '42px',
               display: 'flex', flexDirection: 'column',
-              overflowY: 'auto'
+              overflowY: 'auto',
             }}>
+              {/* Bouton fermer */}
               <button
                 onClick={onClose}
                 style={{
                   position: 'absolute', top: '24px', right: '24px',
                   background: 'rgba(0,0,0,0.05)', border: 'none',
-                  width: '36px', height: '36px', borderRadius: '50%',
+                  width: '38px', height: '38px', borderRadius: '50%',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', color: c.text
+                  cursor: 'pointer', color: c.text,
+                  transition: 'transform 0.18s ease, background 0.18s ease',
                 }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.07)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,0,0,0.05)'}
+                onMouseDown={e => e.currentTarget.style.transform = 'scale(0.96)'}
+                onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+                aria-label="Fermer"
               >
                 <X size={20} />
               </button>
@@ -116,19 +132,14 @@ const Modal = ({ product, theme, onClose, handleWhatsapp }) => {
               </h2>
 
               <p style={{ fontSize: '24px', fontWeight: '700', color: c.primary, margin: '0 0 24px', lineHeight: 1 }}>
-                {product.price.toLocaleString()} <span style={{ fontSize: '14px', fontWeight: '400', color: c.textMuted }}>Ar</span>
+                {product.price.toLocaleString()}
+                <span style={{ fontSize: '14px', fontWeight: '400', color: c.textMuted }}> Ar</span>
               </p>
 
               {product.description && (
                 <div style={{ flex: 1, marginBottom: '24px' }}>
                   <h4 style={{ fontSize: '14px', fontWeight: '600', color: c.text, marginBottom: '12px' }}>Description</h4>
-                  <p style={{
-                    fontSize: '15px',
-                    color: c.textMuted,
-                    lineHeight: '1.6',
-                    margin: 0,
-                    whiteSpace: 'pre-wrap'
-                  }}>
+                  <p style={{ fontSize: '15px', color: c.textMuted, lineHeight: '1.6', margin: 0, whiteSpace: 'pre-wrap' }}>
                     {product.description}
                   </p>
                 </div>
@@ -149,9 +160,10 @@ const Modal = ({ product, theme, onClose, handleWhatsapp }) => {
                   fontWeight: '600',
                   cursor: 'pointer',
                   transition: 'transform 0.1s ease, filter 0.2s',
-                  boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
+                  boxShadow: '0 12px 24px rgba(0,0,0,0.16)',
+                  fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
                 }}
-                onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.1)'}
+                onMouseEnter={e => e.currentTarget.style.filter = 'brightness(1.06)'}
                 onMouseLeave={e => e.currentTarget.style.filter = 'brightness(1)'}
                 onMouseDown={e => e.currentTarget.style.transform = 'scale(0.98)'}
                 onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
@@ -161,6 +173,7 @@ const Modal = ({ product, theme, onClose, handleWhatsapp }) => {
               </button>
             </div>
           </div>
+
           <style dangerouslySetInnerHTML={{__html: `
             @media (max-width: 768px) {
               .modal-inner { flex-direction: column !important; }
@@ -175,43 +188,35 @@ const Modal = ({ product, theme, onClose, handleWhatsapp }) => {
   );
 };
 
-const ProductCard = ({ product, theme }) => {
+/* ════════════════════════════════════════════
+   PRODUCT CARD
+   - PC  → clic = modal plein format
+   - Mobile → clic = description expandable
+   - onTrack : callback pour le tracking WA
+════════════════════════════════════════════ */
+const ProductCard = ({ product, theme, onTrack }) => {
   const [modalOpen, setModalOpen] = useState(false);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded]   = useState(false);
+  const [isPC, setIsPC]           = useState(true);
 
-  const c = theme?.colors ?? {
-    primary:    '#1D4ED8',
-    accent:     '#F97316',
-    text:       '#1e293b',
-    textMuted:  '#64748b',
-    surface:    'rgba(255, 253, 247, 0.58)',
-    btn:        '#1D4ED8',
-    btnText:    '#ffffff',
-    btnHover:   '#1638a8',
-  };
-
-  const [isPC, setIsPC] = useState(true);
+  const c = theme?.colors ?? {};
 
   useEffect(() => {
-    const checkPC = () => setIsPC(window.innerWidth > 768);
-    checkPC();
-    window.addEventListener('resize', checkPC);
-    return () => window.removeEventListener('resize', checkPC);
+    const check = () => setIsPC(window.innerWidth > 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
   }, []);
 
   const handleWhatsapp = (e) => {
     e.stopPropagation();
-    if (product.whatsappLink) {
-      window.open(product.whatsappLink, '_blank');
-    }
+    if (onTrack) onTrack();
+    if (product.whatsappLink) window.open(product.whatsappLink, '_blank');
   };
 
   const handleCardClick = () => {
-    if (isPC) {
-      setModalOpen(true);
-    } else {
-      setExpanded(v => !v);
-    }
+    if (isPC) setModalOpen(true);
+    else setExpanded(v => !v);
   };
 
   return (
@@ -229,26 +234,32 @@ const ProductCard = ({ product, theme }) => {
           background: c.surface,
           backdropFilter: 'blur(28px) saturate(160%)',
           WebkitBackdropFilter: 'blur(28px) saturate(160%)',
-          border: `1px solid transparent`,
-          boxShadow: `0 4px 24px rgba(0,0,0,0.10)`,
+          border: '1px solid rgba(255, 255, 255, 0.11)',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.55)',
           transition: 'transform 0.25s cubic-bezier(0.22,0.68,0,1.2), box-shadow 0.25s ease',
         }}
         onMouseEnter={e => {
           e.currentTarget.style.transform = 'translateY(-3px)';
-          e.currentTarget.style.boxShadow = `0 12px 36px rgba(0,0,0,0.14)`;
+          e.currentTarget.style.boxShadow = '0 12px 36px rgba(0,0,0,0.13), inset 0 1px 0 rgba(255,255,255,0.65)';
         }}
         onMouseLeave={e => {
           e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = `0 4px 24px rgba(0,0,0,0.10)`;
+          e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.55)';
         }}
       >
+
         {/* Image */}
         {product.image_url ? (
-          <div style={{ width: '100%', aspectRatio: '1/1', overflow: 'hidden', background: 'rgba(0,0,0,0.04)' }}>
+          <div style={{ width: '100%', aspectRatio: '1/1', overflow: 'hidden' }}>
             <img
               src={product.image_url}
               alt={product.name}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              style={{
+                width: '100%', height: '100%', objectFit: 'cover', display: 'block',
+                transition: 'transform 0.4s cubic-bezier(0.22,0.68,0,1.2)',
+              }}
+              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
             />
           </div>
         ) : (
@@ -269,10 +280,10 @@ const ProductCard = ({ product, theme }) => {
         )}
 
         {/* Body */}
-        <div style={{ padding: '13px 14px 38px', position: 'relative', zIndex: 4 }}>
+        <div style={{ padding: '13px 14px 38px', position: 'relative', zIndex: 3 }}>
 
           {product.reference && (
-            <p style={{ fontSize: '10px', color: c.accent, letterSpacing: '0.07em', textTransform: 'uppercase', margin: '0 0 3px' }}>
+            <p style={{ fontSize: '10px', color: c.accent, letterSpacing: '0.07em', textTransform: 'uppercase', margin: '0 0 3px', fontWeight: 600 }}>
               {product.reference}
             </p>
           )}
@@ -281,23 +292,15 @@ const ProductCard = ({ product, theme }) => {
             {product.name}
           </h3>
 
-          {product.description && (
+          {/* Description — expandable sur mobile, masquée sur PC (modal) */}
+          {product.description && !isPC && (
             <div style={{ marginBottom: '10px' }}>
               <p style={{
-                fontSize: '12px',
-                color: c.textMuted,
-                lineHeight: '1.6',
-                margin: 0,
-                overflow: 'hidden',
-                transition: 'max-height 0.38s ease',
+                fontSize: '12px', color: c.textMuted, lineHeight: '1.6', margin: 0,
+                overflow: 'hidden', transition: 'max-height 0.38s ease',
                 ...(expanded
                   ? { maxHeight: '600px', display: 'block' }
-                  : {
-                      maxHeight: '38px',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                    }
+                  : { maxHeight: '36px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }
                 ),
               }}>
                 {product.description}
@@ -310,8 +313,16 @@ const ProductCard = ({ product, theme }) => {
             </div>
           )}
 
+          {/* Sur PC : petite indication "cliquer pour détails" */}
+          {isPC && (
+            <p style={{ fontSize: '11px', color: c.textMuted, margin: '0 0 8px', opacity: 0.6 }}>
+              Cliquer pour les détails
+            </p>
+          )}
+
           <p style={{ fontSize: '17px', fontWeight: '700', color: c.text, margin: '0 0 12px', lineHeight: 1 }}>
-            {product.price.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '400', color: c.textMuted }}>Ar</span>
+            {product.price.toLocaleString()}
+            <span style={{ fontSize: '11px', fontWeight: '400', color: c.textMuted }}> Ar</span>
           </p>
 
           <button
@@ -328,7 +339,9 @@ const ProductCard = ({ product, theme }) => {
               fontSize: '12.5px',
               fontWeight: '500',
               cursor: 'pointer',
+              fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
               transition: 'background 0.18s ease, transform 0.1s ease',
+              position: 'relative', overflow: 'hidden',
             }}
             onMouseEnter={e => e.currentTarget.style.background = c.btnHover}
             onMouseLeave={e => e.currentTarget.style.background = c.btn}
@@ -343,20 +356,23 @@ const ProductCard = ({ product, theme }) => {
           </button>
         </div>
 
-        {/* Chevron */}
-        <div style={{
-          position: 'absolute', bottom: '11px', right: '13px',
-          color: c.textMuted,
-          transition: 'transform 0.3s ease',
-          transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
-          display: isPC ? 'none' : 'block',
-          lineHeight: 0, zIndex: 4,
-        }}>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
-        </div>
+        {/* Chevron (mobile seulement) */}
+        {!isPC && (
+          <div style={{
+            position: 'absolute', bottom: '11px', right: '13px',
+            color: c.textMuted,
+            transition: 'transform 0.3s ease',
+            transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+            lineHeight: 0, zIndex: 4,
+          }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </div>
+        )}
       </div>
+
+      {/* Modal PC */}
       {modalOpen && (
         <Modal
           product={product}

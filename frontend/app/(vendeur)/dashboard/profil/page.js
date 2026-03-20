@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSession, saveSession } from '../../../../lib/auth';
 import api from '../../../../lib/api';
-import { THEMES } from '../../../../lib/themes';
+import { THEMES, DEFAULT_THEME } from '../../../../lib/themes';
 
 /* ══════════════════════════════════════════════════════════════
    ThemePickerModal
@@ -33,7 +33,6 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap');
 
-        /* ── Trigger ── */
         .tpm-btn {
           display: inline-flex; align-items: center; gap: 9px;
           padding: 9px 14px;
@@ -55,7 +54,6 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
         .tpm-btn-dot  { width: 11px; height: 11px; border-radius: 50%; transition: transform .2s; }
         .tpm-btn:hover .tpm-btn-dot { transform: scale(1.2); }
 
-        /* ── Overlay ── */
         .tpm-overlay {
           position: fixed; inset: 0;
           background: rgba(10,10,10,.46);
@@ -66,7 +64,6 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
         }
         @keyframes tpm-fog { from { opacity: 0 } to { opacity: 1 } }
 
-        /* ── Close btn ── */
         .tpm-close {
           width: 28px; height: 28px; border-radius: 7px;
           border: 1px solid #ececec; background: transparent;
@@ -76,7 +73,6 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
         }
         .tpm-close:hover { background: #f3f3f3; color: #333; }
 
-        /* ── Apply btn ── */
         .tpm-apply {
           border: none; border-radius: 8px;
           font-family: 'DM Sans', sans-serif;
@@ -86,14 +82,11 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
         }
         .tpm-apply:hover { opacity: .87; transform: translateY(-1px); }
 
-        /* ════════════════════════════════════════
-           MOBILE · bottom-sheet  (< 640px)
-        ════════════════════════════════════════ */
+        /* ── MOBILE bottom-sheet ── */
         .tpm-sheet {
           position: fixed;
           bottom: 0; left: 0; right: 0;
-          height: 70vh;
-          max-height: 530px;
+          height: 70vh; max-height: 530px;
           background: #fff;
           border-radius: 20px 20px 0 0;
           z-index: 1001;
@@ -107,8 +100,7 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
         }
 
         .tpm-sheet-drag {
-          flex-shrink: 0;
-          padding: 12px 0 0;
+          flex-shrink: 0; padding: 12px 0 0;
           display: flex; justify-content: center;
         }
         .tpm-drag-pill {
@@ -174,16 +166,13 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
         .tpm-foot-label { font-size: 11px; color: #bbb; }
         .tpm-foot-name  { font-size: 13px; font-weight: 600; color: #111; margin-top: 1px; }
 
-        /* ════════════════════════════════════════
-           DESKTOP · side panel  (≥ 640px)
-        ════════════════════════════════════════ */
+        /* ── DESKTOP side panel ── */
         .tpm-panel {
           position: fixed;
           top: 50%; right: 0;
           transform: translateY(-50%);
           width: 290px;
-          height: 65vh;
-          max-height: 560px;
+          height: 65vh; max-height: 560px;
           background: #fff;
           border-radius: 16px 0 0 16px;
           z-index: 1001;
@@ -252,7 +241,6 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
           text-align: center;
         }
 
-        /* ── Responsive visibility ── */
         .tpm-mobile-only  { display: flex !important; }
         .tpm-desktop-only { display: none  !important; }
         @media (min-width: 640px) {
@@ -280,9 +268,7 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
 
           {/* ══ MOBILE – bottom-sheet ══ */}
           <div className="tpm-sheet tpm-mobile-only" onClick={(e) => e.stopPropagation()}>
-            <div className="tpm-sheet-drag">
-              <div className="tpm-drag-pill" />
-            </div>
+            <div className="tpm-sheet-drag"><div className="tpm-drag-pill" /></div>
 
             <div className="tpm-sheet-head">
               <div>
@@ -419,8 +405,8 @@ export default function ProfilPage() {
   const [form, setForm] = useState({
     shopName: '', description: '', whatsapp: '', facebookUrl: '', profileImageUrl: '',
   });
+  // ── Un seul état thème, initialisé avec DEFAULT_THEME ──
   const [localTheme, setLocalTheme] = useState(DEFAULT_THEME);
-  const [theme, setTheme]     = useState('minimal');
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
   const [success, setSuccess] = useState('');
@@ -437,7 +423,7 @@ export default function ProfilPage() {
       const { data } = await api.get('/auth/me');
       const u = data.user;
 
-      // ── Thème : priorité DB (u.theme), fallback localStorage, fallback DEFAULT
+      // Thème : priorité DB → localStorage → DEFAULT_THEME
       const dbTheme    = u.theme && THEMES[u.theme] ? u.theme : null;
       const localStore = localStorage.getItem('shop_theme');
       const resolved   = dbTheme || (localStore && THEMES[localStore] ? localStore : DEFAULT_THEME);
@@ -448,7 +434,7 @@ export default function ProfilPage() {
         description:     u.description       || '',
         whatsapp:        u.whatsapp          || '',
         facebookUrl:     u.facebook_url      || '',
-        profileImageUrl: u.profile_image_url || ''
+        profileImageUrl: u.profile_image_url || '',
       });
     } finally {
       setLoading(false);
@@ -459,9 +445,9 @@ export default function ProfilPage() {
     setError(''); setSuccess('');
     setSaving(true);
     try {
-      // Sauvegarde profil + thème en DB dans le même appel
+      // Thème envoyé en DB avec le reste du profil
       await api.put('/auth/profile', { ...form, theme: localTheme });
-      // Miroir local pour éviter un aller-retour réseau au prochain chargement
+      // Miroir localStorage pour éviter un aller-retour au prochain chargement
       localStorage.setItem('shop_theme', localTheme);
       setSuccess('Profil mis à jour.');
       const session = getSession();
@@ -507,20 +493,20 @@ export default function ProfilPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#fafafa', fontFamily: 'system-ui, sans-serif' }}>
 
-      <div style={{ background: '#fff', borderBottom: '1px solid #e5e5e5', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '56px' }}>
-        <a href="/dashboard" style={{ fontWeight: '700', fontSize: '16px', color: '#111', textDecoration: 'none' }}>
-          <span>Tsen@be</span>
+      {/* ── Navbar ── */}
+      <div style={{
+        background: '#fff', borderBottom: '1px solid #e5e5e5',
+        padding: '0 24px', display: 'flex', alignItems: 'center',
+        justifyContent: 'space-between', height: '56px',
+      }}>
+        <a href="/dashboard"
+          style={{ fontWeight: '700', fontSize: '16px', color: '#111', textDecoration: 'none' }}>
+          Tsen@be
         </a>
         <div style={{ display: 'flex', gap: '24px' }}>
-          <a href="/dashboard" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>
-            <span>Accueil</span>
-          </a>
-          <a href="/dashboard/produits" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>
-            <span>Produits</span>
-          </a>
-          <a href="/dashboard/stats" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>
-            <span>Stats</span>
-          </a>
+          <a href="/dashboard"          style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>Accueil</a>
+          <a href="/dashboard/produits" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>Produits</a>
+          <a href="/dashboard/stats"    style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>Stats</a>
         </div>
       </div>
 
@@ -646,44 +632,15 @@ export default function ProfilPage() {
             />
           </div>
 
-          {/* ── Thème ── */}
+          {/* ── Thème (modal uniquement, grille inline supprimée) ── */}
           <div>
-            <label style={{ ...labelStyle, marginBottom: '12px' }}>Theme de la boutique</label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '12px' }}>
-              {Object.values(THEMES).map(t => (
-                <div
-                  key={t.id}
-                  onClick={() => setTheme(t.id)}
-                  style={{
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: theme === t.id ? `2px solid ${t.colors.primary}` : '1px solid #e5e5e5',
-                    cursor: 'pointer',
-                    background: t.colors.background,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
-                    position: 'relative'
-                  }}
-                >
-                  <div style={{ display: 'flex', gap: '4px' }}>
-                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: t.colors.primary }} />
-                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: t.colors.accent }} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '13px', fontWeight: '600', color: t.colors.text }}>{t.label}</div>
-                    <div style={{ fontSize: '11px', color: t.colors.textMuted }}>{t.style}</div>
-                  </div>
-                  {theme === t.id && (
-                    <div style={{ position: 'absolute', top: '8px', right: '8px', color: t.colors.primary }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+            <label style={{ ...labelStyle, marginBottom: '10px' }}>
+              Thème de la boutique
+            </label>
+            <ThemePickerModal
+              localTheme={localTheme}
+              setLocalTheme={setLocalTheme}
+            />
           </div>
 
           {/* ── Enregistrer ── */}

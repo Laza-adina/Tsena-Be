@@ -133,14 +133,6 @@
   margin-bottom: 20px;
 }
 
-/* ── Liste contacts ── */
-.pc-contacts {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
 /* ── Bouton contact ── */
 .pc-contact-row {
   width: 100%;
@@ -161,15 +153,7 @@
 }
 
 /* reflet interne sur les boutons */
-.pc-contact-row::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 50%;
-  background: linear-gradient(180deg, rgba(255,255,255,0.10) 0%, transparent 100%);
-  border-radius: 14px 14px 0 0;
-  pointer-events: none;
-}
+/* removed reflective pseudo for contact buttons to avoid shine */
 
 .pc-contact-row:hover {
   background: var(--pc-row-hover, rgba(255, 255, 255, 0.20));

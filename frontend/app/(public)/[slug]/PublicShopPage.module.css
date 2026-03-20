@@ -2,7 +2,9 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap');
 
-/* ── Page ── */
+/* ─────────────────────────────────────────
+   PAGE
+───────────────────────────────────────── */
 .page {
   min-height: 100vh;
   font-family: 'DM Sans', 'Segoe UI', sans-serif;
@@ -10,36 +12,35 @@
   padding: 40px 36px 72px;
 }
 
-/* ── Fond thématique fixe ── */
 .bgGradient {
   position: fixed;
   inset: 0;
   z-index: -1;
 }
 
-/* ── États loading / notFound ── */
+/* ─────────────────────────────────────────
+   LOADING / NOT FOUND
+───────────────────────────────────────── */
 .centered {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  background: #f5f5f3;
+  gap: 14px;
 }
 
 .stateText {
-  color: #777;
   font-size: 14px;
   font-family: 'DM Sans', 'Segoe UI', sans-serif;
   margin: 0;
+  opacity: 0.6;
 }
 
 .spinner {
   width: 26px;
   height: 26px;
-  border: 2.5px solid rgba(0, 0, 0, 0.08);
-  border-top-color: #555;
+  border: 2.5px solid rgba(0,0,0,0.08);
   border-radius: 50%;
   animation: spin 0.75s linear infinite;
 }
@@ -47,80 +48,85 @@
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ─────────────────────────────────────────
-   LAYOUT — Profile en haut + search list
+   LAYOUT
 ───────────────────────────────────────── */
 .layout {
-  max-width: 1000px; /* Reduced since no sidebar */
+  max-width: 1200px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 32px;
-  align-items: center;
+  gap: 28px;
 }
 
-/* ── Haut profile ── */
-.topProfile {
-  width: 100%;
-  max-width: 480px;
-  display: flex;
-  justify-content: center;
+.headerStack {
+  position: relative;
+  z-index: 1;
 }
 
-.topProfile :global(.pc-wrapper) {
-  width: 100%;
-}
-
-/* ── Zone produits avec searchbar ── */
+/* ─────────────────────────────────────────
+   ZONE PRODUITS
+───────────────────────────────────────── */
 .productsArea {
-  width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
 }
 
-/* ── Barre de recherche Sticky ── */
-.searchContainer {
+/* ── Recherche ── */
+.searchWrap {
   position: sticky;
-  top: 16px;
-  z-index: 100;
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
+  top: 12px;
+  margin-bottom: 24px;
+  z-index: 5;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.4;
+  pointer-events: none;
+  display: flex;
 }
 
 .searchInput {
   width: 100%;
-  padding: 14px 20px;
-  border-radius: 9999px;
+  padding: 11px 14px 11px 38px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  outline: none;
+  box-sizing: border-box;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 15px;
-  outline: none;
-  transition: all 0.3s ease;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.searchInput:focus {
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
 }
 
 .searchInput::placeholder {
-  opacity: 0.6;
+  opacity: 0.4;
 }
 
-/* ── Titre section produits ── */
+/* ── Titre section ── */
 .sectionTitle {
   font-family: 'Syne', sans-serif;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  opacity: 0.45;
-  margin: 0;
-  text-align: center;
+  margin: 0 0 18px;
 }
 
-/* ── Grille produits ── */
+/* ── Grille ── */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
 }
 
 @media (min-width: 1280px) {
@@ -132,81 +138,210 @@
   text-align: center;
   font-size: 14px;
   padding: 80px 0;
-  opacity: 0.55;
+  opacity: 0.5;
 }
 
-/* ── Footer ── */
+/* ─────────────────────────────────────────
+   PRODUCT CARD (inline glass)
+───────────────────────────────────────── */
+.card {
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  isolation: isolate;
+  transition: transform 0.22s cubic-bezier(0.22,0.68,0,1.2), box-shadow 0.22s ease;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.5);
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 32px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+/* Reflet supérieur */
+.cardShine {
+  /* disabled visual shine */
+  display: none !important;
+}
+
+/* ── Image ── */
+.imgWrap {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+}
+
+.img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s cubic-bezier(0.22,0.68,0,1.2);
+}
+
+.card:hover .img { transform: scale(1.05); }
+
+.noImg {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  flex-direction: column;
+  gap: 6px;
+  opacity: 0.6;
+}
+
+/* ── Body ── */
+.cardBody {
+  padding: 12px 14px 36px;
+  position: relative;
+  z-index: 3;
+}
+
+.ref {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  margin: 0 0 3px;
+  opacity: 0.75;
+}
+
+.productName {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 6px;
+  line-height: 1.3;
+}
+
+/* Description expandable */
+.descWrap { margin-bottom: 9px; }
+
+.desc {
+  font-size: 12px;
+  line-height: 1.55;
+  margin: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease;
+}
+
+.descClosed {
+  max-height: 36px;
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.descOpen {
+  max-height: 400px;
+  display: block;
+}
+
+.more {
+  font-size: 10.5px;
+  display: block;
+  margin-top: 2px;
+  opacity: 0.7;
+}
+
+/* ── Prix ── */
+.price {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 12px;
+  line-height: 1;
+}
+
+.currency {
+  font-size: 11px;
+  font-weight: 400;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── Bouton WhatsApp ── */
+.btnWa {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  transition: opacity 0.18s, transform 0.1s;
+  position: relative;
+  overflow: hidden;
+}
+
+.btnWa::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.btnWa:hover  { opacity: 0.88; }
+.btnWa:active { transform: scale(0.98); }
+
+/* ── Chevron ── */
+.chevron {
+  position: absolute;
+  bottom: 11px;
+  right: 13px;
+  z-index: 4;
+  line-height: 0;
+  transition: transform 0.3s ease, color 0.2s;
+}
+
+/* ─────────────────────────────────────────
+   FOOTER
+───────────────────────────────────────── */
 .powered {
   text-align: center;
   font-size: 11px;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   margin-top: 64px;
-  opacity: 0.35;
 }
 
 /* ─────────────────────────────────────────
    RESPONSIVE
 ───────────────────────────────────────── */
 
-/* Tablette */
-@media (max-width: 860px) {
-  .page {
-    padding: 28px 22px 60px;
-  }
+@media (max-width: 1100px) {
+  .layout { padding-top: 6px; }
 }
 
-/* ─────────────────────────────────────────
-   MOBILE ≤ 640px
-   ProfileCard plein écran en haut
-   Produits en dessous, 1 colonne
-───────────────────────────────────────── */
+@media (max-width: 860px) {
+  .page   { padding: 28px 22px 60px; }
+  .layout { gap: 20px; }
+}
+
+/* ── Mobile ≤ 640px — ProfileCard hero plein écran ── */
 @media (max-width: 640px) {
+  .page   { padding: 0 0 56px; }
 
-  /* Page sans padding latéral — fullbleed */
-  .page {
-    padding: 0 0 56px;
-  }
+  .layout { gap: 0; }
 
-  .layout {
-    gap: 0;
-  }
-
-  /* ── Haut profile = hero fullscreen ── */
-  .topProfile {
-    position: static;
-    width: 100%;
-    max-width: 100%;
-  }
-
-  /* ProfileCard prend tout l'écran en hauteur */
-  .topProfile :global(.pc-wrapper) {
-    width: 100%;
-  }
-
-  .topProfile :global(.pc-card) {
-    min-height: 100svh;
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-    border-top: none;
-  }
-
-  /* Enlever le border-radius du reflet supérieur aussi */
-  .topProfile :global(.pc-card::before) {
-    border-radius: 0;
-  }
-
-  /* ── Produits : décalage avec espace aéré ── */
   .productsArea {
-    padding: 40px 16px 0;
-  }
-
-  .sectionTitle {
-    margin-bottom: 18px;
+    padding: 36px 16px 0;
   }
 
   .grid {
     grid-template-columns: 1fr;
     gap: 14px;
   }
+
+  .card { border-radius: 18px; }
 }
