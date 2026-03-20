@@ -65,7 +65,6 @@ export default function DashboardPage() {
       <style>{`
         .dash-nav-links { display: flex; align-items: center; gap: 24px; }
         .dash-hamburger { display: none; background: none; border: none; cursor: pointer; flex-direction: column; gap: 5px; padding: 4px; }
-        .dash-mobile-menu { display: none; }
         .dash-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
         .dash-quick-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
         @media (max-width: 768px) {
@@ -107,7 +106,7 @@ export default function DashboardPage() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div className="dash-mobile-menu" style={{ background: '#CCD5AE', borderBottom: '1px solid #E9EDC9', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ background: '#CCD5AE', borderBottom: '1px solid #E9EDC9', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <a href="/dashboard/produits" style={{ fontSize: '14px', color: '#3D4A2A', textDecoration: 'none' }}><span>Produits</span></a>
           <a href="/dashboard/stats" style={{ fontSize: '14px', color: '#3D4A2A', textDecoration: 'none' }}><span>Stats</span></a>
           <a href="/dashboard/profil" style={{ fontSize: '14px', color: '#3D4A2A', textDecoration: 'none' }}><span>Profil</span></a>
