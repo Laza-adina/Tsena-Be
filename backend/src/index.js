@@ -7,18 +7,31 @@ const routes  = require('./routes');
 const app  = express();
 const PORT = process.env.PORT || 3001;
 
-// CORS
-app.use(cors());
-app.options('*', cors());
+// CORS sécurisé — autorise localhost + Vercel
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://tsena-be.vercel.app',
+  process.env.FRONTEND_URL
+].filter(Boolean);
 
-// Headers manuels
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-  if (req.method === 'OPTIONS') return res.sendStatus(200);
-  next();
-});
+app.use(cors({
+  origin: (origin, callback) => {
+    // Autoriser les requêtes sans origin (Postman, mobile, Railway health check)
+    if (!origin) return callback(null, true);
+    // Autoriser tous les sous-domaines Vercel (previews inclus)
+    if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS bloqué: ${origin}`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Preflight pour toutes les routes
+app.options('*', cors());
 
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -35,7 +48,6 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Erreur interne.' });
 });
 
-// Start
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Backend running on port ${PORT}`);
 });
