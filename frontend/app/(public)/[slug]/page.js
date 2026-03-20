@@ -148,11 +148,9 @@ export default function PublicShopPage() {
       </div>
 
       {/* ── Footer ── */}
-      {!vendor.isPremium && (
-        <p style={{ textAlign: 'center', fontSize: '11px', color: T.textMuted, padding: '24px', marginTop: '16px' }}>
-          Powered by Keyros
-        </p>
-      )}
+      <p style={{ textAlign: 'center', fontSize: '11px', color: '#999', padding: '24px', marginTop: '16px' }}>
+  Powered by Tsen@be
+</p>
     </div>
   );
 }
