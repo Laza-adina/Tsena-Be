@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSession, saveSession } from '../../../../lib/auth';
 import api from '../../../../lib/api';
-import { THEMES, DEFAULT_THEME } from '../../../../lib/themes';
+import { THEMES } from '../../../../lib/themes';
 
 /* ══════════════════════════════════════════════════════════════
    ThemePickerModal
@@ -430,6 +430,7 @@ export default function ProfilPage() {
     shopName: '', description: '', whatsapp: '', facebookUrl: '', profileImageUrl: '',
   });
   const [localTheme, setLocalTheme] = useState(DEFAULT_THEME);
+  const [theme, setTheme]     = useState('minimal');
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState(false);
   const [success, setSuccess] = useState('');
@@ -445,14 +446,13 @@ export default function ProfilPage() {
     try {
       const { data } = await api.get('/auth/me');
       const u = data.user;
-      const savedTheme = localStorage.getItem('shop_theme') || DEFAULT_THEME;
-      setLocalTheme(savedTheme);
+      setTheme(u.theme || 'minimal');
       setForm({
         shopName:        u.shop_name         || '',
         description:     u.description       || '',
         whatsapp:        u.whatsapp          || '',
         facebookUrl:     u.facebook_url      || '',
-        profileImageUrl: u.profile_image_url || '',
+        profileImageUrl: u.profile_image_url || ''
       });
     } finally {
       setLoading(false);
@@ -463,9 +463,8 @@ export default function ProfilPage() {
     setError(''); setSuccess('');
     setSaving(true);
     try {
-      await api.put('/auth/profile', form);
-      localStorage.setItem('shop_theme', localTheme);
-      setSuccess('Profil mis à jour.');
+      await api.put('/auth/profile', { ...form, theme });
+      setSuccess('Profil mis a jour.');
       const session = getSession();
       saveSession(session.token, { ...session.user, shopName: form.shopName });
     } catch (err) {
@@ -509,20 +508,20 @@ export default function ProfilPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#fafafa', fontFamily: 'system-ui, sans-serif' }}>
 
-      {/* ── Navbar ── */}
-      <div style={{
-        background: '#fff', borderBottom: '1px solid #e5e5e5',
-        padding: '0 24px', display: 'flex', alignItems: 'center',
-        justifyContent: 'space-between', height: '56px',
-      }}>
-        <a href="/dashboard"
-          style={{ fontWeight: '700', fontSize: '16px', color: '#111', textDecoration: 'none' }}>
-          Keyros
+      <div style={{ background: '#fff', borderBottom: '1px solid #e5e5e5', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '56px' }}>
+        <a href="/dashboard" style={{ fontWeight: '700', fontSize: '16px', color: '#111', textDecoration: 'none' }}>
+          <span>Tsen@be</span>
         </a>
         <div style={{ display: 'flex', gap: '24px' }}>
-          <a href="/dashboard"          style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>Accueil</a>
-          <a href="/dashboard/produits" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>Produits</a>
-          <a href="/dashboard/stats"    style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>Stats</a>
+          <a href="/dashboard" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>
+            <span>Accueil</span>
+          </a>
+          <a href="/dashboard/produits" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>
+            <span>Produits</span>
+          </a>
+          <a href="/dashboard/stats" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>
+            <span>Stats</span>
+          </a>
         </div>
       </div>
 
@@ -554,43 +553,15 @@ export default function ProfilPage() {
           padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px',
         }}>
 
-          {/* Photo de profil */}
           <div>
             <label style={labelStyle}>Photo de profil</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <label style={{ cursor: 'pointer', position: 'relative', display: 'inline-block' }}>
-                {form.profileImageUrl ? (
-                  <img
-                    src={form.profileImageUrl}
-                    alt="profil"
-                    style={{
-                      width: '64px', height: '64px', borderRadius: '50%',
-                      objectFit: 'cover', border: '1px solid #e5e5e5',
-                      display: 'block'
-                    }}
-                  />
-                ) : (
-                  <div style={{
-                    width: '64px', height: '64px', borderRadius: '50%',
-                    background: '#f5f5f5', border: '1px solid #e5e5e5',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#999'
-                  }}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                      <circle cx="8.5" cy="8.5" r="1.5"/>
-                      <polyline points="21 15 16 10 5 21"/>
-                    </svg>
-                  </div>
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  style={{ display: 'none' }}
-                />
-              </label>
-              <span style={{ fontSize: '13px', color: '#777' }}>Cliquez sur l'image pour la modifier</span>
+              {form.profileImageUrl ? (
+                <img src={form.profileImageUrl} alt="profil" style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '1px solid #e5e5e5' }} />
+              ) : (
+                <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#f5f5f5', border: '1px solid #e5e5e5' }} />
+              )}
+              <input type="file" accept="image/*" onChange={handleImageUpload} style={{ fontSize: '13px', color: '#555' }} />
             </div>
           </div>
 
@@ -646,15 +617,44 @@ export default function ProfilPage() {
             />
           </div>
 
-          {/* Thème */}
+          {/* Sélection du thème */}
           <div>
-            <label style={{ ...labelStyle, marginBottom: '10px' }}>
-              Thème de la boutique
-            </label>
-            <ThemePickerModal
-              localTheme={localTheme}
-              setLocalTheme={setLocalTheme}
-            />
+            <label style={{ ...labelStyle, marginBottom: '12px' }}>Theme de la boutique</label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '12px' }}>
+              {Object.values(THEMES).map(t => (
+                <div
+                  key={t.id}
+                  onClick={() => setTheme(t.id)}
+                  style={{
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: theme === t.id ? `2px solid ${t.colors.primary}` : '1px solid #e5e5e5',
+                    cursor: 'pointer',
+                    background: t.colors.background,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    position: 'relative'
+                  }}
+                >
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: t.colors.primary }} />
+                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: t.colors.accent }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: '600', color: t.colors.text }}>{t.label}</div>
+                    <div style={{ fontSize: '11px', color: t.colors.textMuted }}>{t.style}</div>
+                  </div>
+                  {theme === t.id && (
+                    <div style={{ position: 'absolute', top: '8px', right: '8px', color: t.colors.primary }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Sauvegarder */}

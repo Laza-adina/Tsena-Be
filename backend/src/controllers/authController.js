@@ -101,8 +101,9 @@ exports.getMe = async (req, res) => {
   try {
     const { data: user } = await db
       .from('users')
-      .select('id, email, shop_name, shop_slug, description, profile_image_url, whatsapp, facebook_url, plan, plan_expires_at')
+      .select('id, email, shop_name, shop_slug, description, profile_image_url, whatsapp, facebook_url, plan, plan_expires_at, theme')
       .eq('id', req.user.id).single();
+      
 
     if (!user) return res.status(404).json({ error: 'Utilisateur introuvable.' });
     res.json({ user });
@@ -120,6 +121,7 @@ exports.updateProfile = async (req, res) => {
     if (whatsapp !== undefined)    updates.whatsapp = whatsapp;
     if (facebookUrl !== undefined) updates.facebook_url = facebookUrl;
     if (profileImageUrl !== undefined) updates.profile_image_url = profileImageUrl;
+    if (req.body.theme !== undefined) updates.theme = req.body.theme;
 
     const { data: user, error } = await db
       .from('users').update(updates).eq('id', req.user.id)

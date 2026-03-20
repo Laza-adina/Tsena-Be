@@ -2,35 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import ProductCard from '../../../components/ProductCard';
-import { THEMES, DEFAULT_THEME } from '../../../lib/themes';
 import api from '../../../lib/api';
-import styles from './PublicShopPage.module.css';
-import ProfileCard from '../../../components/ProfileCard';
-
-const hexToRgb = (hex) => {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `${r}, ${g}, ${b}`;
-};
+import { THEMES } from '../../../lib/themes';
 
 export default function PublicShopPage() {
-  const { slug }            = useParams();
-  const [vendor, setVendor] = useState(null);
+  const { slug }                = useParams();
+  const [vendor, setVendor]     = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [localTheme, setLocalTheme] = useState(null);
 
   useEffect(() => {
-    // Récupérer le thème stocké localement dès le montage côté cleint
-    const savedTheme = localStorage.getItem('shop_theme');
-    if (savedTheme && THEMES[savedTheme]) {
-      setLocalTheme(savedTheme);
-    }
-    
     const fetchShop = async () => {
       try {
         const { data } = await api.get(`/public/${slug}`);
@@ -45,114 +27,203 @@ export default function PublicShopPage() {
     fetchShop();
   }, [slug]);
 
-  const activeThemeId = localTheme || vendor?.theme || DEFAULT_THEME;
-  const theme = THEMES[activeThemeId] ?? THEMES[DEFAULT_THEME];
-  const c     = theme?.colors ?? THEMES[DEFAULT_THEME].colors;
-
-  // Calcul du focus color pour la barre de recherche via l'opacité (fallback : texte)
-  const isDarkSearch = c.surface && c.surface.includes('rgba(255') ? false : true;
-  
-  const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (p.description && p.description.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
-
   if (loading) return (
-    <div className={styles.centered}>
-      <div className={styles.spinner} />
-      <p className={styles.stateText}>Chargement...</p>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafafa' }}>
+      <p style={{ color: '#999', fontSize: '14px', fontFamily: 'system-ui, sans-serif' }}>Chargement...</p>
     </div>
   );
 
   if (notFound) return (
-    <div className={styles.centered}>
-      <p className={styles.stateText}>Boutique introuvable.</p>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafafa' }}>
+      <p style={{ color: '#999', fontSize: '14px', fontFamily: 'system-ui, sans-serif' }}>Boutique introuvable.</p>
     </div>
   );
 
+  const themeKey = vendor.theme || 'dark_premium';
+  const T = THEMES[themeKey]?.colors || THEMES['dark_premium'].colors;
+
+  const trackWhatsapp = async (productId) => {
+    try {
+      await api.post(`/public/${slug}/track`, { productId });
+    } catch {}
+  };
+
   return (
-    <div className={styles.page}>
+    <div style={{ minHeight: '100vh', background: T.background, fontFamily: 'system-ui, sans-serif' }}>
 
-      {/* ── Fond thématique ── */}
-      <div className={styles.bgGradient} style={{ background: c.background }} />
+      {/* Header */}
+      <div style={{ background: T.surface, borderBottom: `1px solid ${T.primary}22`, padding: '32px 16px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '480px', margin: '0 auto' }}>
 
-      {/* ── Layout principal ── */}
-      <div className={styles.layout}>
+          {vendor.profileImageUrl && (
+            <img
+              src={vendor.profileImageUrl}
+              alt={vendor.shopName}
+              style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                objectFit: 'cover',
+                marginBottom: '12px',
+                border: `2px solid ${T.primary}`
+              }}
+            />
+          )}
 
-        {/* ════ HAUT — ProfileCard ════ */}
-        <header className={styles.topProfile}>
-          <ProfileCard
-            name={vendor.shopName}
-            description={vendor.description || ''}
-            whatsapp={vendor.whatsapp || ''}
-            facebook={vendor.facebook || ''}
-            avatarUrl={vendor.profileImageUrl || ''}
-            enableTilt={false}
-            enableMobileTilt={false}
-            themeColors={c}
-            glowColor={`rgba(${hexToRgb(c.primary)}, 0.55)`}
-          />
-        </header>
+          <h1 style={{ fontSize: '22px', fontWeight: '700', color: T.text, margin: '0 0 8px' }}>
+            {vendor.shopName}
+          </h1>
 
-        {/* ════ PRODUITS AVEC SEARCH ════ */}
-        <div className={styles.productsArea}>
-          
-          {/* SEARCH BAR FIXED */}
-          {products.length > 0 && (
-            <div className={styles.searchContainer}>
-              <input 
-                type="text" 
-                placeholder="Rechercher un produit..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={styles.searchInput}
+          {vendor.description && (
+            <p style={{ fontSize: '14px', color: T.textMuted, margin: '0 0 16px', lineHeight: '1.6' }}>
+              {vendor.description}
+            </p>
+          )}
+
+          {/* Contact */}
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+
+            {vendor.whatsapp && (
+              <a
+                href={`https://wa.me/${vendor.whatsapp}`}
+                rel="noreferrer"
+                target="_blank"
                 style={{
-                  background: c.surface,
-                  color: c.text,
-                  border: `1px solid ${c.primary}40`, /* 40 pour ~25% opacité hex */
-                  boxShadow: `0 4px 16px rgba(0,0,0,0.1)`,
+                  padding: '8px 18px',
+                  background: T.btn,
+                  color: T.btnText,
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  textDecoration: 'none',
+                  display: 'inline-block'
                 }}
-                onFocus={(e) => {
-                  e.target.style.border = `1px solid ${c.primary}`;
-                  e.target.style.boxShadow = `0 6px 20px rgba(0,0,0,0.15)`;
-                }}
-                onBlur={(e) => {
-                  e.target.style.border = `1px solid ${c.primary}40`;
-                  e.target.style.boxShadow = `0 4px 16px rgba(0,0,0,0.1)`;
-                }}
-              />
-            </div>
-          )}
+              >
+                WhatsApp
+              </a>
+            )}
 
-          {products.length > 0 && (
-            <p className={styles.sectionTitle} style={{ color: c.text }}>
-              Produits · {filteredProducts.length}
-            </p>
-          )}
-
-          {products.length === 0 ? (
-            <p className={styles.emptyText} style={{ color: c.textMuted }}>
-              Aucun produit disponible pour le moment.
-            </p>
-          ) : filteredProducts.length === 0 ? (
-            <p className={styles.emptyText} style={{ color: c.textMuted }}>
-              Aucun produit ne correspond à votre recherche.
-            </p>
-          ) : (
-            <div className={styles.grid}>
-              {filteredProducts.map(product => (
-                <ProductCard key={product.id} product={product} theme={theme} />
-              ))}
-            </div>
-          )}
+            {vendor.facebookUrl && (
+              <a
+                href={vendor.facebookUrl}
+                rel="noreferrer"
+                target="_blank"
+                style={{
+                  padding: '8px 18px',
+                  background: 'transparent',
+                  color: T.primary,
+                  border: `1px solid ${T.primary}`,
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  textDecoration: 'none',
+                  display: 'inline-block'
+                }}
+              >
+                Facebook
+              </a>
+            )}
+          </div>
         </div>
-
       </div>
 
-      {/* ── Footer ── */}
+      {/* Produits */}
+      <div style={{ maxWidth: '480px', margin: '0 auto', padding: '24px 16px' }}>
+
+        {products.length === 0 ? (
+          <p style={{ textAlign: 'center', color: T.textMuted, fontSize: '14px', marginTop: '48px' }}>
+            Aucun produit disponible pour le moment.
+          </p>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            {products.map(product => (
+              <div
+                key={product.id}
+                style={{
+                  background: T.surface,
+                  border: `1px solid ${T.primary}22`,
+                  borderRadius: '10px',
+                  overflow: 'hidden'
+                }}
+              >
+                {product.image_url ? (
+                  <img
+                    src={product.image_url}
+                    alt={product.name}
+                    style={{
+                      width: '100%',
+                      aspectRatio: '1/1',
+                      objectFit: 'cover',
+                      display: 'block'
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: '100%',
+                      aspectRatio: '1/1',
+                      background: `${T.primary}22`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <span style={{ fontSize: '11px', color: T.textMuted }}>Pas d'image</span>
+                  </div>
+                )}
+
+                <div style={{ padding: '10px' }}>
+                  <p style={{ fontSize: '11px', color: T.textMuted, margin: '0 0 3px' }}>
+                    {product.reference}
+                  </p>
+                  <p style={{ fontSize: '14px', fontWeight: '600', color: T.text, margin: '0 0 4px' }}>
+                    {product.name}
+                  </p>
+
+                  {product.description && (
+                    <p style={{ fontSize: '12px', color: T.textMuted, margin: '0 0 6px', lineHeight: '1.4' }}>
+                      {product.description}
+                    </p>
+                  )}
+
+                  <p style={{ fontSize: '15px', fontWeight: '700', color: T.accent, margin: '0 0 10px' }}>
+                    {product.price.toLocaleString()} Ar
+                  </p>
+
+                  {vendor.whatsapp && product.whatsappLink && (
+                    <a
+                      href={product.whatsappLink}
+                      rel="noreferrer"
+                      target="_blank"
+                      onClick={() => trackWhatsapp(product.id)}
+                      style={{
+                        display: 'block',
+                        width: '100%',
+                        padding: '9px 0',
+                        background: T.btn,
+                        color: T.btnText,
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        textAlign: 'center',
+                        textDecoration: 'none',
+                        boxSizing: 'border-box'
+                      }}
+                    >
+                      Commander via WhatsApp
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
       {!vendor.isPremium && (
-        <p className={styles.powered} style={{ color: `rgba(${hexToRgb(c.text)}, 0.35)` }}>
-          Powered by Keyros
+        <p style={{ textAlign: 'center', fontSize: '11px', color: T.textMuted, padding: '24px', marginTop: '16px' }}>
+          Powered by Tsen@be
         </p>
       )}
     </div>

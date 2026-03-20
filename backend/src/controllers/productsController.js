@@ -166,11 +166,11 @@ exports.getPublicShop = async (req, res) => {
     const { slug } = req.params;
 
     const { data: vendor } = await db
-      .from('users')
-      .select('id, shop_name, shop_slug, description, profile_image_url, whatsapp, facebook_url, plan')
-      .eq('shop_slug', slug)
-      .eq('is_active', true)
-      .maybeSingle();
+    .from('users')
+    .select('id, shop_name, shop_slug, description, profile_image_url, whatsapp, facebook_url, plan, theme')
+    .eq('shop_slug', slug)
+    .eq('is_active', true)
+    .maybeSingle();
 
     if (!vendor) return res.status(404).json({ error: 'Boutique introuvable.' });
 
@@ -193,16 +193,17 @@ exports.getPublicShop = async (req, res) => {
     db.from('page_views').insert([{ user_id: vendor.id, event_type: 'page_view' }])
       .then(() => {}).catch(() => {});
 
-    res.json({
-      vendor: {
-        shopName:        vendor.shop_name,
-        shopSlug:        vendor.shop_slug,
-        description:     vendor.description,
-        profileImageUrl: vendor.profile_image_url,
-        whatsapp:        vendor.whatsapp,
-        facebookUrl:     vendor.facebook_url,
-        isPremium:       vendor.plan === 'premium'
-      },
+      res.json({
+        vendor: {
+          shopName:        vendor.shop_name,
+          shopSlug:        vendor.shop_slug,
+          description:     vendor.description,
+          profileImageUrl: vendor.profile_image_url,
+          whatsapp:        vendor.whatsapp,
+          facebookUrl:     vendor.facebook_url,
+          isPremium:       vendor.plan === 'premium',
+          theme:           vendor.theme || 'dark_premium'
+        },
       products: productsWithLinks
     });
   } catch (err) {
