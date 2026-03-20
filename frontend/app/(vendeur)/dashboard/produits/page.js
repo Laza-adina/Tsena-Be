@@ -8,6 +8,7 @@ import api from '../../../../lib/api';
 export default function ProduitsPage() {
   const router = useRouter();
   const [products, setProducts]   = useState([]);
+  const [search, setSearch] = useState('');
   const [loading, setLoading]     = useState(true);
   const [showForm, setShowForm]   = useState(false);
   const [editing, setEditing]     = useState(null);
@@ -18,14 +19,22 @@ export default function ProduitsPage() {
   });
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchProducts(search);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
     const session = getSession();
     if (!session) { router.push('/login'); return; }
     fetchProducts();
   }, []);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (searchTerm = '') => {
     try {
-      const { data } = await api.get('/products');
+      const params = searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : '';
+      const { data } = await api.get(`/products${params}`);
       setProducts(data.products);
     } finally {
       setLoading(false);
@@ -149,6 +158,17 @@ export default function ProduitsPage() {
           >
             Ajouter un produit
           </button>
+        </div>
+
+        {/* Barre de recherche */}
+        <div style={{ marginBottom: '16px' }}>
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Rechercher par nom ou reference..."
+            style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e5e5', borderRadius: '6px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
+          />
         </div>
 
         {/* Formulaire ajout/modif */}

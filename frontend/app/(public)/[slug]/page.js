@@ -11,21 +11,33 @@ export default function PublicShopPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [search, setSearch]     = useState('');
+
+  const fetchShop = async (searchTerm = '') => {
+    try {
+      const params = searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : '';
+      const { data } = await api.get(`/public/${slug}${params}`);
+      setVendor(data.vendor);
+      setProducts(data.products);
+    } catch {
+      setNotFound(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchShop = async () => {
-      try {
-        const { data } = await api.get(`/public/${slug}`);
-        setVendor(data.vendor);
-        setProducts(data.products);
-      } catch {
-        setNotFound(true);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (!slug) return;
     fetchShop();
   }, [slug]);
+
+  useEffect(() => {
+    if (!slug || loading) return;
+    const timer = setTimeout(() => {
+      fetchShop(search);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafafa' }}>
@@ -126,6 +138,28 @@ export default function PublicShopPage() {
           </div>
         </div>
       </div>
+
+      {/* Recherche */}
+          <div style={{ marginBottom: '16px' }}>
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Rechercher un produit..."
+              style={{
+                width: '100%',
+                padding: '10px 14px',
+                border: `1px solid ${T.primary}44`,
+                borderRadius: '8px',
+                fontSize: '14px',
+                outline: 'none',
+                boxSizing: 'border-box',
+                background: T.surface,
+                color: T.text,
+                fontFamily: 'system-ui, sans-serif'
+              }}
+            />
+          </div>
 
       {/* Produits */}
       <div style={{ maxWidth: '480px', margin: '0 auto', padding: '24px 16px' }}>

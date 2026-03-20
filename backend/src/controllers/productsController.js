@@ -17,13 +17,20 @@ const buildWhatsappLink = (whatsapp, productRef, productName) => {
 // ─── GET /api/products ─────────────────────────────────────
 exports.getMyProducts = async (req, res) => {
   try {
-    const { data: products, error } = await db
+    const { search } = req.query;
+
+    let query = db
       .from('products')
       .select('*')
       .eq('user_id', req.user.id)
       .order('display_order', { ascending: true })
       .order('created_at', { ascending: false });
 
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,reference.ilike.%${search}%,description.ilike.%${search}%`);
+    }
+
+    const { data: products, error } = await query;
     if (error) throw error;
     res.json({ products });
   } catch {
@@ -174,12 +181,20 @@ exports.getPublicShop = async (req, res) => {
 
     if (!vendor) return res.status(404).json({ error: 'Boutique introuvable.' });
 
-    const { data: products } = await db
-      .from('products')
-      .select('id, reference, name, description, price, image_url, display_order')
-      .eq('user_id', vendor.id)
-      .eq('is_available', true)
-      .order('display_order', { ascending: true });
+    const { search } = req.query;
+
+let productsQuery = db
+  .from('products')
+  .select('id, reference, name, description, price, image_url, display_order')
+  .eq('user_id', vendor.id)
+  .eq('is_available', true)
+  .order('display_order', { ascending: true });
+
+if (search) {
+  productsQuery = productsQuery.or(`name.ilike.%${search}%,reference.ilike.%${search}%`);
+}
+
+const { data: products } = await productsQuery;
 
     // Ajouter le lien WhatsApp pré-rempli sur chaque produit
     const productsWithLinks = (products || []).map(p => ({
