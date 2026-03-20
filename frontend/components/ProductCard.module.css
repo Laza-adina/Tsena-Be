@@ -16,11 +16,8 @@
   background: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(28px) saturate(160%);
   -webkit-backdrop-filter: blur(28px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.10),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.2);
+  border: 1px solid transparent;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.10);
 
   transition:
     transform 0.25s cubic-bezier(0.22, 0.68, 0, 1.2),
@@ -31,43 +28,14 @@
 .card:hover {
   transform: translateY(-3px);
   background: rgba(255, 255, 255, 0.65);
-  box-shadow:
-    0 16px 48px rgba(0, 0, 0, 0.13),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.25);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.13);
 }
 
 .cardExpanded {
   background: rgba(255, 255, 255, 0.68);
 }
 
-/* ── Reflet de lumière haut ── */
-.glassShine {
-  pointer-events: none;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 52%;
-  background: linear-gradient(
-    175deg,
-    rgba(255, 255, 255, 0.45) 0%,
-    rgba(255, 255, 255, 0.08) 55%,
-    transparent 100%
-  );
-  border-radius: 24px 24px 60% 60% / 24px 24px 40% 40%;
-  z-index: 2;
-}
-
-/* ── Liseré brillant sur les bords ── */
-.glassEdge {
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  z-index: 3;
-}
+/* Les reflets de lumières ont été retirés pour préserver le rendu sur des thèmes sombres */
 
 /* ─────────────────────────────────────────
    IMAGE
@@ -242,28 +210,13 @@
 @media (prefers-color-scheme: dark) {
   .card {
     background: rgba(20, 20, 30, 0.50);
-    border-color: rgba(255, 255, 255, 0.12);
-    box-shadow:
-      0 8px 32px rgba(0, 0, 0, 0.35),
-      inset 0 1px 0 rgba(255, 255, 255, 0.18),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+    border-color: transparent;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
   }
 
   .card:hover {
     background: rgba(30, 30, 45, 0.60);
-    box-shadow:
-      0 16px 48px rgba(0, 0, 0, 0.45),
-      inset 0 1px 0 rgba(255, 255, 255, 0.22),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.07);
-  }
-
-  .glassShine {
-    background: linear-gradient(
-      175deg,
-      rgba(255, 255, 255, 0.1) 0%,
-      rgba(255, 255, 255, 0.02) 55%,
-      transparent 100%
-    );
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
   }
 
   .name,

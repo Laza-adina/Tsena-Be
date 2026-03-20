@@ -1,16 +1,16 @@
 /* PublicShopPage.module.css */
 
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap');
+
 /* ── Page ── */
 .page {
   min-height: 100vh;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 32px 24px 48px;
   font-family: 'DM Sans', 'Segoe UI', sans-serif;
   position: relative;
+  padding: 40px 36px 72px;
 }
 
-/* ── Fond thématique ── */
+/* ── Fond thématique fixe ── */
 .bgGradient {
   position: fixed;
   inset: 0;
@@ -25,177 +25,188 @@
   align-items: center;
   justify-content: center;
   gap: 16px;
-  background: #f5f5f5;
+  background: #f5f5f3;
 }
 
 .stateText {
-  color: #666;
+  color: #777;
   font-size: 14px;
   font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  margin: 0;
 }
 
 .spinner {
-  width: 28px;
-  height: 28px;
-  border: 2.5px solid rgba(0, 0, 0, 0.1);
+  width: 26px;
+  height: 26px;
+  border: 2.5px solid rgba(0, 0, 0, 0.08);
   border-top-color: #555;
   border-radius: 50%;
   animation: spin 0.75s linear infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── Header ── */
-.header {
+/* ─────────────────────────────────────────
+   LAYOUT — Profile en haut + search list
+───────────────────────────────────────── */
+.layout {
+  max-width: 1000px; /* Reduced since no sidebar */
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
+  gap: 32px;
   align-items: center;
-  text-align: center;
-  margin-bottom: 28px;
 }
 
-.avatarWrap {
-  width: 90px;
-  height: 90px;
-  border-radius: 50%;
-  padding: 3px;
-  margin-bottom: 14px;
-  flex-shrink: 0;
-}
-
-.avatar {
+/* ── Haut profile ── */
+.topProfile {
   width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  object-fit: cover;
-  display: block;
-}
-
-.shopName {
-  font-size: 22px;
-  font-weight: 700;
-  margin: 0 0 8px;
-  line-height: 1.2;
-}
-
-.shopDesc {
-  font-size: 14px;
-  margin: 0 0 18px;
-  max-width: 400px;
-  line-height: 1.6;
-}
-
-/* ── Boutons sociaux ── */
-.socialRow {
+  max-width: 480px;
   display: flex;
-  gap: 10px;
   justify-content: center;
-  flex-wrap: wrap;
 }
 
-.socialBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 18px;
-  border-radius: 8px;
+.topProfile :global(.pc-wrapper) {
+  width: 100%;
+}
+
+/* ── Zone produits avec searchbar ── */
+.productsArea {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── Barre de recherche Sticky ── */
+.searchContainer {
+  position: sticky;
+  top: 16px;
+  z-index: 100;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: 9999px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.searchInput::placeholder {
+  opacity: 0.6;
+}
+
+/* ── Titre section produits ── */
+.sectionTitle {
+  font-family: 'Syne', sans-serif;
   font-size: 13px;
-  font-weight: 500;
-  text-decoration: none;
-  border: 1.5px solid transparent;
-  transition: background 0.18s, transform 0.12s;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.socialBtn:active {
-  transform: scale(0.97);
-}
-
-.socialBtnWa {
-  background: rgba(255, 255, 255, 0.35);
-  border-color: rgba(255, 255, 255, 0.55);
-}
-
-.socialBtnWa:hover {
-  background: rgba(255, 255, 255, 0.55);
-}
-
-/* ── Séparateur ── */
-.divider {
-  height: 1px;
-  margin-bottom: 28px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.45;
+  margin: 0;
+  text-align: center;
 }
 
 /* ── Grille produits ── */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+@media (min-width: 1280px) {
+  .grid { grid-template-columns: repeat(3, 1fr); }
 }
 
 /* ── Empty ── */
 .emptyText {
   text-align: center;
   font-size: 14px;
-  padding: 40px 0;
+  padding: 80px 0;
+  opacity: 0.55;
 }
 
 /* ── Footer ── */
 .powered {
   text-align: center;
   font-size: 11px;
-  margin-top: 48px;
+  letter-spacing: 0.06em;
+  margin-top: 64px;
+  opacity: 0.35;
 }
 
 /* ─────────────────────────────────────────
    RESPONSIVE
 ───────────────────────────────────────── */
 
-/* Large desktop : max 4 colonnes */
-@media (min-width: 1200px) {
-  .grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-/* Desktop standard : 3 colonnes */
-@media (max-width: 1199px) and (min-width: 769px) {
-  .grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-/* Tablette : 2 colonnes */
-@media (max-width: 768px) and (min-width: 481px) {
-  .grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
+/* Tablette */
+@media (max-width: 860px) {
   .page {
-    padding: 28px 18px 40px;
+    padding: 28px 22px 60px;
   }
 }
 
-/* Mobile : 1 seule colonne */
-@media (max-width: 480px) {
+/* ─────────────────────────────────────────
+   MOBILE ≤ 640px
+   ProfileCard plein écran en haut
+   Produits en dessous, 1 colonne
+───────────────────────────────────────── */
+@media (max-width: 640px) {
+
+  /* Page sans padding latéral — fullbleed */
   .page {
-    padding: 20px 14px 36px;
+    padding: 0 0 56px;
+  }
+
+  .layout {
+    gap: 0;
+  }
+
+  /* ── Haut profile = hero fullscreen ── */
+  .topProfile {
+    position: static;
+    width: 100%;
     max-width: 100%;
+  }
+
+  /* ProfileCard prend tout l'écran en hauteur */
+  .topProfile :global(.pc-wrapper) {
+    width: 100%;
+  }
+
+  .topProfile :global(.pc-card) {
+    min-height: 100svh;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+  }
+
+  /* Enlever le border-radius du reflet supérieur aussi */
+  .topProfile :global(.pc-card::before) {
+    border-radius: 0;
+  }
+
+  /* ── Produits : décalage avec espace aéré ── */
+  .productsArea {
+    padding: 40px 16px 0;
+  }
+
+  .sectionTitle {
+    margin-bottom: 18px;
   }
 
   .grid {
     grid-template-columns: 1fr;
     gap: 14px;
-  }
-
-  .shopName {
-    font-size: 19px;
-  }
-
-  .shopDesc {
-    font-size: 13px;
   }
 }

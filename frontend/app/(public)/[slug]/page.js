@@ -6,6 +6,7 @@ import ProductCard from '../../../components/ProductCard';
 import { THEMES, DEFAULT_THEME } from '../../../lib/themes';
 import api from '../../../lib/api';
 import styles from './PublicShopPage.module.css';
+import ProfileCard from '../../../components/ProfileCard';
 
 const hexToRgb = (hex) => {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -20,8 +21,16 @@ export default function PublicShopPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [localTheme, setLocalTheme] = useState(null);
 
   useEffect(() => {
+    // Récupérer le thème stocké localement dès le montage côté cleint
+    const savedTheme = localStorage.getItem('shop_theme');
+    if (savedTheme && THEMES[savedTheme]) {
+      setLocalTheme(savedTheme);
+    }
+    
     const fetchShop = async () => {
       try {
         const { data } = await api.get(`/public/${slug}`);
@@ -36,8 +45,17 @@ export default function PublicShopPage() {
     fetchShop();
   }, [slug]);
 
-  const theme = THEMES[vendor?.theme] ?? THEMES[DEFAULT_THEME];
+  const activeThemeId = localTheme || vendor?.theme || DEFAULT_THEME;
+  const theme = THEMES[activeThemeId] ?? THEMES[DEFAULT_THEME];
   const c     = theme?.colors ?? THEMES[DEFAULT_THEME].colors;
+
+  // Calcul du focus color pour la barre de recherche via l'opacité (fallback : texte)
+  const isDarkSearch = c.surface && c.surface.includes('rgba(255') ? false : true;
+  
+  const filteredProducts = products.filter(p =>
+    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (p.description && p.description.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   if (loading) return (
     <div className={styles.centered}>
@@ -56,108 +74,84 @@ export default function PublicShopPage() {
     <div className={styles.page}>
 
       {/* ── Fond thématique ── */}
-      <div
-        className={styles.bgGradient}
-        style={{ background: c.background }}
-      />
+      <div className={styles.bgGradient} style={{ background: c.background }} />
 
-      {/* ── Header vendeur ── */}
-      <div className={styles.header}>
+      {/* ── Layout principal ── */}
+      <div className={styles.layout}>
 
-        {vendor.profileImageUrl && (
-          <div
-            className={styles.avatarWrap}
-            style={{ background: `linear-gradient(135deg, ${c.accent}, ${c.primary})` }}
-          >
-            <img
-              src={vendor.profileImageUrl}
-              alt={vendor.shopName}
-              className={styles.avatar}
-              style={{ border: `3px solid ${c.background}` }}
-            />
-          </div>
-        )}
+        {/* ════ HAUT — ProfileCard ════ */}
+        <header className={styles.topProfile}>
+          <ProfileCard
+            name={vendor.shopName}
+            description={vendor.description || ''}
+            whatsapp={vendor.whatsapp || ''}
+            facebook={vendor.facebook || ''}
+            avatarUrl={vendor.profileImageUrl || ''}
+            enableTilt={true}
+            enableMobileTilt={false}
+            themeColors={c}
+            glowColor={`rgba(${hexToRgb(c.primary)}, 0.55)`}
+          />
+        </header>
 
-        <h1
-          className={styles.shopName}
-          style={{ color: c.text }}
-        >
-          {vendor.shopName}
-        </h1>
-
-        {vendor.description && (
-          <p
-            className={styles.shopDesc}
-            style={{ color: c.textMuted }}
-          >
-            {vendor.description}
-          </p>
-        )}
-
-        <div className={styles.socialRow}>
-          {vendor.whatsapp && (
-            <a
-              href={`https://wa.me/${vendor.whatsapp}`}
-              rel="noreferrer"
-              target="_blank"
-              className={`${styles.socialBtn} ${styles.socialBtnWa}`}
-              style={{ color: c.text }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                <path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.558 4.115 1.535 5.843L.057 24l6.305-1.654A11.954 11.954 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.823 9.823 0 0 1-5.001-1.366l-.359-.213-3.722.976.995-3.633-.234-.374A9.818 9.818 0 0 1 2.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/>
-              </svg>
-              WhatsApp
-            </a>
+        {/* ════ PRODUITS AVEC SEARCH ════ */}
+        <div className={styles.productsArea}>
+          
+          {/* SEARCH BAR FIXED */}
+          {products.length > 0 && (
+            <div className={styles.searchContainer}>
+              <input 
+                type="text" 
+                placeholder="Rechercher un produit..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={styles.searchInput}
+                style={{
+                  background: c.surface,
+                  color: c.text,
+                  border: `1px solid ${c.primary}40`, /* 40 pour ~25% opacité hex */
+                  boxShadow: `0 4px 16px rgba(0,0,0,0.1)`,
+                }}
+                onFocus={(e) => {
+                  e.target.style.border = `1px solid ${c.primary}`;
+                  e.target.style.boxShadow = `0 6px 20px rgba(0,0,0,0.15)`;
+                }}
+                onBlur={(e) => {
+                  e.target.style.border = `1px solid ${c.primary}40`;
+                  e.target.style.boxShadow = `0 4px 16px rgba(0,0,0,0.1)`;
+                }}
+              />
+            </div>
           )}
-          {vendor.facebook && (
-            <a
-              href={vendor.facebook}
-              rel="noreferrer"
-              target="_blank"
-              className={`${styles.socialBtn} ${styles.socialBtnFb}`}
-              style={{
-                background: `rgba(${hexToRgb(c.primary)}, 0.15)`,
-                borderColor: `rgba(${hexToRgb(c.primary)}, 0.35)`,
-                color: c.primary,
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.235 2.686.235v2.97h-1.513c-1.491 0-1.956.93-1.956 1.886v2.269h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/>
-              </svg>
-              Facebook
-            </a>
+
+          {products.length > 0 && (
+            <p className={styles.sectionTitle} style={{ color: c.text }}>
+              Produits · {filteredProducts.length}
+            </p>
+          )}
+
+          {products.length === 0 ? (
+            <p className={styles.emptyText} style={{ color: c.textMuted }}>
+              Aucun produit disponible pour le moment.
+            </p>
+          ) : filteredProducts.length === 0 ? (
+            <p className={styles.emptyText} style={{ color: c.textMuted }}>
+              Aucun produit ne correspond à votre recherche.
+            </p>
+          ) : (
+            <div className={styles.grid}>
+              {filteredProducts.map(product => (
+                <ProductCard key={product.id} product={product} theme={theme} />
+              ))}
+            </div>
           )}
         </div>
+
       </div>
-
-      {/* ── Séparateur ── */}
-      <div
-        className={styles.divider}
-        style={{
-          background: `linear-gradient(90deg, transparent, rgba(${hexToRgb(c.primary)}, 0.25), transparent)`,
-        }}
-      />
-
-      {/* ── Grille produits ── */}
-      {products.length === 0 ? (
-        <p className={styles.emptyText} style={{ color: c.textMuted }}>
-          Aucun produit disponible pour le moment.
-        </p>
-      ) : (
-        <div className={styles.grid}>
-          {products.map(product => (
-            <ProductCard key={product.id} product={product} theme={theme} />
-          ))}
-        </div>
-      )}
 
       {/* ── Footer ── */}
       {!vendor.isPremium && (
-        <p
-          className={styles.powered}
-          style={{ color: `rgba(${hexToRgb(c.text)}, 0.35)` }}
-        >
+        <p className={styles.powered} style={{ color: `rgba(${hexToRgb(c.text)}, 0.35)` }}>
           Powered by Keyros
         </p>
       )}

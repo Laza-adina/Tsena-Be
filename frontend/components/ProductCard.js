@@ -37,38 +37,19 @@ const ProductCard = ({ product, theme }) => {
         background: c.surface,
         backdropFilter: 'blur(28px) saturate(160%)',
         WebkitBackdropFilter: 'blur(28px) saturate(160%)',
-        border: `1px solid rgba(255,255,255,0.55)`,
-        boxShadow: `0 4px 24px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.80)`,
+        border: `1px solid transparent`,
+        boxShadow: `0 4px 24px rgba(0,0,0,0.10)`,
         transition: 'transform 0.25s cubic-bezier(0.22,0.68,0,1.2), box-shadow 0.25s ease',
       }}
       onMouseEnter={e => {
         e.currentTarget.style.transform = 'translateY(-3px)';
-        e.currentTarget.style.boxShadow = `0 12px 36px rgba(0,0,0,0.14), inset 0 1px 0 rgba(255,255,255,0.9)`;
+        e.currentTarget.style.boxShadow = `0 12px 36px rgba(0,0,0,0.14)`;
       }}
       onMouseLeave={e => {
         e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = `0 4px 24px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.80)`;
+        e.currentTarget.style.boxShadow = `0 4px 24px rgba(0,0,0,0.10)`;
       }}
     >
-      {/* Reflet glass */}
-      <div style={{
-        pointerEvents: 'none',
-        position: 'absolute',
-        top: 0, left: 0, right: 0,
-        height: '50%',
-        background: 'linear-gradient(175deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.06) 55%, transparent 100%)',
-        borderRadius: '20px 20px 60% 60% / 20px 20px 40% 40%',
-        zIndex: 2,
-      }} />
-      <div style={{
-        pointerEvents: 'none',
-        position: 'absolute',
-        inset: 0,
-        borderRadius: '20px',
-        border: '1px solid rgba(255,255,255,0.30)',
-        zIndex: 3,
-      }} />
-
       {/* Image */}
       {product.image_url ? (
         <div style={{ width: '100%', aspectRatio: '1/1', overflow: 'hidden', background: 'rgba(0,0,0,0.04)' }}>

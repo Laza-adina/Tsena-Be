@@ -4,10 +4,12 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSession, saveSession } from '../../../../lib/auth';
 import api from '../../../../lib/api';
+import { THEMES, DEFAULT_THEME } from '../../../../lib/themes';
 
 export default function ProfilPage() {
   const router = useRouter();
   const [form, setForm]       = useState({ shopName: '', description: '', whatsapp: '', facebookUrl: '', profileImageUrl: '' });
+  const [localTheme, setLocalTheme] = useState(DEFAULT_THEME);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving]   = useState(false);
   const [success, setSuccess] = useState('');
@@ -23,12 +25,15 @@ export default function ProfilPage() {
     try {
       const { data } = await api.get('/auth/me');
       const u = data.user;
+      const savedTheme = localStorage.getItem('shop_theme') || DEFAULT_THEME;
+      setLocalTheme(savedTheme);
+      
       setForm({
         shopName:        u.shop_name        || '',
         description:     u.description      || '',
         whatsapp:        u.whatsapp         || '',
         facebookUrl:     u.facebook_url     || '',
-        profileImageUrl: u.profile_image_url || ''
+        profileImageUrl: u.profile_image_url || '',
       });
     } finally {
       setLoading(false);
@@ -39,7 +44,11 @@ export default function ProfilPage() {
     setError(''); setSuccess('');
     setSaving(true);
     try {
+      // On sauvegarde le profil en DB
       const { data } = await api.put('/auth/profile', form);
+      // On sauvegarde le thème en local
+      localStorage.setItem('shop_theme', localTheme);
+      
       setSuccess('Profil mis a jour.');
       // Mettre à jour la session locale
       const session = getSession();
@@ -176,6 +185,45 @@ export default function ProfilPage() {
               placeholder="https://facebook.com/votreboutique"
               style={inputStyle}
             />
+          </div>
+
+          <div>
+            <label style={{ ...labelStyle, marginBottom: '12px' }}>Thème de la boutique</label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '12px' }}>
+              {Object.values(THEMES).map(t => (
+                <div
+                  key={t.id}
+                  onClick={() => setLocalTheme(t.id)}
+                  style={{
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: localTheme === t.id ? `2px solid ${t.colors.primary}` : '1px solid #e5e5e5',
+                    cursor: 'pointer',
+                    background: t.colors.background,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    position: 'relative',
+                  }}
+                >
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: t.colors.primary }} />
+                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: t.colors.accent }} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: '600', color: t.colors.text }}>{t.label}</div>
+                    <div style={{ fontSize: '11px', color: t.colors.textMuted }}>{t.style}</div>
+                  </div>
+                  {localTheme === t.id && (
+                    <div style={{ position: 'absolute', top: '8px', right: '8px', color: t.colors.primary }}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
           <button

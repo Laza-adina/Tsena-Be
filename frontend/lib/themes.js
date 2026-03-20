@@ -341,4 +341,4 @@ export const THEMES = {
   },
 };
 
-export const DEFAULT_THEME = 'tropical_punch';
+export const DEFAULT_THEME = 'dark_premium';

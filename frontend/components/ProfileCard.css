@@ -1,0 +1,305 @@
+/* ProfileCard.css — transparent glass, logo centré, contacts WA + FB */
+
+:root {
+  --pointer-x: 50%;
+  --pointer-y: 50%;
+  --pointer-from-center: 0;
+  --pointer-from-top: 0.5;
+  --pointer-from-left: 0.5;
+  --card-opacity: 0;
+  --rotate-x: 0deg;
+  --rotate-y: 0deg;
+  --background-x: 50%;
+  --background-y: 50%;
+  --behind-glow-color: rgba(125, 190, 255, 0.55);
+  --behind-glow-size: 55%;
+  --sunpillar-1: hsl(2,   100%, 73%);
+  --sunpillar-2: hsl(53,  100%, 69%);
+  --sunpillar-3: hsl(93,  100%, 69%);
+  --sunpillar-4: hsl(176, 100%, 76%);
+  --sunpillar-5: hsl(228, 100%, 74%);
+  --sunpillar-6: hsl(283, 100%, 73%);
+  --card-radius: 28px;
+}
+
+/* ── Wrapper perspective ── */
+.pc-wrapper {
+  perspective: 600px;
+  transform: translate3d(0, 0, 0.1px);
+  position: relative;
+  touch-action: none;
+  width: 100%;
+}
+
+/* ── Glow derrière ── */
+.pc-behind {
+  position: absolute;
+  inset: -20px;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at var(--pointer-x) var(--pointer-y),
+    var(--behind-glow-color) 0%,
+    transparent var(--behind-glow-size)
+  );
+  filter: blur(40px) saturate(1.2);
+  opacity: calc(0.75 * var(--card-opacity));
+  transition: opacity 250ms ease;
+}
+
+.pc-wrapper:hover  { --card-opacity: 1; }
+.pc-wrapper.active { --card-opacity: 1; }
+
+/* ── Shell ── */
+.pc-shell {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+/* ── Card principale — fond transparent ── */
+.pc-card {
+  width: 100%;
+  min-height: 480px;
+  box-sizing: border-box;
+  border-radius: var(--card-radius);
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+
+  background: var(--pc-glass-bg, rgba(255, 255, 255, 0.13));
+  backdrop-filter: blur(32px) saturate(160%);
+  -webkit-backdrop-filter: blur(32px) saturate(160%);
+  border: 1px solid transparent;
+  box-shadow: 0 8px 40px var(--pc-shadow, rgba(0, 0, 0, 0.14));
+
+  transition: transform 1s ease, box-shadow 0.3s ease;
+  transform: translateZ(0) rotateX(0deg) rotateY(0deg);
+  backface-visibility: hidden;
+}
+
+.pc-card:hover,
+.pc-shell.active .pc-card {
+  transition: none;
+  transform: translateZ(0) rotateX(var(--rotate-y)) rotateY(var(--rotate-x));
+  box-shadow: 0 16px 56px rgba(0, 0, 0, 0.18);
+}
+
+.pc-shell.entering .pc-card {
+  transition: transform 180ms ease-out;
+}
+
+/* ── Corps du contenu ── */
+.pc-body {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 36px 24px 28px;
+  gap: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Logo / avatar ── */
+.pc-logo-wrap {
+  margin-bottom: 18px;
+  position: relative;
+}
+
+.pc-logo {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--theme-glass-border, rgba(255, 255, 255, 0.55));
+  box-shadow:
+    0 4px 20px var(--theme-shadow, rgba(0, 0, 0, 0.18)),
+    0 0 0 6px var(--theme-glass-bg, rgba(255, 255, 255, 0.10));
+  display: block;
+}
+
+.pc-logo-placeholder {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* ── Nom ── */
+.pc-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--pc-text, rgba(255, 255, 255, 0.95));
+  margin: 0 0 10px;
+  text-align: center;
+  line-height: 1.25;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+  letter-spacing: -0.01em;
+}
+
+/* ── Description / slogan ── */
+.pc-desc {
+  font-size: 13px;
+  color: var(--pc-text-muted, rgba(255, 255, 255, 0.65));
+  text-align: center;
+  line-height: 1.6;
+  margin: 0 0 22px;
+  font-style: italic;
+  max-width: 220px;
+  display: -webkit-box;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Séparateur ── */
+.pc-sep {
+  width: 100%;
+  height: 0.5px;
+  background: linear-gradient(90deg, transparent, var(--pc-sep, rgba(255,255,255,0.30)), transparent);
+  margin-bottom: 20px;
+}
+
+/* ── Liste contacts ── */
+.pc-contacts {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Bouton contact ── */
+.pc-contact-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  background: var(--pc-row-bg, rgba(255, 255, 255, 0.10));
+  border: 1px solid var(--pc-row-border, rgba(255, 255, 255, 0.20));
+  border-radius: 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.18s ease, border-color 0.18s, transform 0.12s;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+/* reflet interne sur les boutons */
+.pc-contact-row::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.10) 0%, transparent 100%);
+  border-radius: 14px 14px 0 0;
+  pointer-events: none;
+}
+
+.pc-contact-row:hover {
+  background: var(--pc-row-hover, rgba(255, 255, 255, 0.20));
+  border-color: var(--pc-row-border-hover, rgba(255, 255, 255, 0.38));
+}
+
+.pc-contact-row:active {
+  transform: scale(0.98);
+}
+
+/* ── Icônes contact ── */
+.pc-contact-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pc-wa-icon {
+  background: rgba(37, 211, 102, 0.18);
+  color: #25d366;
+  border: 1px solid rgba(37, 211, 102, 0.28);
+}
+
+.pc-fb-icon {
+  background: rgba(24, 119, 242, 0.18);
+  color: #1877f2;
+  border: 1px solid rgba(24, 119, 242, 0.28);
+}
+
+/* ── Texte contact ── */
+.pc-contact-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pc-contact-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--pc-contact-lbl, rgba(255, 255, 255, 0.45));
+  font-weight: 500;
+}
+
+.pc-contact-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--pc-contact-val, rgba(255, 255, 255, 0.88));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Flèche ── */
+.pc-arrow {
+  color: rgba(255, 255, 255, 0.35);
+  flex-shrink: 0;
+  transition: color 0.18s, transform 0.18s;
+}
+
+.pc-contact-row:hover .pc-arrow {
+  color: rgba(255, 255, 255, 0.7);
+  transform: translate(2px, -2px);
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .pc-logo    { width: 80px; height: 80px; }
+  .pc-logo-placeholder { width: 80px; height: 80px; }
+  .pc-name    { font-size: 18px; }
+}
+
+@media (max-width: 640px) {
+  .pc-card    { min-height: 100svh; }
+  .pc-body    {
+    padding: 48px 28px 36px;
+    justify-content: center;
+  }
+  .pc-logo    { width: 72px; height: 72px; }
+  .pc-logo-placeholder { width: 72px; height: 72px; }
+  .pc-name    { font-size: 17px; }
+  .pc-desc    { font-size: 12px; margin-bottom: 18px; }
+  .pc-contact-row { padding: 10px 12px; }
+  .pc-contact-icon { width: 32px; height: 32px; border-radius: 9px; }
+  .pc-contact-value { font-size: 12.5px; }
+}
+
+@media (max-width: 480px) {
+  .pc-body    { padding: 24px 14px 18px; }
+  .pc-logo    { width: 64px; height: 64px; }
+  .pc-logo-placeholder { width: 64px; height: 64px; }
+  .pc-name    { font-size: 15px; }
+}
