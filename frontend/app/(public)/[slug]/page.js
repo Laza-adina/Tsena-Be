@@ -87,7 +87,7 @@ export default function PublicShopPage() {
             whatsapp={vendor.whatsapp || ''}
             facebook={vendor.facebook || ''}
             avatarUrl={vendor.profileImageUrl || ''}
-            enableTilt={true}
+            enableTilt={false}
             enableMobileTilt={false}
             themeColors={c}
             glowColor={`rgba(${hexToRgb(c.primary)}, 0.55)`}
