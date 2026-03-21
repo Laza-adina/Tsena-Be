@@ -64,25 +64,20 @@ export default function PublicShopPage() {
 
   const [rate, setRate] = useState(1);
 
-useEffect(() => {
-  if (!vendor || vendor.displayCurrency === 'MGA') { setRate(1); return; }
-  fetch('https://api.exchangerate-api.com/v4/latest/USD')
-    .then(r => r.json())
-    .then(data => {
-      const mga = data.rates['MGA'];
-      if (vendor.displayCurrency === 'USD') setRate(1 / mga);
-      else if (vendor.displayCurrency === 'EUR') setRate(data.rates['EUR'] / mga);
-    })
-    .catch(() => setRate(1));
-}, [vendor]);
+  useEffect(() => {
+    if (!vendor || vendor.displayCurrency === 'MGA') { setRate(1); return; }
+    if (vendor.displayCurrency === 'USD') setRate(1 / 4800);  // 1 USD = 4800 Ar
+    else if (vendor.displayCurrency === 'EUR') setRate(1 / 5200);  // 1 EUR = 5200 Ar
+  }, [vendor]);
 
-const formatPrice = (priceInMga) => {
-  if (!vendor?.displayCurrency || vendor.displayCurrency === 'MGA') {
+  const formatPrice = (priceInMga) => {
+    if (!vendor?.displayCurrency || vendor.displayCurrency === 'MGA') {
+      return `${priceInMga.toLocaleString()} Ar`;
+    }
+    if (vendor.displayCurrency === 'USD') return `$${priceInMga.toLocaleString()}`;
+    if (vendor.displayCurrency === 'EUR') return `€${priceInMga.toLocaleString()}`;
     return `${priceInMga.toLocaleString()} Ar`;
-  }
-  const converted = (priceInMga * rate).toFixed(2);
-  return vendor.displayCurrency === 'USD' ? `$${converted}` : `€${converted}`;
-};
+  };
 
   if (loading) {
     const defC = THEMES[DEFAULT_THEME].colors;
