@@ -576,7 +576,7 @@ export default function ProduitsPage() {
                     />
                   </div>
                   <div className="pr-field">
-                    <label className="pr-label">Prix (Ariary)</label>
+                    <label className="pr-label">Prix</label>
                     <input
                       type="number"
                       className="pr-input"
