@@ -140,7 +140,8 @@ const formatPrice = (priceInMga) => {
     );
   }
 
-  const hasCover = Boolean(vendor?.coverImageUrl);
+  const coverUrl = vendor?.coverImageUrl || vendor?.cover_image_url || null;
+  const hasCover = Boolean(coverUrl);
 
   return (
     <>
@@ -320,7 +321,7 @@ const formatPrice = (priceInMga) => {
         {hasCover ? (
           <div className="sp-cover">
             <Image
-              src={vendor.coverImageUrl}
+              src={coverUrl}
               alt="Couverture"
               fill
               style={{ objectFit: "cover", objectPosition: "center" }}
@@ -475,7 +476,7 @@ const formatPrice = (priceInMga) => {
           )}
         </main>
 
-        <p className="sp-footer">Powered by Keyros</p>
+        <p className="sp-footer">Powered by Tsen@be</p>
       </div>
     </>
   );

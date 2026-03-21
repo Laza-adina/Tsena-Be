@@ -214,6 +214,7 @@ const { data: products } = await productsQuery;
           shopSlug:        vendor.shop_slug,
           description:     vendor.description,
           profileImageUrl: vendor.profile_image_url,
+          coverImageUrl:   vendor.cover_image_url,
           whatsapp:        vendor.whatsapp,
           facebookUrl:     vendor.facebook_url,
           isPremium:       vendor.plan === 'premium',

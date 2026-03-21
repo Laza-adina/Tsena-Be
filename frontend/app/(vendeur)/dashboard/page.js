@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { getSession, clearSession } from '../../../lib/auth';
 import api from '../../../lib/api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { Link } from 'lucide-react';
 
 const C = {
   cream:   '#FFFFFF',
@@ -30,7 +31,7 @@ export default function DashboardPage() {
     if (!session) { router.push('/login'); return; }
     setUser(session.user);
     fetchStats();
-  }, []);
+  }, [router]);
 
   const fetchStats = async () => {
     try {
@@ -219,14 +220,14 @@ export default function DashboardPage() {
 
         {/* Accès rapides */}
         <div className="dash-quick-grid" style={fadeItem(380)}>
-          <a href="/dashboard/produits" className="quick-card" style={{ ...cardStyle, textDecoration: 'none', display: 'block' }}>
+          <Link href="/dashboard/produits" className="quick-card" style={{ ...cardStyle, textDecoration: 'none', display: 'block' }}>
             <p style={{ fontSize: '15px', fontWeight: '600', color: C.dark, margin: '0 0 6px' }}>Gérer les produits</p>
             <p style={{ fontSize: '13px', color: C.muted, margin: 0, fontWeight: '300' }}>Ajouter, modifier ou supprimer vos articles</p>
-          </a>
-          <a href="/dashboard/profil" className="quick-card" style={{ ...cardStyle, textDecoration: 'none', display: 'block' }}>
+          </Link>
+          <Link href="/dashboard/profil" className="quick-card" style={{ ...cardStyle, textDecoration: 'none', display: 'block' }}>
             <p style={{ fontSize: '15px', fontWeight: '600', color: C.dark, margin: '0 0 6px' }}>Modifier le profil</p>
             <p style={{ fontSize: '13px', color: C.muted, margin: 0, fontWeight: '300' }}>Photo, description, liens de contact</p>
-          </a>
+          </Link>
         </div>
 
         {/* Bannière essai */}
@@ -234,15 +235,15 @@ export default function DashboardPage() {
           <div style={{ ...fadeItem(440), marginTop: '20px', padding: '18px 22px', background: C.dark, borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
             <div>
               <p style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: '17px', fontWeight: '700', color: C.cream, margin: '0 0 3px', letterSpacing: '-0.2px' }}>
-                Période d'essai en cours
+                Période d&apos;essai en cours
               </p>
               <p style={{ fontSize: '13px', color: C.sage, margin: 0, fontWeight: '300' }}>
                 Expire le {user?.planExpiresAt ? new Date(user.planExpiresAt).toLocaleDateString('fr-FR') : '—'}
               </p>
             </div>
-            <a href="/dashboard/abonnement" style={{ fontSize: '13px', color: C.cream, background: C.caramel, padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: '600', transition: 'opacity 0.2s', whiteSpace: 'nowrap' }}>
+            <Link href="/dashboard/abonnement" style={{ fontSize: '13px', color: C.cream, background: C.caramel, padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: '600', transition: 'opacity 0.2s', whiteSpace: 'nowrap' }}>
               Voir les offres
-            </a>
+            </Link>
           </div>
         )}
       </div>
