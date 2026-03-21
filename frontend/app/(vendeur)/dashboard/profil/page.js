@@ -411,6 +411,7 @@ export default function ProfilPage() {
     facebookUrl: "",
     profileImageUrl: "",
     coverImageUrl: "",
+    displayCurrency: "MGA",
   });
   const [localTheme, setLocalTheme] = useState(DEFAULT_THEME);
   const [loading, setLoading] = useState(true);
@@ -435,6 +436,7 @@ export default function ProfilPage() {
         facebookUrl: u.facebook_url || "",
         profileImageUrl: u.profile_image_url || "",
         coverImageUrl: u.cover_image_url || "",
+        displayCurrency: u.display_currency || "MGA",
       });
     } finally {
       setLoading(false);
@@ -455,7 +457,7 @@ export default function ProfilPage() {
     setSuccess("");
     setSaving(true);
     try {
-      await api.put("/auth/profile", { ...form, theme: localTheme });
+      await api.put("/auth/profile", { ...form, theme: localTheme, displayCurrency: form.displayCurrency });
       localStorage.setItem("shop_theme", localTheme);
       setSuccess("Profil mis \u00e0 jour.");
       const session = getSession();
@@ -1055,6 +1057,21 @@ export default function ProfilPage() {
                         placeholder="https://facebook.com/votreboutique"
                       />
                     </div>
+                    <div className="pf-field">
+                        <label className="pf-label">
+                          Devise d&apos;affichage
+                          <span className="pf-hint">prix affiches sur votre boutique</span>
+                        </label>
+                        <select
+                          className="pf-input"
+                          value={form.displayCurrency}
+                          onChange={(e) => setForm({ ...form, displayCurrency: e.target.value })}
+                        >
+                          <option value="MGA">Ariary (MGA)</option>
+                          <option value="USD">Dollar US (USD)</option>
+                          <option value="EUR">Euro (EUR)</option>
+                        </select>
+                      </div>
                   </div>
                 </div>
               </div>

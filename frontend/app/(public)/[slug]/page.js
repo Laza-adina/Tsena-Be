@@ -62,6 +62,28 @@ export default function PublicShopPage() {
     [slug],
   );
 
+  const [rate, setRate] = useState(1);
+
+useEffect(() => {
+  if (!vendor || vendor.displayCurrency === 'MGA') { setRate(1); return; }
+  fetch('https://api.exchangerate-api.com/v4/latest/USD')
+    .then(r => r.json())
+    .then(data => {
+      const mga = data.rates['MGA'];
+      if (vendor.displayCurrency === 'USD') setRate(1 / mga);
+      else if (vendor.displayCurrency === 'EUR') setRate(data.rates['EUR'] / mga);
+    })
+    .catch(() => setRate(1));
+}, [vendor]);
+
+const formatPrice = (priceInMga) => {
+  if (!vendor?.displayCurrency || vendor.displayCurrency === 'MGA') {
+    return `${priceInMga.toLocaleString()} Ar`;
+  }
+  const converted = (priceInMga * rate).toFixed(2);
+  return vendor.displayCurrency === 'USD' ? `$${converted}` : `€${converted}`;
+};
+
   if (loading) {
     const defC = THEMES[DEFAULT_THEME].colors;
     return (
@@ -441,12 +463,13 @@ export default function PublicShopPage() {
           ) : (
             <div className="sp-grid">
               {products.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={{ ...product, whatsappLink: product.whatsappLink }}
-                  theme={theme}
-                  onTrack={() => trackWhatsapp(product.id)}
-                />
+               <ProductCard
+               key={product.id}
+               product={{ ...product, whatsappLink: product.whatsappLink }}
+               theme={theme}
+               onTrack={() => trackWhatsapp(product.id)}
+               formatPrice={formatPrice}
+             />
               ))}
             </div>
           )}

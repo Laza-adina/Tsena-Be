@@ -101,8 +101,7 @@ exports.getMe = async (req, res) => {
   try {
     const { data: user } = await db
       .from('users')
-      .select('id, email, shop_name, shop_slug, description, profile_image_url, cover_image_url, whatsapp, facebook_url, plan, plan_expires_at, theme')
-
+      .select('id, email, shop_name, shop_slug, description, profile_image_url, cover_image_url, whatsapp, facebook_url, plan, plan_expires_at, theme, display_currency')
       .eq('id', req.user.id).single();
       
 
@@ -124,6 +123,7 @@ exports.updateProfile = async (req, res) => {
     if (profileImageUrl !== undefined) updates.profile_image_url = profileImageUrl;
     if (req.body.theme !== undefined) updates.theme = req.body.theme;
     if (req.body.coverImageUrl !== undefined) updates.cover_image_url = req.body.coverImageUrl;
+    if (req.body.displayCurrency !== undefined) updates.display_currency = req.body.displayCurrency;
 
     const { data: user, error } = await db
       .from('users').update(updates).eq('id', req.user.id)

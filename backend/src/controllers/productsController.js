@@ -174,7 +174,7 @@ exports.getPublicShop = async (req, res) => {
 
     const { data: vendor } = await db
     .from('users')
-    .select('id, shop_name, shop_slug, description, profile_image_url, whatsapp, facebook_url, plan, theme')
+    .select('id, shop_name, shop_slug, description, profile_image_url, cover_image_url, whatsapp, facebook_url, plan, theme, display_currency')
     .eq('shop_slug', slug)
     .eq('is_active', true)
     .maybeSingle();
@@ -217,7 +217,8 @@ const { data: products } = await productsQuery;
           whatsapp:        vendor.whatsapp,
           facebookUrl:     vendor.facebook_url,
           isPremium:       vendor.plan === 'premium',
-          theme:           vendor.theme || 'dark_premium'
+          theme:           vendor.theme || 'dark_premium',
+          displayCurrency: vendor.display_currency || 'MGA'
         },
       products: productsWithLinks
     });

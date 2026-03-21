@@ -9,7 +9,7 @@ import { X, ArrowRight } from "lucide-react";
 /* ══════════════════════════════════════════════════════════
    MODAL
 ══════════════════════════════════════════════════════════ */
-const Modal = ({ product, theme, onClose, handleWhatsapp }) => {
+const Modal = ({ product, theme, onClose, handleWhatsapp, formatPrice }) => {
   const c = theme?.colors ?? {};
   const fontDisplay = theme?.fonts?.display ? `'${theme.fonts.display}', ` : "";
   const fontBody = theme?.fonts?.body ? `'${theme.fonts.body}', ` : "";
@@ -222,17 +222,7 @@ const Modal = ({ product, theme, onClose, handleWhatsapp }) => {
                   fontFamily: `${fontDisplay}system-ui, sans-serif`,
                 }}
               >
-                {product.price.toLocaleString()}
-                <span
-                  style={{
-                    fontSize: "13px",
-                    fontWeight: "400",
-                    color: c.textMuted,
-                  }}
-                >
-                  {" "}
-                  Ar
-                </span>
+               {formatPrice ? formatPrice(product.price) : `${product.price.toLocaleString()} Ar`}
               </p>
 
               {product.description && (
@@ -336,7 +326,7 @@ const Modal = ({ product, theme, onClose, handleWhatsapp }) => {
 /* ══════════════════════════════════════════════════════════
    PRODUCT CARD
 ══════════════════════════════════════════════════════════ */
-const ProductCard = ({ product, theme, onTrack }) => {
+const ProductCard = ({ product, theme, onTrack, formatPrice }) => {
   const [modalOpen, setModalOpen] = useState(false);
 
   const c = theme?.colors ?? {};
@@ -492,18 +482,7 @@ const ProductCard = ({ product, theme, onTrack }) => {
               lineHeight: 1,
             }}
           >
-            {product.price.toLocaleString()}
-            <span
-              style={{
-                fontSize: "11px",
-                fontWeight: "400",
-                color: c.textMuted,
-                fontFamily: `${fontBody}system-ui`,
-              }}
-            >
-              {" "}
-              Ar
-            </span>
+          {formatPrice ? formatPrice(product.price) : `${product.price.toLocaleString()} Ar`}
           </p>
 
           <button
@@ -549,13 +528,14 @@ const ProductCard = ({ product, theme, onTrack }) => {
       </div>
 
       {modalOpen && (
-        <Modal
-          product={product}
-          theme={theme}
-          onClose={() => setModalOpen(false)}
-          handleWhatsapp={handleWhatsapp}
-        />
-      )}
+  <Modal
+    product={product}
+    theme={theme}
+    onClose={() => setModalOpen(false)}
+    handleWhatsapp={handleWhatsapp}
+    formatPrice={formatPrice}
+  />
+)}
     </>
   );
 };
