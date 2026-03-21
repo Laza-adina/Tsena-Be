@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3001;
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
-  'https://tsena-be.vercel.app',
+  'https://tsenabe.app',
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
