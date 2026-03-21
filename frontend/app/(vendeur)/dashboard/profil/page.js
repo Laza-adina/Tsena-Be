@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -9,13 +8,13 @@ import api from "../../../../lib/api";
 import { THEMES, DEFAULT_THEME } from "../../../../lib/themes";
 
 const C = {
-  main: "#D9D9D9", 
-  light: "#EBEBEB", 
-  cream: "#FFFFFF", 
-  beige: "#F5F5F5", 
-  caramel: "#3C6E71", 
-  dark: "#353535", 
-  text: "#353535", 
+  main: "#D9D9D9",
+  light: "#EBEBEB",
+  cream: "#FFFFFF",
+  beige: "#F5F5F5",
+  caramel: "#3C6E71",
+  dark: "#353535",
+  text: "#353535",
   muted: "#284B63",
 };
 
@@ -26,7 +25,6 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
   const [open, setOpen] = useState(false);
   const themes = Object.values(THEMES);
   const current = THEMES[localTheme] || themes[0];
-
   useEffect(() => {
     const onKey = (e) => e.key === "Escape" && setOpen(false);
     if (open) {
@@ -38,12 +36,10 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
       document.body.style.overflow = "";
     };
   }, [open]);
-
   return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
-
         .tpm-btn {
           display: inline-flex; align-items: center; gap: 9px;
           padding: 9px 14px; border-radius: 8px;
@@ -57,14 +53,12 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
         .tpm-btn-dots { display:flex; gap:4px; }
         .tpm-btn-dot  { width:11px; height:11px; border-radius:50%; transition:transform .2s; }
         .tpm-btn:hover .tpm-btn-dot { transform:scale(1.2); }
-
         .tpm-overlay {
           position:fixed; inset:0; background:rgba(61,74,42,.45);
           backdrop-filter:blur(5px); z-index:1000;
           animation:tpm-fog .2s ease forwards;
         }
         @keyframes tpm-fog { from{opacity:0} to{opacity:1} }
-
         .tpm-close {
           width:28px; height:28px; border-radius:7px;
           border:1px solid ${C.light}; background:transparent;
@@ -73,14 +67,12 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
           color:${C.muted}; transition:background .12s, color .12s;
         }
         .tpm-close:hover { background:${C.light}; color:${C.dark}; }
-
         .tpm-apply {
           border:none; border-radius:8px; font-family:'DM Sans',sans-serif;
           font-size:13px; font-weight:600; color:#fff;
           cursor:pointer; transition:opacity .15s, transform .15s;
         }
         .tpm-apply:hover { opacity:.87; transform:translateY(-1px); }
-
         .tpm-sheet {
           position:fixed; bottom:0; left:0; right:0;
           height:70vh; max-height:530px; background:${C.cream};
@@ -89,10 +81,8 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
           animation:tpm-rise .3s cubic-bezier(.32,1.4,.6,1) forwards;
         }
         @keyframes tpm-rise { from{transform:translateY(100%);opacity:0} to{transform:translateY(0);opacity:1} }
-
         .tpm-sheet-drag { flex-shrink:0; padding:12px 0 0; display:flex; justify-content:center; }
         .tpm-drag-pill  { width:36px; height:4px; border-radius:2px; background:${C.light}; }
-
         .tpm-sheet-head {
           flex-shrink:0; padding:12px 18px 13px;
           display:flex; align-items:center; justify-content:space-between;
@@ -100,13 +90,10 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
         }
         .tpm-sheet-title { font-family:'Cormorant Garamond',Georgia,serif; font-size:18px; font-weight:700; color:${C.dark}; }
         .tpm-sheet-sub   { font-size:11px; color:${C.muted}; margin-top:2px; }
-
         .tpm-sheet-body { flex:1; overflow-y:auto; overflow-x:hidden; padding:14px 14px 0; }
         .tpm-sheet-body::-webkit-scrollbar { width:3px; }
         .tpm-sheet-body::-webkit-scrollbar-thumb { background:${C.light}; border-radius:2px; }
-
         .tpm-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; }
-
         .tpm-card {
           border-radius:10px; padding:11px 10px 10px; cursor:pointer;
           border:2px solid transparent; position:relative;
@@ -120,14 +107,12 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
         .tpm-card-name  { font-size:12px; font-weight:600; line-height:1.3; }
         .tpm-card-style { font-size:10px; margin-top:1px; opacity:.65; }
         .tpm-card-check { position:absolute; top:8px; right:8px; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
-
         .tpm-sheet-foot {
           flex-shrink:0; padding:13px 16px 20px; border-top:1px solid ${C.light};
           background:${C.cream}; display:flex; align-items:center; justify-content:space-between; gap:12px;
         }
         .tpm-foot-label { font-size:11px; color:${C.muted}; }
         .tpm-foot-name  { font-size:13px; font-weight:600; color:${C.dark}; margin-top:1px; }
-
         .tpm-panel {
           position:fixed; top:50%; right:0; transform:translateY(-50%);
           width:290px; height:65vh; max-height:560px;
@@ -146,11 +131,9 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
         }
         .tpm-panel-title { font-family:'Cormorant Garamond',Georgia,serif; font-size:22px; font-weight:700; color:${C.dark}; line-height:1.15; }
         .tpm-panel-sub   { font-size:11px; color:${C.muted}; margin-top:4px; }
-
         .tpm-panel-body { flex:1; overflow-y:auto; overflow-x:hidden; padding:12px 12px 0; }
         .tpm-panel-body::-webkit-scrollbar { width:3px; }
         .tpm-panel-body::-webkit-scrollbar-thumb { background:${C.light}; border-radius:2px; }
-
         .tpm-list { display:flex; flex-direction:column; gap:6px; }
         .tpm-row {
           display:flex; align-items:center; gap:11px; border-radius:10px;
@@ -165,10 +148,8 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
         .tpm-row-name  { font-size:13px; font-weight:600; color:${C.dark}; }
         .tpm-row-style { font-size:11px; color:${C.muted}; margin-top:1px; }
         .tpm-row-check { flex-shrink:0; margin-left:auto; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
-
         .tpm-panel-foot { flex-shrink:0; padding:13px 14px 18px; border-top:1px solid ${C.light}; background:${C.cream}; border-radius:0 0 0 16px; }
         .tpm-apply-full { display:block; width:100%; padding:10px; text-align:center; }
-
         .tpm-mobile-only  { display:flex !important; }
         .tpm-desktop-only { display:none  !important; }
         @media (min-width:640px) {
@@ -176,7 +157,6 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
           .tpm-desktop-only { display:flex  !important; }
         }
       `}</style>
-
       <button className="tpm-btn" type="button" onClick={() => setOpen(true)}>
         <div className="tpm-btn-dots">
           <div
@@ -202,11 +182,9 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
           <path d="M19 9l-7 7-7-7" />
         </svg>
       </button>
-
       {open && (
         <>
           <div className="tpm-overlay" onClick={() => setOpen(false)} />
-
           {/* MOBILE */}
           <div
             className="tpm-sheet tpm-mobile-only"
@@ -317,7 +295,6 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
               </button>
             </div>
           </div>
-
           {/* DESKTOP */}
           <div
             className="tpm-panel tpm-desktop-only"
@@ -433,6 +410,7 @@ export default function ProfilPage() {
     whatsapp: "",
     facebookUrl: "",
     profileImageUrl: "",
+    coverImageUrl: "",
   });
   const [localTheme, setLocalTheme] = useState(DEFAULT_THEME);
   const [loading, setLoading] = useState(true);
@@ -456,6 +434,7 @@ export default function ProfilPage() {
         whatsapp: u.whatsapp || "",
         facebookUrl: u.facebook_url || "",
         profileImageUrl: u.profile_image_url || "",
+        coverImageUrl: u.cover_image_url || "",
       });
     } finally {
       setLoading(false);
@@ -488,16 +467,21 @@ export default function ProfilPage() {
     }
   };
 
-  const handleImageUpload = async (e) => {
+  const handleImageUpload = async (e, field = "profile") => {
     const file = e.target.files[0];
     if (!file) return;
     const formData = new FormData();
     formData.append("image", file);
+    const endpoint = field === "cover" ? "/upload/cover" : "/upload/profile";
     try {
-      const { data } = await api.post("/upload/profile", formData, {
+      const { data } = await api.post(endpoint, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setForm((f) => ({ ...f, profileImageUrl: data.profileImageUrl }));
+      if (field === "cover") {
+        setForm((f) => ({ ...f, coverImageUrl: data.coverImageUrl }));
+      } else {
+        setForm((f) => ({ ...f, profileImageUrl: data.profileImageUrl }));
+      }
     } catch {
       setError("Erreur lors de l\u0027upload.");
     }
@@ -551,11 +535,8 @@ export default function ProfilPage() {
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap');
-
         *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-
         .pf-root { min-height:100vh; background:${C.cream}; font-family:'DM Sans',sans-serif; color:${C.text}; }
-
         .pf-nav {
           background:${C.cream}; border-bottom:1px solid ${C.light};
           height:60px; display:flex; align-items:center;
@@ -574,17 +555,14 @@ export default function ProfilPage() {
         .pf-nav-link::after { content:''; position:absolute; bottom:0; left:0; width:0; height:1px; background:${C.dark}; transition:width .25s; }
         .pf-nav-link:hover::after { width:100%; }
         .pf-nav-link.active::after { width:100%; }
-
         .pf-layout { display:grid; grid-template-columns:1fr; min-height:calc(100vh - 60px); }
         @media (min-width:900px) { .pf-layout { grid-template-columns:260px 1fr; } }
-
         .pf-sidebar {
           display:none; background:${C.light}; border-right:1px solid ${C.main};
           padding:48px 28px; flex-direction:column; gap:32px;
           position:sticky; top:60px; height:calc(100vh - 60px); overflow-y:auto;
         }
         @media (min-width:900px) { .pf-sidebar { display:flex; } }
-
         .pf-sidebar-avatar-wrap { display:flex; flex-direction:column; align-items:center; gap:14px; }
         .pf-sidebar-avatar {
           width:88px; height:88px; border-radius:50%;
@@ -616,11 +594,9 @@ export default function ProfilPage() {
         .pf-info-label { font-size:10px; color:${C.muted}; font-weight:600; margin-bottom:2px; text-transform:uppercase; letter-spacing:.05em; }
         .pf-info-val   { font-size:13px; color:${C.dark}; font-weight:500; word-break:break-all; }
         .pf-info-empty { font-size:13px; color:${C.muted}; font-style:italic; font-weight:300; }
-
         .pf-main { padding:40px 24px 80px; }
         @media (min-width:640px)  { .pf-main { padding:48px 40px 80px; } }
         @media (min-width:1100px) { .pf-main { padding:56px 64px 80px; } }
-
         .pf-page-header { margin-bottom:40px; }
         .pf-page-eyebrow {
           display:inline-block; font-size:10px; font-weight:600; letter-spacing:2px;
@@ -632,7 +608,6 @@ export default function ProfilPage() {
           font-size:38px; font-weight:700; color:${C.dark}; line-height:1.05; letter-spacing:-1px;
         }
         .pf-page-sub { font-size:15px; color:${C.muted}; margin-top:8px; font-weight:300; line-height:1.7; }
-
         .pf-alert {
           display:flex; align-items:flex-start; gap:10px;
           padding:13px 18px; border-radius:10px;
@@ -642,21 +617,16 @@ export default function ProfilPage() {
         @keyframes pf-fade-in { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:none} }
         .pf-alert-err { background:#FEF2F2; border:1px solid #FECACA; color:#991B1B; }
         .pf-alert-ok  { background:${C.light}; border:1px solid ${C.main}; color:${C.dark}; }
-
         .pf-sections { display:flex; flex-direction:column; gap:20px; }
-
         .pf-section { background:#fff; border:1px solid ${C.light}; border-radius:20px; overflow:hidden; transition:box-shadow .2s; }
         .pf-section:hover { box-shadow:0 4px 20px rgba(61,74,42,.07); }
-
         .pf-section-header {
           padding:20px 24px 16px; border-bottom:1px solid ${C.light};
           display:flex; align-items:center; gap:12px; background:${C.cream};
         }
         .pf-section-icon { width:32px; height:32px; border-radius:8px; background:${C.light}; display:flex; align-items:center; justify-content:center; color:${C.muted}; flex-shrink:0; }
         .pf-section-label { font-family:'Cormorant Garamond',Georgia,serif; font-size:16px; font-weight:700; color:${C.dark}; letter-spacing:-0.3px; }
-
         .pf-section-body { padding:22px 24px 24px; display:flex; flex-direction:column; gap:18px; }
-
         .pf-field { display:flex; flex-direction:column; gap:6px; }
         .pf-label { font-size:11px; font-weight:600; color:${C.muted}; letter-spacing:.08em; text-transform:uppercase; }
         .pf-hint  { font-size:11px; font-weight:300; color:${C.muted}; text-transform:none; letter-spacing:0; margin-left:6px; }
@@ -669,10 +639,34 @@ export default function ProfilPage() {
         }
         .pf-input:focus, .pf-textarea:focus {
           border-color:${C.caramel}; background:#fff;
-          box-shadow:0 0 0 3px rgba(212,163,115,.15);
+          box-shadow:0 0 0 3px rgba(60,110,113,.15);
         }
         .pf-input::placeholder, .pf-textarea::placeholder { color:${C.muted}; opacity:.5; font-weight:300; }
         .pf-textarea { resize:vertical; line-height:1.65; min-height:90px; }
+
+        /* ── Cover upload zone ── */
+        .pf-cover-zone {
+          position:relative; width:100%; height:160px;
+          border-radius:12px; overflow:hidden;
+          border:2px dashed ${C.main}; background:${C.beige};
+          cursor:pointer; transition:border-color .18s, background .18s;
+          display:flex; align-items:center; justify-content:center;
+        }
+        .pf-cover-zone:hover { border-color:${C.caramel}; background:${C.light}; }
+        .pf-cover-zone.has-img { border-style:solid; border-color:${C.main}; }
+        .pf-cover-overlay {
+          position:absolute; inset:0; background:rgba(0,0,0,.35);
+          display:flex; flex-direction:column;
+          align-items:center; justify-content:center;
+          gap:6px; opacity:0; transition:opacity .18s;
+        }
+        .pf-cover-zone:hover .pf-cover-overlay { opacity:1; }
+        .pf-cover-placeholder {
+          display:flex; flex-direction:column;
+          align-items:center; gap:10px; color:${C.muted};
+        }
+        .pf-cover-placeholder-text { font-size:13px; font-weight:500; }
+        .pf-cover-placeholder-sub  { font-size:11px; opacity:.65; font-weight:300; }
 
         .pf-mobile-avatar { display:flex; align-items:center; gap:16px; }
         @media (min-width:900px) { .pf-mobile-avatar-section { display:none; } }
@@ -689,10 +683,8 @@ export default function ProfilPage() {
         .pf-mobile-avatar-info { flex:1; }
         .pf-mobile-avatar-name { font-family:'Cormorant Garamond',Georgia,serif; font-size:17px; font-weight:700; color:${C.dark}; }
         .pf-mobile-avatar-hint { font-size:12px; color:${C.muted}; margin-top:3px; font-weight:300; }
-
         .pf-grid-2 { display:grid; grid-template-columns:1fr; gap:18px; }
         @media (min-width:640px) { .pf-grid-2 { grid-template-columns:1fr 1fr; } }
-
         .pf-save-bar { margin-top:28px; display:flex; align-items:center; justify-content:flex-end; }
         .pf-btn-save {
           display:inline-flex; align-items:center; gap:8px;
@@ -701,14 +693,13 @@ export default function ProfilPage() {
           font-size:14px; font-weight:600; cursor:pointer;
           transition:transform .2s, box-shadow .2s; letter-spacing:.01em;
         }
-        .pf-btn-save:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 8px 24px rgba(61,74,42,.18); }
+        .pf-btn-save:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 8px 24px rgba(53,53,53,.18); }
         .pf-btn-save:disabled { background:${C.muted}; cursor:not-allowed; }
         .pf-btn-spinner {
           width:14px; height:14px; border-radius:50%;
           border:2px solid rgba(255,255,255,.4); border-top-color:#fff;
           animation:spin .6s linear infinite;
         }
-
         @media (max-width:768px) {
           .pf-nav-links { display:none; }
           .pf-page-title { font-size:28px !important; }
@@ -775,7 +766,7 @@ export default function ProfilPage() {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={handleImageUpload}
+                  onChange={(e) => handleImageUpload(e, "profile")}
                   style={{ display: "none" }}
                 />
               </label>
@@ -788,9 +779,7 @@ export default function ProfilPage() {
                 </div>
               </div>
             </div>
-
             <div className="pf-sidebar-divider" />
-
             <div>
               <div className="pf-sidebar-section-title">Infos boutique</div>
               {[
@@ -951,7 +940,7 @@ export default function ProfilPage() {
                       <input
                         type="file"
                         accept="image/*"
-                        onChange={handleImageUpload}
+                        onChange={(e) => handleImageUpload(e, "profile")}
                         style={{ display: "none" }}
                       />
                     </label>
@@ -967,6 +956,7 @@ export default function ProfilPage() {
                 </div>
               </div>
 
+              {/* ══ COUVERTURE ══ */}
               {/* Identité */}
               <div className="pf-section">
                 <div className="pf-section-header">
@@ -1069,7 +1059,7 @@ export default function ProfilPage() {
                 </div>
               </div>
 
-              {/* Apparence */}
+              {/* Apparence (thème + couverture) */}
               <div className="pf-section">
                 <div className="pf-section-header">
                   <div className="pf-section-icon">
@@ -1090,6 +1080,111 @@ export default function ProfilPage() {
                   <span className="pf-section-label">Apparence</span>
                 </div>
                 <div className="pf-section-body">
+                  <div className="pf-field" style={{ marginBottom: 24 }}>
+                    <label className="pf-label">
+                      Photo de couverture
+                      <span className="pf-hint">
+                        visible en haut de votre vitrine &middot; 1400×400px
+                        recommand&eacute;
+                      </span>
+                    </label>
+                    <label
+                      className={`pf-cover-zone${form.coverImageUrl ? " has-img" : ""}`}
+                    >
+                      {form.coverImageUrl && (
+                        <Image
+                          src={form.coverImageUrl}
+                          alt="couverture"
+                          fill
+                          style={{ objectFit: "cover" }}
+                          sizes="100vw"
+                          unoptimized
+                        />
+                      )}
+                      {/* Overlay au hover */}
+                      <div className="pf-cover-overlay">
+                        <svg
+                          width="22"
+                          height="22"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="#fff"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="17 8 12 3 7 8" />
+                          <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                        <span
+                          style={{
+                            fontSize: "13px",
+                            fontWeight: 500,
+                            color: "#fff",
+                          }}
+                        >
+                          {form.coverImageUrl
+                            ? "Changer la photo"
+                            : "Ajouter une photo"}
+                        </span>
+                      </div>
+                      {/* Placeholder quand pas d'image */}
+                      {!form.coverImageUrl && (
+                        <div className="pf-cover-placeholder">
+                          <svg
+                            width="28"
+                            height="28"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <circle cx="8.5" cy="8.5" r="1.5" />
+                            <polyline points="21 15 16 10 5 21" />
+                          </svg>
+                          <span className="pf-cover-placeholder-text">
+                            Ajouter une photo de couverture
+                          </span>
+                          <span className="pf-cover-placeholder-sub">
+                            JPG ou PNG &mdash; max 5&nbsp;Mo
+                          </span>
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e, "cover")}
+                        style={{ display: "none" }}
+                      />
+                    </label>
+                    {/* Bouton supprimer si cover présente */}
+                    {form.coverImageUrl && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setForm((f) => ({ ...f, coverImageUrl: "" }))
+                        }
+                        style={{
+                          alignSelf: "flex-start",
+                          marginTop: "6px",
+                          background: "transparent",
+                          border: "none",
+                          fontSize: "12px",
+                          color: C.muted,
+                          cursor: "pointer",
+                          textDecoration: "underline",
+                          fontFamily: "'DM Sans', sans-serif",
+                          fontWeight: 300,
+                        }}
+                      >
+                        Supprimer la photo de couverture
+                      </button>
+                    )}
+                  </div>
                   <div className="pf-field">
                     <label className="pf-label">
                       Th&egrave;me de la boutique
