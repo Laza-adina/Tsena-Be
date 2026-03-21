@@ -13,6 +13,29 @@ const hexToRgb = (hex) => {
   return `${parseInt(c.slice(0, 2), 16)}, ${parseInt(c.slice(2, 4), 16)}, ${parseInt(c.slice(4, 6), 16)}`;
 };
 
+/* ── Skeleton card ── */
+function SkeletonCard() {
+  return (
+    <div className="sk-card">
+      <div className="sk-img sk-pulse" />
+      <div className="sk-body">
+        <div
+          className="sk-line sk-pulse"
+          style={{ width: "60%", height: "10px", marginBottom: "8px" }}
+        />
+        <div
+          className="sk-line sk-pulse"
+          style={{ width: "40%", height: "10px", marginBottom: "14px" }}
+        />
+        <div
+          className="sk-line sk-pulse"
+          style={{ width: "100%", height: "32px", borderRadius: "8px" }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function PublicShopPage() {
   const { slug } = useParams();
   const [vendor, setVendor] = useState(null);
@@ -20,6 +43,7 @@ export default function PublicShopPage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [search, setSearch] = useState("");
+  const [pageReady, setPageReady] = useState(false); // contrôle le fade-in global
 
   const fetchShop = useCallback(
     async (searchTerm = "") => {
@@ -34,6 +58,8 @@ export default function PublicShopPage() {
         setNotFound(true);
       } finally {
         setLoading(false);
+        // Petit délai pour que le DOM soit peint avant le fade-in
+        setTimeout(() => setPageReady(true), 60);
       }
     },
     [slug],
@@ -61,59 +87,167 @@ export default function PublicShopPage() {
     },
     [slug],
   );
-
-  const [rate, setRate] = useState(1);
-
-  useEffect(() => {
-    if (!vendor || vendor.displayCurrency === 'MGA') { setRate(1); return; }
-    if (vendor.displayCurrency === 'USD') setRate(1 / 4800);  // 1 USD = 4800 Ar
-    else if (vendor.displayCurrency === 'EUR') setRate(1 / 5200);  // 1 EUR = 5200 Ar
-  }, [vendor]);
-
   const formatPrice = (priceInMga) => {
-    if (!vendor?.displayCurrency || vendor.displayCurrency === 'MGA') {
+    if (!vendor?.displayCurrency || vendor.displayCurrency === "MGA")
       return `${priceInMga.toLocaleString()} Ar`;
-    }
-    if (vendor.displayCurrency === 'USD') return `$${priceInMga.toLocaleString()}`;
-    if (vendor.displayCurrency === 'EUR') return `€${priceInMga.toLocaleString()}`;
+    if (vendor.displayCurrency === "USD")
+      return `$${priceInMga.toLocaleString()}`;
+    if (vendor.displayCurrency === "EUR")
+      return `€${priceInMga.toLocaleString()}`;
     return `${priceInMga.toLocaleString()} Ar`;
   };
 
+  /* ── Loading skeleton ── */
   if (loading) {
     const defC = THEMES[DEFAULT_THEME].colors;
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "16px",
-          background: defC.background,
-        }}
-      >
-        <div
-          style={{
-            width: "36px",
-            height: "36px",
-            borderRadius: "50%",
-            border: `3px solid rgba(${hexToRgb(defC.primary)}, 0.2)`,
-            borderTopColor: defC.primary,
-            animation: "sp .75s linear infinite",
-          }}
-        />
-        <style>{`@keyframes sp { to { transform: rotate(360deg) } }`}</style>
-        <p
-          style={{
-            fontSize: "13px",
-            color: defC.textMuted,
-            fontFamily: "system-ui",
-          }}
-        >
-          Chargement...
-        </p>
-      </div>
+      <>
+        <style>{`
+          *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+          @keyframes sp  { to { transform: rotate(360deg) } }
+          @keyframes shimmer {
+            0%   { background-position: -600px 0; }
+            100% { background-position:  600px 0; }
+          }
+          @keyframes sk-fade-in {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+          }
+
+          body { background: ${defC.background}; margin: 0; }
+
+          .sk-page {
+            min-height: 100vh;
+            background: ${defC.background};
+            font-family: system-ui, sans-serif;
+            animation: sk-fade-in .8s ease forwards;
+          }
+
+          /* Cover skeleton */
+          .sk-cover {
+            width: 100%; height: 220px;
+            background: ${defC.surface};
+            position: relative; overflow: hidden;
+          }
+          @media (min-width: 900px) { .sk-cover { height: 300px; } }
+
+          /* Hero skeleton */
+          .sk-hero {
+            max-width: 1280px; margin: 0 auto; padding: 0 24px;
+            display: flex; align-items: flex-end; gap: 20px;
+            transform: translateY(-44px); margin-bottom: -24px;
+          }
+          @media (max-width: 640px) {
+            .sk-hero { flex-direction: column; align-items: center; transform: translateY(-48px); }
+          }
+
+          .sk-avatar {
+            width: 96px; height: 96px; border-radius: 50%;
+            border: 3px solid ${defC.background};
+            flex-shrink: 0;
+          }
+          @media (min-width: 640px) { .sk-avatar { width: 112px; height: 112px; } }
+
+          .sk-meta { padding-bottom: 8px; flex: 1; }
+          .sk-line { border-radius: 6px; }
+
+          .sk-body-section {
+            max-width: 1280px; margin: 40px auto 0; padding: 0 24px;
+          }
+
+          /* Search bar skeleton */
+          .sk-search {
+            height: 44px; border-radius: 12px; margin-bottom: 28px;
+            max-width: 560px;
+          }
+
+          /* Grid */
+          .sk-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+          }
+          @media (min-width: 640px)  { .sk-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; } }
+          @media (min-width: 1100px) { .sk-grid { grid-template-columns: repeat(4, 1fr); } }
+
+          .sk-card {
+            border-radius: 16px; overflow: hidden;
+            border: 1px solid rgba(128,128,128,.12);
+          }
+          .sk-img { width: 100%; aspect-ratio: 1/1; }
+          .sk-body-inner { padding: 13px 14px 16px; }
+
+          /* Shimmer pulse */
+          .sk-pulse {
+            background: linear-gradient(
+              90deg,
+              ${defC.surface} 0%,
+              rgba(${hexToRgb(defC.primary)}, 0.08) 40%,
+              ${defC.surface} 80%
+            );
+            background-size: 600px 100%;
+            animation: shimmer 2.2s ease-in-out infinite;
+          }
+
+          /* Spinner centré */
+          .sk-spinner-wrap {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; padding: 60px 0 80px; gap: 14px;
+          }
+          .sk-spinner {
+            width: 32px; height: 32px; border-radius: 50%;
+            border: 3px solid rgba(${hexToRgb(defC.primary)}, 0.18);
+            border-top-color: ${defC.primary};
+            animation: sp .75s linear infinite;
+          }
+          .sk-spinner-label {
+            font-size: 13px; color: ${defC.textMuted};
+            opacity: .7; letter-spacing: .03em;
+          }
+        `}</style>
+
+        <div className="sk-page">
+          {/* Cover */}
+          <div className="sk-cover sk-pulse" />
+
+          {/* Hero */}
+          <div className="sk-hero">
+            <div className="sk-avatar sk-pulse" />
+            <div className="sk-meta">
+              <div
+                className="sk-line sk-pulse"
+                style={{ width: "200px", height: "28px", marginBottom: "10px" }}
+              />
+              <div
+                className="sk-line sk-pulse"
+                style={{ width: "280px", height: "14px", marginBottom: "6px" }}
+              />
+              <div
+                className="sk-line sk-pulse"
+                style={{ width: "160px", height: "14px" }}
+              />
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="sk-body-section">
+            <div className="sk-search sk-pulse" />
+            <div className="sk-grid">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
+
+            <div className="sk-spinner-wrap">
+              <div className="sk-spinner" />
+              <span className="sk-spinner-label">
+                Chargement de la boutique...
+              </span>
+            </div>
+          </div>
+        </div>
+      </>
     );
   }
 
@@ -159,12 +293,66 @@ export default function PublicShopPage() {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: var(--c-bg); }
 
+        /* ── Skeleton dans le body normal (shimmer réutilisé) ── */
+        @keyframes shimmer {
+          0%   { background-position: -600px 0; }
+          100% { background-position:  600px 0; }
+        }
+        .sk-pulse {
+          background: linear-gradient(
+            90deg,
+            var(--c-surface) 0%,
+            rgba(${hexToRgb(c.primary)}, 0.08) 40%,
+            var(--c-surface) 80%
+          );
+          background-size: 600px 100%;
+          animation: shimmer 2.2s ease-in-out infinite;
+          border-radius: 6px;
+        }
+        .sk-card {
+          border-radius: 16px; overflow: hidden;
+          border: 1px solid rgba(128,128,128,.12);
+        }
+        .sk-img { width: 100%; aspect-ratio: 1/1; }
+        .sk-body { padding: 13px 14px 16px; }
+
+        /* ── Fade-in page ── */
+        @keyframes page-in {
+          from { opacity: 0; transform: translateY(20px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
         .sp-page {
           min-height: 100vh;
           background: var(--c-bg);
           font-family: var(--font-body);
           color: var(--c-text);
+          opacity: 0;
+          animation: page-in .9s ease forwards;
         }
+        .sp-page.ready { opacity: 1; }
+
+        /* ── Stagger children ── */
+        @keyframes child-in {
+          from { opacity: 0; transform: translateY(24px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .sp-anim { animation: child-in .8s ease both; }
+        .sp-anim-1 { animation-delay: .10s; }
+        .sp-anim-2 { animation-delay: .20s; }
+        .sp-anim-3 { animation-delay: .32s; }
+        .sp-anim-4 { animation-delay: .44s; }
+
+        /* ── Product cards stagger ── */
+        .sp-grid > * { animation: child-in .7s ease both; }
+        .sp-grid > *:nth-child(1)  { animation-delay: .30s; }
+        .sp-grid > *:nth-child(2)  { animation-delay: .36s; }
+        .sp-grid > *:nth-child(3)  { animation-delay: .42s; }
+        .sp-grid > *:nth-child(4)  { animation-delay: .48s; }
+        .sp-grid > *:nth-child(5)  { animation-delay: .54s; }
+        .sp-grid > *:nth-child(6)  { animation-delay: .60s; }
+        .sp-grid > *:nth-child(7)  { animation-delay: .66s; }
+        .sp-grid > *:nth-child(8)  { animation-delay: .72s; }
+        .sp-grid > *:nth-child(n+9){ animation-delay: .78s; }
 
         /* ── Cover ── */
         .sp-cover {
@@ -172,6 +360,9 @@ export default function PublicShopPage() {
         }
         @media (min-width: 900px) { .sp-cover { height: 340px; } }
 
+        .sp-cover-img {
+          transition: filter .6s ease, opacity .6s ease;
+        }
         .sp-cover-overlay {
           position: absolute; inset: 0;
           background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0.55) 100%);
@@ -211,7 +402,9 @@ export default function PublicShopPage() {
           background: var(--c-surface);
           display: flex; align-items: center; justify-content: center;
           position: relative;
+          transition: transform .3s cubic-bezier(0.16,1,0.3,1), box-shadow .3s ease;
         }
+        .sp-avatar-ring:hover { transform: scale(1.04); box-shadow: 0 8px 28px rgba(0,0,0,0.30); }
         @media (min-width: 640px) { .sp-avatar-ring { width: 112px; height: 112px; border-width: 4px; } }
 
         .sp-shop-meta { padding-bottom: 8px; flex: 1; min-width: 0; }
@@ -238,10 +431,14 @@ export default function PublicShopPage() {
           background: var(--c-surface); border: 1px solid var(--c-border);
           font-family: var(--font-body); font-size: 13px; font-weight: 500;
           color: var(--c-text); cursor: pointer; text-decoration: none;
-          transition: border-color .15s, transform .12s;
+          transition: border-color .18s, transform .18s, box-shadow .18s;
           backdrop-filter: blur(10px);
         }
-        .sp-contact-pill:hover { border-color: var(--c-primary); transform: translateY(-1px); }
+        .sp-contact-pill:hover {
+          border-color: var(--c-primary);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+        }
         .sp-wa-pill { color: #25D366; }
         .sp-fb-pill { color: #1877F2; }
 
@@ -256,6 +453,8 @@ export default function PublicShopPage() {
         .sp-search-wrap {
           position: sticky; top: 0; z-index: 20;
           padding: 16px 0 24px; background: var(--c-bg);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
         }
         @media (min-width: 900px) { .sp-search-wrap { padding-top: 0; } }
 
@@ -263,13 +462,18 @@ export default function PublicShopPage() {
         .sp-search-icon {
           position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
           color: var(--c-muted); opacity: 0.6; pointer-events: none; display: flex;
+          transition: opacity .2s;
         }
+        .sp-search-input:focus ~ .sp-search-icon,
+        .sp-search-wrap:focus-within .sp-search-icon { opacity: 1; }
+
         .sp-search-input {
           width: 100%; padding: 12px 16px 12px 42px;
           background: var(--c-surface); border: 1.5px solid var(--c-border);
           border-radius: 12px; font-family: var(--font-body);
           font-size: 14px; color: var(--c-text); outline: none;
-          backdrop-filter: blur(12px); transition: border-color .15s, box-shadow .15s;
+          backdrop-filter: blur(12px);
+          transition: border-color .2s, box-shadow .2s, background .2s;
         }
         .sp-search-input:focus {
           border-color: var(--c-primary);
@@ -287,9 +491,10 @@ export default function PublicShopPage() {
           font-size: 12px; font-weight: 500; color: var(--c-muted);
           background: var(--c-surface); border: 1px solid var(--c-border);
           border-radius: 999px; padding: 2px 10px;
+          transition: background .2s;
         }
 
-        /* ── Grid — TOUJOURS 2 colonnes minimum ── */
+        /* ── Grid ── */
         .sp-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
@@ -303,6 +508,7 @@ export default function PublicShopPage() {
         .sp-empty {
           text-align: center; padding: 80px 0;
           font-size: 14px; color: var(--c-muted); opacity: 0.7;
+          animation: child-in .8s ease both;
         }
 
         .sp-footer {
@@ -311,29 +517,32 @@ export default function PublicShopPage() {
         }
       `}</style>
 
-      <div className="sp-page">
+      <div className={`sp-page${pageReady ? " ready" : ""}`}>
         {/* Cover */}
-        {hasCover ? (
-          <div className="sp-cover">
-            <Image
-              src={coverUrl}
-              alt="Couverture"
-              fill
-              style={{ objectFit: "cover", objectPosition: "center" }}
-              sizes="100vw"
-              priority
-              unoptimized
-            />
-            <div className="sp-cover-overlay" />
-          </div>
-        ) : (
-          <div className="sp-no-cover">
-            <div className="sp-no-cover-pattern" />
-          </div>
-        )}
+        <div className="sp-anim sp-anim-1">
+          {hasCover ? (
+            <div className="sp-cover">
+              <Image
+                src={coverUrl}
+                alt="Couverture"
+                fill
+                className="sp-cover-img"
+                style={{ objectFit: "cover", objectPosition: "center" }}
+                sizes="100vw"
+                priority
+                unoptimized
+              />
+              <div className="sp-cover-overlay" />
+            </div>
+          ) : (
+            <div className="sp-no-cover">
+              <div className="sp-no-cover-pattern" />
+            </div>
+          )}
+        </div>
 
         {/* Profile anchor */}
-        <div className="sp-hero">
+        <div className="sp-hero sp-anim sp-anim-2">
           <div className="sp-profile-anchor">
             <div className="sp-avatar-ring">
               {vendor.profileImageUrl ? (
@@ -412,12 +621,12 @@ export default function PublicShopPage() {
         </div>
 
         {/* Divider */}
-        <div className="sp-divider">
+        <div className="sp-divider sp-anim sp-anim-3">
           <div className="sp-divider-inner" />
         </div>
 
         {/* Produits */}
-        <main className="sp-main">
+        <main className="sp-main sp-anim sp-anim-4">
           <div className="sp-search-wrap">
             <div className="sp-search-inner">
               <span className="sp-search-icon">
@@ -459,13 +668,13 @@ export default function PublicShopPage() {
           ) : (
             <div className="sp-grid">
               {products.map((product) => (
-               <ProductCard
-               key={product.id}
-               product={{ ...product, whatsappLink: product.whatsappLink }}
-               theme={theme}
-               onTrack={() => trackWhatsapp(product.id)}
-               formatPrice={formatPrice}
-             />
+                <ProductCard
+                  key={product.id}
+                  product={{ ...product, whatsappLink: product.whatsappLink }}
+                  theme={theme}
+                  onTrack={() => trackWhatsapp(product.id)}
+                  formatPrice={formatPrice}
+                />
               ))}
             </div>
           )}

@@ -11,23 +11,29 @@
     stroke-width="2"
     stroke-linecap="round"
   />
-  <path
-    d="M20 36 L44 36"
-    stroke="#284B63"
-    stroke-width="2"
-    stroke-linecap="round"
-  />
-  <path
-    d="M22 40 L42 40"
-    stroke="#F4A261"
-    stroke-width="2"
-    stroke-linecap="round"
-  />
-  <path
-    d="M20 24 Q32 10 44 24"
-    fill="none"
-    stroke="#284B63"
-    stroke-width="3"
-    stroke-linecap="round"
-  />
+    <path d="M18 28 L46 28"
+          stroke="#0071eb"
+          stroke-width="2"
+          stroke-linecap="round"/>
+
+    <path d="M20 32 L44 32"
+          stroke="#ff6f08"
+          stroke-width="2"
+          stroke-linecap="round"/>
+
+    <path d="M20 36 L44 36"
+          stroke="#0071eb"
+          stroke-width="2"
+          stroke-linecap="round"/>
+
+    <path d="M22 40 L42 40"
+          stroke="#ff6f08"
+          stroke-width="2"
+          stroke-linecap="round"/>
+
+    <path d="M20 24 Q32 10 44 24"
+          fill="none"
+          stroke="#0071eb"
+          stroke-width="3"
+          stroke-linecap="round"/>
 </svg>

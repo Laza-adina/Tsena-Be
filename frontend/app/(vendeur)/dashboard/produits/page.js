@@ -378,10 +378,10 @@ export default function ProduitsPage() {
         {/* Mobile menu */}
         {menuOpen && (
           <div className="pr-mobile-nav">
-            <a href="/dashboard" onClick={() => setMenuOpen(false)}>Accueil</a>
-            <a href="/dashboard/produits" onClick={() => setMenuOpen(false)}>Produits</a>
-            <a href="/dashboard/stats" onClick={() => setMenuOpen(false)}>Stats</a>
-            <a href="/dashboard/profil" onClick={() => setMenuOpen(false)}>Profil</a>
+            <Link href="/dashboard" onClick={() => setMenuOpen(false)}>Accueil</Link>
+            <Link href="/dashboard/produits" onClick={() => setMenuOpen(false)}>Produits</Link>
+            <Link href="/dashboard/stats" onClick={() => setMenuOpen(false)}>Stats</Link>
+            <Link href="/dashboard/profil" onClick={() => setMenuOpen(false)}>Profil</Link>
           </div>
         )}
 
