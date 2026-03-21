@@ -404,6 +404,7 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
 ══════════════════════════════════════════════════════════════ */
 export default function ProfilPage() {
   const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
   const [form, setForm] = useState({
     shopName: "",
     description: "",
@@ -457,7 +458,11 @@ export default function ProfilPage() {
     setSuccess("");
     setSaving(true);
     try {
-      await api.put("/auth/profile", { ...form, theme: localTheme, displayCurrency: form.displayCurrency });
+      await api.put("/auth/profile", {
+        ...form,
+        theme: localTheme,
+        displayCurrency: form.displayCurrency,
+      });
       localStorage.setItem("shop_theme", localTheme);
       setSuccess("Profil mis \u00e0 jour.");
       const session = getSession();
@@ -550,6 +555,35 @@ export default function ProfilPage() {
           font-size:22px; font-weight:700; color:${C.dark}; text-decoration:none; letter-spacing:-0.5px;
         }
         .pf-nav-links { display:flex; align-items:center; gap:24px; }
+        .pf-hamburger {
+          display: none;
+          background: none;
+          border: none;
+          cursor: pointer;
+          flex-direction: column;
+          gap: 5px;
+          padding: 4px;
+        }
+        @media (max-width: 768px) {
+          .pf-nav-links { display: none !important; }
+          .pf-hamburger { display: flex !important; }
+        }
+        .pf-mobile-menu {
+          display: none;
+        }
+        @media (max-width: 768px) {
+          .pf-mobile-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            background: ${C.cream};
+            border-bottom: 1px solid ${C.light};
+            padding: 16px 20px;
+            position: sticky;
+            top: 60px;
+            z-index: 99;
+          }
+        }
         .pf-nav-link {
           font-size:14px; font-weight:500; color:${C.dark};
           text-decoration:none; position:relative; padding-bottom:2px;
@@ -729,8 +763,77 @@ export default function ProfilPage() {
                 Profil
               </Link>
             </div>
+            <button
+              className="pf-hamburger"
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label="Ouvrir le menu"
+            >
+              <div
+                style={{
+                  width: "22px",
+                  height: "2px",
+                  background: C.dark,
+                  transition: "transform 0.2s",
+                  transform: menuOpen
+                    ? "rotate(45deg) translateY(7px)"
+                    : "none",
+                }}
+              />
+              <div
+                style={{
+                  width: "22px",
+                  height: "2px",
+                  background: C.dark,
+                  opacity: menuOpen ? 0 : 1,
+                  transition: "opacity 0.2s",
+                }}
+              />
+              <div
+                style={{
+                  width: "22px",
+                  height: "2px",
+                  background: C.dark,
+                  transition: "transform 0.2s",
+                  transform: menuOpen
+                    ? "rotate(-45deg) translateY(-7px)"
+                    : "none",
+                }}
+              />
+            </button>
           </div>
         </nav>
+        {menuOpen && (
+          <div className="pf-mobile-menu">
+            <Link
+              href="/dashboard"
+              className="pf-nav-link"
+              onClick={() => setMenuOpen(false)}
+            >
+              Accueil
+            </Link>
+            <Link
+              href="/dashboard/produits"
+              className="pf-nav-link"
+              onClick={() => setMenuOpen(false)}
+            >
+              Produits
+            </Link>
+            <Link
+              href="/dashboard/stats"
+              className="pf-nav-link"
+              onClick={() => setMenuOpen(false)}
+            >
+              Stats
+            </Link>
+            <Link
+              href="/dashboard/profil"
+              className="pf-nav-link active"
+              onClick={() => setMenuOpen(false)}
+            >
+              Profil
+            </Link>
+          </div>
+        )}
 
         <div className="pf-layout">
           {/* Sidebar */}
@@ -1058,20 +1161,24 @@ export default function ProfilPage() {
                       />
                     </div>
                     <div className="pf-field">
-                        <label className="pf-label">
-                          Devise d&apos;affichage
-                          <span className="pf-hint">prix affiches sur votre boutique</span>
-                        </label>
-                        <select
-                          className="pf-input"
-                          value={form.displayCurrency}
-                          onChange={(e) => setForm({ ...form, displayCurrency: e.target.value })}
-                        >
-                          <option value="MGA">Ariary (MGA)</option>
-                          <option value="USD">Dollar US (USD)</option>
-                          <option value="EUR">Euro (EUR)</option>
-                        </select>
-                      </div>
+                      <label className="pf-label">
+                        Devise d&apos;affichage
+                        <span className="pf-hint">
+                          prix affiches sur votre boutique
+                        </span>
+                      </label>
+                      <select
+                        className="pf-input"
+                        value={form.displayCurrency}
+                        onChange={(e) =>
+                          setForm({ ...form, displayCurrency: e.target.value })
+                        }
+                      >
+                        <option value="MGA">Ariary (MGA)</option>
+                        <option value="USD">Dollar US (USD)</option>
+                        <option value="EUR">Euro (EUR)</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>
