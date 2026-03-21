@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const C = {
   cream: "#FFFFFF",
@@ -194,7 +195,21 @@ export default function LandingPage() {
             className="brand-name"
             style={{ fontSize: "22px", color: C.dark }}
           >
-            Tsen<span style={{ color: C.caramel }}>@</span>be
+            Tsen
+            <span>
+              <Image
+                src="/logo.png"
+                alt="@"
+                width={25}
+                height={25}
+                style={{
+                  display: "inline-block",
+                  verticalAlign: "middle",
+                  margin: "0 0 5px 0",
+                }}
+              />
+            </span>
+            be
           </span>
 
           <div className="nav-links">
@@ -915,7 +930,19 @@ export default function LandingPage() {
                 className="brand-name"
                 style={{ fontSize: "24px", color: C.cream, margin: "0 0 14px" }}
               >
-                Tsen<span style={{ color: C.caramel }}>@</span>be
+                Tsen
+                <Image
+                  src="/logo_light.png"
+                  alt="@"
+                  width={25}
+                  height={25}
+                  style={{
+                    display: "inline-block",
+                    verticalAlign: "middle",
+                    margin: "0 0 5px 0",
+                  }}
+                />
+                be
               </p>
               <p
                 style={{
