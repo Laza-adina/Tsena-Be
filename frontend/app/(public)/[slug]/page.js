@@ -118,7 +118,8 @@ export default function PublicShopPage() {
     );
   }
 
-  const hasCover = Boolean(vendor?.coverImageUrl);
+  const coverUrl = vendor?.coverImageUrl || vendor?.cover_image_url || null;
+  const hasCover = Boolean(coverUrl);
 
   return (
     <>
@@ -298,7 +299,7 @@ export default function PublicShopPage() {
         {hasCover ? (
           <div className="sp-cover">
             <Image
-              src={vendor.coverImageUrl}
+              src={coverUrl}
               alt="Couverture"
               fill
               style={{ objectFit: "cover", objectPosition: "center" }}
@@ -452,7 +453,7 @@ export default function PublicShopPage() {
           )}
         </main>
 
-        <p className="sp-footer">Powered by Keyros</p>
+        <p className="sp-footer">Powered by Tsen@be</p>
       </div>
     </>
   );

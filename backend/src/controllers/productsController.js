@@ -174,7 +174,7 @@ exports.getPublicShop = async (req, res) => {
 
     const { data: vendor } = await db
     .from('users')
-    .select('id, shop_name, shop_slug, description, profile_image_url, whatsapp, facebook_url, plan, theme')
+    .select('id, shop_name, shop_slug, description, profile_image_url, cover_image_url, whatsapp, facebook_url, plan, theme')
     .eq('shop_slug', slug)
     .eq('is_active', true)
     .maybeSingle();
@@ -214,6 +214,7 @@ const { data: products } = await productsQuery;
           shopSlug:        vendor.shop_slug,
           description:     vendor.description,
           profileImageUrl: vendor.profile_image_url,
+          coverImageUrl:   vendor.cover_image_url,
           whatsapp:        vendor.whatsapp,
           facebookUrl:     vendor.facebook_url,
           isPremium:       vendor.plan === 'premium',
