@@ -9,14 +9,14 @@ import api from "../../../../lib/api";
 import { THEMES, DEFAULT_THEME } from "../../../../lib/themes";
 
 const C = {
-  main: "#CCD5AE",
-  light: "#E9EDC9",
-  cream: "#FEFAE0",
-  beige: "#FAEDCD",
-  caramel: "#D4A373",
-  dark: "#3D4A2A",
-  text: "#2D2D2D",
-  muted: "#6A7A52",
+  main: "#D9D9D9", 
+  light: "#EBEBEB", 
+  cream: "#FFFFFF", 
+  beige: "#F5F5F5", 
+  caramel: "#3C6E71", 
+  dark: "#353535", 
+  text: "#353535", 
+  muted: "#284B63",
 };
 
 /* ══════════════════════════════════════════════════════════════

@@ -452,7 +452,7 @@ export default function PublicShopPage() {
           )}
         </main>
 
-        <p className="sp-footer">Powered by Tsen@be</p>
+        <p className="sp-footer">Powered by Keyros</p>
       </div>
     </>
   );

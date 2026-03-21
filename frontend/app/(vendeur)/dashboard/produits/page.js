@@ -1,101 +1,129 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { getSession } from '../../../../lib/auth';
-import api from '../../../../lib/api';
+import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import { getSession } from "../../../../lib/auth";
+import api from "../../../../lib/api";
+
+const C = {
+  main: "#D9D9D9",
+  light: "#EBEBEB",
+  cream: "#FFFFFF",
+  beige: "#F5F5F5",
+  caramel: "#3C6E71",
+  dark: "#353535",
+  text: "#353535",
+  muted: "#284B63",
+};
 
 export default function ProduitsPage() {
   const router = useRouter();
-  const [products, setProducts]   = useState([]);
-  const [search, setSearch] = useState('');
-  const [loading, setLoading]     = useState(true);
-  const [showForm, setShowForm]   = useState(false);
-  const [editing, setEditing]     = useState(null);
-  const [error, setError]         = useState('');
-  const [saving, setSaving]       = useState(false);
+  const [products, setProducts] = useState([]);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    name: '', reference: '', price: '', description: '', imageUrl: ''
+    name: "",
+    reference: "",
+    price: "",
+    description: "",
+    imageUrl: "",
   });
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchProducts(search);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [search]);
-
-  useEffect(() => {
-    const session = getSession();
-    if (!session) { router.push('/login'); return; }
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async (searchTerm = '') => {
+  const fetchProducts = useCallback(async (searchTerm = "") => {
     try {
-      const params = searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : '';
+      const params = searchTerm
+        ? `?search=${encodeURIComponent(searchTerm)}`
+        : "";
       const { data } = await api.get(`/products${params}`);
       setProducts(data.products);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const session = getSession();
+    if (!session) {
+      router.push("/login");
+      return;
+    }
+    fetchProducts();
+  }, [router, fetchProducts]);
+
+  useEffect(() => {
+    const t = setTimeout(() => fetchProducts(search), 300);
+    return () => clearTimeout(t);
+  }, [search, fetchProducts]);
 
   const resetForm = () => {
-    setForm({ name: '', reference: '', price: '', description: '', imageUrl: '' });
+    setForm({
+      name: "",
+      reference: "",
+      price: "",
+      description: "",
+      imageUrl: "",
+    });
     setEditing(null);
-    setError('');
+    setError("");
   };
 
-  const openAdd = () => { resetForm(); setShowForm(true); };
+  const openAdd = () => {
+    resetForm();
+    setShowForm(true);
+  };
 
   const openEdit = (p) => {
     setForm({
-      name: p.name, reference: p.reference,
-      price: p.price, description: p.description || '',
-      imageUrl: p.image_url || ''
+      name: p.name,
+      reference: p.reference,
+      price: p.price,
+      description: p.description || "",
+      imageUrl: p.image_url || "",
     });
     setEditing(p.id);
     setShowForm(true);
   };
 
   const handleSave = async () => {
-    setError('');
+    setError("");
     if (!form.name || !form.price) {
-      setError('Nom et prix requis.'); return;
+      setError("Nom et prix requis.");
+      return;
     }
     setSaving(true);
     try {
-      if (editing) {
-        await api.put(`/products/${editing}`, {
-          name: form.name, reference: form.reference,
-          price: parseInt(form.price), description: form.description,
-          imageUrl: form.imageUrl
-        });
-      } else {
-        await api.post('/products', {
-          name: form.name, reference: form.reference,
-          price: parseInt(form.price), description: form.description,
-          imageUrl: form.imageUrl
-        });
-      }
+      const payload = {
+        name: form.name,
+        reference: form.reference,
+        price: parseInt(form.price),
+        description: form.description,
+        imageUrl: form.imageUrl,
+      };
+      if (editing) await api.put(`/products/${editing}`, payload);
+      else await api.post("/products", payload);
       await fetchProducts();
       setShowForm(false);
       resetForm();
     } catch (err) {
-      setError(err.response?.data?.error || 'Erreur lors de la sauvegarde.');
+      setError(err.response?.data?.error || "Erreur lors de la sauvegarde.");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Supprimer ce produit ?')) return;
+    if (!confirm("Supprimer ce produit ?")) return;
     try {
       await api.delete(`/products/${id}`);
-      setProducts(products.filter(p => p.id !== id));
+      setProducts(products.filter((p) => p.id !== id));
     } catch {
-      alert('Erreur lors de la suppression.');
+      alert("Erreur lors de la suppression.");
     }
   };
 
@@ -103,217 +131,658 @@ export default function ProduitsPage() {
     const file = e.target.files[0];
     if (!file) return;
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append("image", file);
     try {
-      const { data } = await api.post('/upload/product', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      const { data } = await api.post("/upload/product", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
-      setForm(f => ({ ...f, imageUrl: data.imageUrl }));
+      setForm((f) => ({ ...f, imageUrl: data.imageUrl }));
     } catch {
-      setError("Erreur lors de l'upload de l'image.");
+      setError("Erreur lors de l\u0027upload de l\u0027image.");
     }
   };
 
-  const inputStyle = {
-    width: '100%', padding: '10px 12px',
-    border: '1px solid #e5e5e5', borderRadius: '6px',
-    fontSize: '14px', outline: 'none', boxSizing: 'border-box'
-  };
-
-  const labelStyle = {
-    fontSize: '13px', fontWeight: '500',
-    color: '#333', display: 'block', marginBottom: '6px'
-  };
-
-  if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <p style={{ color: '#999', fontSize: '14px' }}>Chargement...</p>
-    </div>
-  );
+  if (loading)
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: C.cream,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "14px",
+          }}
+        >
+          <div
+            style={{
+              width: "28px",
+              height: "28px",
+              borderRadius: "50%",
+              border: `2px solid ${C.light}`,
+              borderTopColor: C.dark,
+              animation: "spin .7s linear infinite",
+            }}
+          />
+          <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+          <span
+            style={{
+              fontSize: "13px",
+              color: C.muted,
+              fontFamily: "'DM Sans', sans-serif",
+              fontWeight: 300,
+            }}
+          >
+            Chargement...
+          </span>
+        </div>
+      </div>
+    );
 
   return (
-    <div style={{ minHeight: '100vh', background: '#fafafa', fontFamily: 'system-ui, sans-serif' }}>
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');
 
-      {/* Navbar */}
-      <div style={{ background: '#ccd5ae', borderBottom: '1px solid #e5e5e5', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '56px' }}>
-        <a href="/dashboard" style={{ fontWeight: '700', fontSize: '16px', color: '#111', textDecoration: 'none' }}>Tsen@be</a>
-        <div style={{ display: 'flex', gap: '24px' }}>
-          <a href="/dashboard" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>Accueil</a>
-          <a href="/dashboard/stats" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>Stats</a>
-          <a href="/dashboard/profil" style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>Profil</a>
-        </div>
-      </div>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '32px 24px' }}>
+        .pr-root { min-height: 100vh; background: ${C.cream}; font-family: 'DM Sans', sans-serif; color: ${C.text}; }
 
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <div>
-            <h1 style={{ fontSize: '20px', fontWeight: '700', color: '#111', margin: '0 0 4px' }}>Produits</h1>
-            <p style={{ fontSize: '13px', color: '#999', margin: 0 }}>{products.length} article(s) dans votre catalogue</p>
-          </div>
-          <button
-            onClick={openAdd}
-            style={{ padding: '9px 18px', background: '#111', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}
-          >
-            Ajouter un produit
-          </button>
-        </div>
+        /* ── Navbar ── */
+        .pr-nav {
+          background: ${C.cream}; border-bottom: 1px solid ${C.light};
+          height: 60px; display: flex; align-items: center;
+          position: sticky; top: 0; z-index: 100;
+        }
+        .pr-nav-inner { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0 40px; }
+        .pr-nav-brand {
+          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-size: 22px; font-weight: 700; color: ${C.dark};
+          text-decoration: none; letter-spacing: -0.5px;
+        }
+        .pr-nav-links { display: flex; align-items: center; gap: 24px; }
+        .pr-nav-link {
+          font-size: 14px; font-weight: 500; color: ${C.dark};
+          text-decoration: none; position: relative; padding-bottom: 2px;
+        }
+        .pr-nav-link::after { content:''; position:absolute; bottom:0; left:0; width:0; height:1px; background:${C.dark}; transition:width .25s; }
+        .pr-nav-link:hover::after { width: 100%; }
+        .pr-nav-link.active::after { width: 100%; }
 
-        {/* Barre de recherche */}
-        <div style={{ marginBottom: '16px' }}>
-          <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Rechercher par nom ou reference..."
-            style={{ width: '100%', padding: '10px 12px', border: '1px solid #e5e5e5', borderRadius: '6px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }}
-          />
-        </div>
+        /* ── Body ── */
+        .pr-body { max-width: 960px; margin: 0 auto; padding: 48px 24px 80px; }
+        @media (min-width: 640px) { .pr-body { padding: 56px 40px 80px; } }
 
-        {/* Formulaire ajout/modif */}
-        {showForm && (
-          <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '8px', padding: '24px', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#111', margin: '0 0 20px' }}>
-              {editing ? 'Modifier le produit' : 'Nouveau produit'}
-            </h2>
+        /* ── Page header ── */
+        .pr-page-header { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 36px; }
+        .pr-page-eyebrow {
+          display: inline-block; font-size: 10px; font-weight: 600;
+          letter-spacing: 2px; text-transform: uppercase; color: ${C.muted};
+          background: ${C.light}; padding: 4px 16px; border-radius: 20px; margin-bottom: 12px;
+        }
+        .pr-page-title {
+          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-size: 38px; font-weight: 700; color: ${C.dark};
+          line-height: 1.05; letter-spacing: -1px;
+        }
+        .pr-page-sub { font-size: 14px; color: ${C.muted}; margin-top: 6px; font-weight: 300; }
 
-            {error && (
-              <div style={{ padding: '10px 12px', background: '#fff0f0', border: '1px solid #fcc', borderRadius: '6px', marginBottom: '16px', fontSize: '13px', color: '#c00' }}>
-                {error}
-              </div>
-            )}
+        /* ── Btn primary — identique landing ── */
+        .pr-btn-primary {
+          display: inline-flex; align-items: center; gap: 7px;
+          padding: 11px 22px;
+          background: ${C.dark}; color: ${C.cream};
+          border: none; border-radius: 8px;
+          font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+          cursor: pointer; letter-spacing: .01em;
+          transition: transform .2s, box-shadow .2s;
+          white-space: nowrap;
+        }
+        .pr-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(61,74,42,.18); }
+        .pr-btn-primary:disabled { background: ${C.muted}; cursor: not-allowed; transform: none; box-shadow: none; }
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div>
-                <label style={labelStyle}>Nom du produit</label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={e => setForm({ ...form, name: e.target.value })}
-                  placeholder="Ex: Robe fleurie"
-                  style={inputStyle}
-                />
-              </div>
-              <div>
-                <label style={labelStyle}>
-                  Reference{' '}
-                  <span style={{ color: '#999', fontWeight: '400' }}>(auto si vide)</span>
-                </label>
-                <input
-                  type="text"
-                  value={form.reference}
-                  onChange={e => setForm({ ...form, reference: e.target.value })}
-                  placeholder="Ex: REF-001"
-                  style={inputStyle}
-                />
-              </div>
-              <div>
-                <label style={labelStyle}>Prix (Ariary)</label>
-                <input
-                  type="number"
-                  value={form.price}
-                  onChange={e => setForm({ ...form, price: e.target.value })}
-                  placeholder="Ex: 25000"
-                  style={inputStyle}
-                />
-              </div>
-              <div>
-                <label style={labelStyle}>Description (optionnel)</label>
-                <input
-                  type="text"
-                  value={form.description}
-                  onChange={e => setForm({ ...form, description: e.target.value })}
-                  placeholder="Courte description"
-                  style={inputStyle}
-                />
-              </div>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={labelStyle}>Image du produit</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  style={{ fontSize: '13px', color: '#555' }}
-                />
-                {form.imageUrl && (
-                  <img
-                    src={form.imageUrl}
-                    alt="preview"
-                    style={{ marginTop: '10px', width: '80px', height: '80px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #e5e5e5' }}
-                  />
-                )}
-              </div>
+        /* ── Search ── */
+        .pr-search-wrap { position: relative; margin-bottom: 28px; }
+        .pr-search-icon {
+          position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+          color: ${C.muted}; opacity: .55; pointer-events: none; display: flex;
+        }
+        .pr-search-input {
+          width: 100%; padding: 12px 16px 12px 42px;
+          border: 1.5px solid ${C.light}; border-radius: 10px;
+          font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 400;
+          color: ${C.dark}; background: ${C.cream}; outline: none;
+          transition: border-color .15s, box-shadow .15s;
+        }
+        .pr-search-input:focus { border-color: ${C.caramel}; box-shadow: 0 0 0 3px rgba(212,163,115,.15); }
+        .pr-search-input::placeholder { color: ${C.muted}; opacity: .5; }
+
+        /* ── Alert ── */
+        .pr-alert {
+          display: flex; align-items: flex-start; gap: 10px;
+          padding: 12px 16px; border-radius: 10px;
+          font-size: 13px; font-weight: 500; margin-bottom: 20px;
+          animation: pr-fade-in .2s ease;
+        }
+        @keyframes pr-fade-in { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:none} }
+        .pr-alert-err { background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; }
+
+        /* ── Form card ── */
+        .pr-form-card {
+          background: #fff; border: 1px solid ${C.light};
+          border-radius: 20px; overflow: hidden; margin-bottom: 28px;
+          transition: box-shadow .2s;
+        }
+        .pr-form-header {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 20px 24px 16px; border-bottom: 1px solid ${C.light};
+          background: ${C.cream};
+        }
+        .pr-form-title {
+          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-size: 18px; font-weight: 700; color: ${C.dark};
+        }
+        .pr-form-close {
+          width: 30px; height: 30px; border-radius: 8px;
+          border: 1px solid ${C.light}; background: transparent;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer; color: ${C.muted}; transition: background .12s, color .12s;
+        }
+        .pr-form-close:hover { background: ${C.light}; color: ${C.dark}; }
+
+        .pr-form-body { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+
+        .pr-form-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+        @media (min-width: 540px) { .pr-form-grid { grid-template-columns: 1fr 1fr; } }
+
+        .pr-field { display: flex; flex-direction: column; gap: 6px; }
+        .pr-label { font-size: 11px; font-weight: 600; color: ${C.muted}; letter-spacing: .08em; text-transform: uppercase; }
+        .pr-hint  { font-size: 11px; font-weight: 300; color: ${C.muted}; text-transform: none; letter-spacing: 0; margin-left: 6px; }
+        .pr-input, .pr-textarea {
+          width: 100%; padding: 11px 14px;
+          border: 1.5px solid ${C.light}; border-radius: 10px;
+          font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 400;
+          color: ${C.dark}; background: ${C.cream}; outline: none;
+          transition: border-color .15s, background .15s, box-shadow .15s;
+        }
+        .pr-input:focus, .pr-textarea:focus {
+          border-color: ${C.caramel}; background: #fff;
+          box-shadow: 0 0 0 3px rgba(212,163,115,.15);
+        }
+        .pr-input::placeholder, .pr-textarea::placeholder { color: ${C.muted}; opacity: .5; font-weight: 300; }
+        .pr-input[type="number"] { -moz-appearance: textfield; }
+        .pr-input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+        .pr-image-preview {
+          width: 80px; height: 80px; border-radius: 10px;
+          border: 1.5px solid ${C.light}; overflow: hidden; position: relative;
+          margin-top: 10px; flex-shrink: 0;
+        }
+
+        .pr-form-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .pr-btn-cancel {
+          padding: 11px 22px;
+          background: transparent; color: ${C.muted};
+          border: 1.5px solid ${C.light}; border-radius: 8px;
+          font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+          cursor: pointer; transition: border-color .15s, color .15s;
+        }
+        .pr-btn-cancel:hover { border-color: ${C.muted}; color: ${C.dark}; }
+
+        /* ── Empty state ── */
+        .pr-empty {
+          background: #fff; border: 1px solid ${C.light}; border-radius: 20px;
+          padding: 72px 32px; text-align: center;
+        }
+        .pr-empty-icon {
+          width: 56px; height: 56px; border-radius: 16px;
+          background: ${C.light}; display: flex; align-items: center; justify-content: center;
+          margin: 0 auto 20px; color: ${C.muted};
+        }
+        .pr-empty-title {
+          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-size: 22px; font-weight: 700; color: ${C.dark}; margin-bottom: 8px;
+        }
+        .pr-empty-sub { font-size: 14px; color: ${C.muted}; font-weight: 300; margin-bottom: 28px; }
+
+        /* ── Product list ── */
+        .pr-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .pr-product-row {
+          background: #fff; border: 1px solid ${C.light}; border-radius: 14px;
+          padding: 16px 20px; display: flex; align-items: center; gap: 16px;
+          transition: box-shadow .18s, border-color .18s;
+        }
+        .pr-product-row:hover { box-shadow: 0 4px 16px rgba(61,74,42,.07); border-color: ${C.main}; }
+
+        .pr-product-img {
+          width: 56px; height: 56px; border-radius: 10px;
+          overflow: hidden; position: relative; flex-shrink: 0;
+          background: ${C.light}; border: 1px solid ${C.main};
+        }
+        .pr-product-img-placeholder {
+          width: 56px; height: 56px; border-radius: 10px;
+          background: ${C.light}; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center; color: ${C.muted};
+        }
+
+        .pr-product-info { flex: 1; min-width: 0; }
+        .pr-product-name {
+          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-size: 16px; font-weight: 700; color: ${C.dark}; margin-bottom: 2px;
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .pr-product-meta { font-size: 12px; color: ${C.muted}; font-weight: 300; }
+        .pr-product-price { font-size: 13px; font-weight: 600; color: ${C.dark}; }
+
+        .pr-product-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .pr-btn-edit {
+          padding: 8px 16px;
+          background: transparent; color: ${C.dark};
+          border: 1.5px solid ${C.light}; border-radius: 8px;
+          font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500;
+          cursor: pointer; transition: border-color .15s, background .15s;
+        }
+        .pr-btn-edit:hover { border-color: ${C.main}; background: ${C.light}; }
+
+        .pr-btn-delete {
+          padding: 8px 16px;
+          background: transparent; color: #991B1B;
+          border: 1.5px solid #FECACA; border-radius: 8px;
+          font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500;
+          cursor: pointer; transition: border-color .15s, background .15s;
+        }
+        .pr-btn-delete:hover { background: #FEF2F2; border-color: #FCA5A5; }
+
+        /* ── File input ── */
+        .pr-file-label {
+          display: inline-flex; align-items: center; gap: 8px;
+          padding: 10px 16px; border: 1.5px dashed ${C.main};
+          border-radius: 10px; cursor: pointer; background: ${C.cream};
+          font-size: 13px; color: ${C.muted}; font-weight: 400;
+          transition: border-color .15s, background .15s;
+        }
+        .pr-file-label:hover { border-color: ${C.caramel}; background: ${C.beige}; }
+
+        @media (max-width: 768px) {
+          .pr-nav-links { display: none; }
+          .pr-page-title { font-size: 28px !important; }
+          .pr-product-row { flex-wrap: wrap; }
+          .pr-product-actions { width: 100%; justify-content: flex-end; }
+        }
+      `}</style>
+
+      <div className="pr-root">
+        {/* Navbar */}
+        <nav className="pr-nav">
+          <div className="pr-nav-inner">
+            <Link href="/dashboard" className="pr-nav-brand">
+              Tsen<span style={{ color: C.caramel }}>@</span>be
+            </Link>
+            <div className="pr-nav-links">
+              <Link href="/dashboard" className="pr-nav-link">
+                Accueil
+              </Link>
+              <Link href="/dashboard/produits" className="pr-nav-link active">
+                Produits
+              </Link>
+              <Link href="/dashboard/stats" className="pr-nav-link">
+                Stats
+              </Link>
+              <Link href="/dashboard/profil" className="pr-nav-link">
+                Profil
+              </Link>
             </div>
-
-            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                style={{ padding: '9px 18px', background: saving ? '#999' : '#111', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '500', cursor: saving ? 'not-allowed' : 'pointer' }}
-              >
-                {saving ? 'Sauvegarde...' : (editing ? 'Mettre a jour' : 'Ajouter')}
-              </button>
-              <button
-                onClick={() => { setShowForm(false); resetForm(); }}
-                style={{ padding: '9px 18px', background: '#fff', color: '#555', border: '1px solid #e5e5e5', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}
-              >
-                Annuler
-              </button>
-            </div>
           </div>
-        )}
+        </nav>
 
-        {/* Liste produits */}
-        {products.length === 0 ? (
-          <div style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '8px', padding: '48px', textAlign: 'center' }}>
-            <p style={{ color: '#999', fontSize: '14px', margin: '0 0 16px' }}>
-              Vous n'avez pas encore de produits.
-            </p>
-            <button
-              onClick={openAdd}
-              style={{ padding: '9px 18px', background: '#111', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}
-            >
-              Ajouter votre premier produit
+        <div className="pr-body">
+          {/* Header */}
+          <div className="pr-page-header">
+            <div>
+              <div className="pr-page-eyebrow">Dashboard</div>
+              <h1 className="pr-page-title">Produits</h1>
+              <p className="pr-page-sub">
+                {products.length} article{products.length !== 1 ? "s" : ""} dans
+                votre catalogue
+              </p>
+            </div>
+            <button className="pr-btn-primary" onClick={openAdd}>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Ajouter un produit
             </button>
           </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {products.map(p => (
-              <div
-                key={p.id}
-                style={{ background: '#fff', border: '1px solid #e5e5e5', borderRadius: '8px', padding: '16px', display: 'flex', alignItems: 'center', gap: '16px' }}
+
+          {/* Search */}
+          <div className="pr-search-wrap">
+            <span className="pr-search-icon">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
               >
-                {p.image_url ? (
-                  <img src={p.image_url} alt={p.name} style={{ width: '56px', height: '56px', objectFit: 'cover', borderRadius: '6px', flexShrink: 0 }} />
-                ) : (
-                  <div style={{ width: '56px', height: '56px', background: '#f5f5f5', borderRadius: '6px', flexShrink: 0 }} />
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+            </span>
+            <input
+              type="text"
+              className="pr-search-input"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher par nom ou r&#233;f&#233;rence..."
+            />
+          </div>
+
+          {/* Formulaire */}
+          {showForm && (
+            <div className="pr-form-card">
+              <div className="pr-form-header">
+                <span className="pr-form-title">
+                  {editing ? "Modifier le produit" : "Nouveau produit"}
+                </span>
+                <button
+                  className="pr-form-close"
+                  onClick={() => {
+                    setShowForm(false);
+                    resetForm();
+                  }}
+                >
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="pr-form-body">
+                {error && (
+                  <div className="pr-alert pr-alert-err">
+                    <svg
+                      width="15"
+                      height="15"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{ flexShrink: 0, marginTop: "1px" }}
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    {error}
+                  </div>
                 )}
 
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: '14px', fontWeight: '600', color: '#111', margin: '0 0 2px' }}>{p.name}</p>
-                  <p style={{ fontSize: '12px', color: '#999', margin: 0 }}>{p.reference} - {p.price.toLocaleString()} Ar</p>
+                <div className="pr-form-grid">
+                  <div className="pr-field">
+                    <label className="pr-label">Nom du produit</label>
+                    <input
+                      type="text"
+                      className="pr-input"
+                      value={form.name}
+                      onChange={(e) =>
+                        setForm({ ...form, name: e.target.value })
+                      }
+                      placeholder="Ex: Robe fleurie"
+                    />
+                  </div>
+                  <div className="pr-field">
+                    <label className="pr-label">
+                      R&#233;f&#233;rence
+                      <span className="pr-hint">auto si vide</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="pr-input"
+                      value={form.reference}
+                      onChange={(e) =>
+                        setForm({ ...form, reference: e.target.value })
+                      }
+                      placeholder="Ex: REF-001"
+                    />
+                  </div>
+                  <div className="pr-field">
+                    <label className="pr-label">Prix (Ariary)</label>
+                    <input
+                      type="number"
+                      className="pr-input"
+                      value={form.price}
+                      onChange={(e) =>
+                        setForm({ ...form, price: e.target.value })
+                      }
+                      placeholder="Ex: 25000"
+                    />
+                  </div>
+                  <div className="pr-field">
+                    <label className="pr-label">
+                      Description <span className="pr-hint">optionnel</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="pr-input"
+                      value={form.description}
+                      onChange={(e) =>
+                        setForm({ ...form, description: e.target.value })
+                      }
+                      placeholder="Courte description"
+                    />
+                  </div>
+                  <div className="pr-field" style={{ gridColumn: "1 / -1" }}>
+                    <label className="pr-label">Image du produit</label>
+                    <label className="pr-file-label">
+                      <svg
+                        width="15"
+                        height="15"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                      </svg>
+                      {form.imageUrl
+                        ? "Changer l\u0027image"
+                        : "Choisir une image"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        style={{ display: "none" }}
+                      />
+                    </label>
+                    {form.imageUrl && (
+                      <div className="pr-image-preview">
+                        <Image
+                          src={form.imageUrl}
+                          alt="preview"
+                          fill
+                          style={{ objectFit: "cover" }}
+                          sizes="80px"
+                          unoptimized
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                <div className="pr-form-actions">
                   <button
-                    onClick={() => openEdit(p)}
-                    style={{ padding: '7px 14px', background: '#fff', border: '1px solid #e5e5e5', borderRadius: '6px', fontSize: '12px', color: '#333', cursor: 'pointer' }}
+                    className="pr-btn-primary"
+                    onClick={handleSave}
+                    disabled={saving}
                   >
-                    Modifier
+                    {saving && (
+                      <div
+                        style={{
+                          width: "13px",
+                          height: "13px",
+                          borderRadius: "50%",
+                          border: "2px solid rgba(255,255,255,.4)",
+                          borderTopColor: "#fff",
+                          animation: "spin .6s linear infinite",
+                        }}
+                      />
+                    )}
+                    {saving
+                      ? "Sauvegarde..."
+                      : editing
+                        ? "Mettre \u00e0 jour"
+                        : "Ajouter"}
                   </button>
                   <button
-                    onClick={() => handleDelete(p.id)}
-                    style={{ padding: '7px 14px', background: '#fff', border: '1px solid #fcc', borderRadius: '6px', fontSize: '12px', color: '#c00', cursor: 'pointer' }}
+                    className="pr-btn-cancel"
+                    onClick={() => {
+                      setShowForm(false);
+                      resetForm();
+                    }}
                   >
-                    Supprimer
+                    Annuler
                   </button>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          )}
+
+          {/* Liste */}
+          {products.length === 0 ? (
+            <div className="pr-empty">
+              <div className="pr-empty-icon">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <polyline points="21 15 16 10 5 21" />
+                </svg>
+              </div>
+              <p className="pr-empty-title">Pas encore de produits</p>
+              <p className="pr-empty-sub">
+                Ajoutez votre premier article pour remplir votre boutique
+              </p>
+              <button className="pr-btn-primary" onClick={openAdd}>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Ajouter un produit
+              </button>
+            </div>
+          ) : (
+            <div className="pr-list">
+              {products.map((p) => (
+                <div key={p.id} className="pr-product-row">
+                  {p.image_url ? (
+                    <div className="pr-product-img">
+                      <Image
+                        src={p.image_url}
+                        alt={p.name}
+                        fill
+                        style={{ objectFit: "cover" }}
+                        sizes="56px"
+                        unoptimized
+                      />
+                    </div>
+                  ) : (
+                    <div className="pr-product-img-placeholder">
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                      >
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                      </svg>
+                    </div>
+                  )}
+
+                  <div className="pr-product-info">
+                    <div className="pr-product-name">{p.name}</div>
+                    <div className="pr-product-meta">
+                      <span>{p.reference}</span>
+                      <span style={{ margin: "0 6px", opacity: 0.4 }}>
+                        &middot;
+                      </span>
+                      <span className="pr-product-price">
+                        {p.price.toLocaleString()} Ar
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="pr-product-actions">
+                    <button className="pr-btn-edit" onClick={() => openEdit(p)}>
+                      Modifier
+                    </button>
+                    <button
+                      className="pr-btn-delete"
+                      onClick={() => handleDelete(p.id)}
+                    >
+                      Supprimer
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -4,14 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 const C = {
-  main:    '#D9D9D9',   // gris clair → remplace C.main (vert sauge)
-  light:   '#EBEBEB',   // gris très clair → remplace C.light
-  cream:   '#FFFFFF',   // blanc pur → remplace C.cream
-  beige:   '#F5F5F5',   // blanc cassé → remplace C.beige
-  caramel: '#3C6E71',   // bleu-pétrole → remplace C.caramel
-  dark:    '#353535',   // noir charbon → remplace C.dark
-  text:    '#353535',   // même
-  muted:   '#284B63'    // bleu marine foncé → remplace C.muted
+   // bleu marine foncé → remplace C.muted
 };
 
 function useInView(options = {}) {
@@ -25,7 +18,7 @@ function useInView(options = {}) {
     }, { threshold: 0.15, ...options });
     obs.observe(el);
     return () => obs.disconnect();
-  }, []);
+  }, [options]);
   return [ref, inView];
 }
 
