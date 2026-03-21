@@ -7,14 +7,14 @@ import api from '../../../lib/api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 const C = {
-  cream:   '#FEFAE0',
-  beige:   '#FAEDCD',
-  sage:    '#CCD5AE',
-  light:   '#E9EDC9',
-  caramel: '#D4A373',
-  dark:    '#3D4A2A',
-  text:    '#2D2D2D',
-  muted:   '#6A7A52'
+  cream:   '#FFFFFF',
+  beige:   '#F5F5F5',
+  sage:    '#D9D9D9',
+  light:   '#EBEBEB',
+  caramel: '#3C6E71',
+  dark:    '#353535',
+  text:    '#353535',
+  muted:   '#284B63'
 };
 
 export default function DashboardPage() {
@@ -102,10 +102,10 @@ export default function DashboardPage() {
         .nav-link-dash:hover { background: ${C.light}; }
 
         .stat-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(61,74,42,0.10); }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(53,53,53,0.08); }
 
         .quick-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-        .quick-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(61,74,42,0.10); }
+        .quick-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(53,53,53,0.08); }
 
         @media (max-width: 768px) {
           .dash-nav-links { display: none !important; }
@@ -117,7 +117,7 @@ export default function DashboardPage() {
       `}</style>
 
       {/* Navbar */}
-      <div style={{ background: C.sage, borderBottom: `1px solid ${C.light}`, padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '58px', position: 'sticky', top: 0, zIndex: 100 }}>
+      <div style={{ background: C.cream, borderBottom: `1px solid ${C.light}`, padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '58px', position: 'sticky', top: 0, zIndex: 100 }}>
         <span style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", fontWeight: '700', fontSize: '20px', color: C.dark, letterSpacing: '-0.3px' }}>
           Tsen<span style={{ color: C.caramel }}>@</span>be
           <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: '11px', fontWeight: '300', color: C.muted, marginLeft: '8px', letterSpacing: '0' }}>by Keyros</span>
@@ -134,7 +134,7 @@ export default function DashboardPage() {
             <a key={link.label} href={link.href} className="nav-link-dash">{link.label}</a>
           ))}
           <button onClick={handleLogout} style={{ marginLeft: '8px', fontSize: '13px', color: C.dark, background: C.light, border: 'none', borderRadius: '6px', padding: '7px 14px', cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", fontWeight: '600', transition: 'background 0.15s' }}
-            onMouseEnter={e => e.target.style.background = C.cream}
+            onMouseEnter={e => e.target.style.background = C.sage}
             onMouseLeave={e => e.target.style.background = C.light}>
             Déconnexion
           </button>
@@ -149,7 +149,7 @@ export default function DashboardPage() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div style={{ background: C.sage, borderBottom: `1px solid ${C.light}`, padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: '4px', position: 'sticky', top: '58px', zIndex: 99 }}>
+        <div style={{ background: C.cream, borderBottom: `1px solid ${C.light}`, padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: '4px', position: 'sticky', top: '58px', zIndex: 99 }}>
           {[
             { label: 'Produits',   href: '/dashboard/produits' },
             { label: 'Stats',      href: '/dashboard/stats' },
@@ -208,7 +208,7 @@ export default function DashboardPage() {
               <XAxis dataKey="jour" tick={{ fontSize: 12, fill: C.muted, fontFamily: 'DM Sans, sans-serif' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 12, fill: C.muted, fontFamily: 'DM Sans, sans-serif' }} axisLine={false} tickLine={false} />
               <Tooltip
-                contentStyle={{ border: `1px solid ${C.light}`, borderRadius: '10px', fontSize: '12px', fontFamily: 'DM Sans, sans-serif', background: C.cream, color: C.dark, boxShadow: '0 4px 16px rgba(61,74,42,0.08)' }}
+                contentStyle={{ border: `1px solid ${C.light}`, borderRadius: '10px', fontSize: '12px', fontFamily: 'DM Sans, sans-serif', background: C.cream, color: C.dark, boxShadow: '0 4px 16px rgba(53,53,53,0.08)' }}
                 cursor={{ fill: C.light }}
               />
               <Bar dataKey="vues"  name="Vues"     fill={C.dark}    radius={[4, 4, 0, 0]} />
@@ -240,7 +240,7 @@ export default function DashboardPage() {
                 Expire le {user?.planExpiresAt ? new Date(user.planExpiresAt).toLocaleDateString('fr-FR') : '—'}
               </p>
             </div>
-            <a href="/dashboard/abonnement" style={{ fontSize: '13px', color: C.dark, background: C.sage, padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: '600', transition: 'background 0.2s', whiteSpace: 'nowrap' }}>
+            <a href="/dashboard/abonnement" style={{ fontSize: '13px', color: C.cream, background: C.caramel, padding: '8px 16px', borderRadius: '8px', textDecoration: 'none', fontWeight: '600', transition: 'opacity 0.2s', whiteSpace: 'nowrap' }}>
               Voir les offres
             </a>
           </div>

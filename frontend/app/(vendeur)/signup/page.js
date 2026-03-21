@@ -6,13 +6,13 @@ import api from '../../../lib/api';
 import { saveSession } from '../../../lib/auth';
 
 const C = {
-  cream:   '#FEFAE0',
-  beige:   '#FAEDCD',
-  sage:    '#CCD5AE',
-  light:   '#E9EDC9',
-  caramel: '#D4A373',
-  dark:    '#3D4A2A',
-  muted:   '#6A7A52'
+  cream:   '#FFFFFF',
+  beige:   '#F5F5F5',
+  sage:    '#D9D9D9',
+  light:   '#EBEBEB',
+  caramel: '#3C6E71',
+  dark:    '#353535',
+  muted:   '#284B63'
 };
 
 export default function SignupPage() {
@@ -75,13 +75,13 @@ export default function SignupPage() {
           border-color: ${C.caramel} !important;
           box-shadow: 0 0 0 3px ${C.caramel}22 !important;
         }
-        input::placeholder { color: ${C.muted}; opacity: 0.6; }
+        input::placeholder { color: ${C.muted}; opacity: 0.5; }
         .btn-signup {
           transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         .btn-signup:hover:not(:disabled) {
           transform: translateY(-2px);
-          box-shadow: 0 8px 24px rgba(61,74,42,0.2);
+          box-shadow: 0 8px 24px rgba(53,53,53,0.18);
         }
         .link-login {
           color: ${C.dark};

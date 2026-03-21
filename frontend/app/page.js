@@ -4,14 +4,14 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 const C = {
-  main:    '#CCD5AE',
-  light:   '#E9EDC9',
-  cream:   '#FEFAE0',
-  beige:   '#FAEDCD',
-  caramel: '#D4A373',
-  dark:    '#3D4A2A',
-  text:    '#2D2D2D',
-  muted:   '#6A7A52'
+  main:    '#D9D9D9',   // gris clair → remplace C.main (vert sauge)
+  light:   '#EBEBEB',   // gris très clair → remplace C.light
+  cream:   '#FFFFFF',   // blanc pur → remplace C.cream
+  beige:   '#F5F5F5',   // blanc cassé → remplace C.beige
+  caramel: '#3C6E71',   // bleu-pétrole → remplace C.caramel
+  dark:    '#353535',   // noir charbon → remplace C.dark
+  text:    '#353535',   // même
+  muted:   '#284B63'    // bleu marine foncé → remplace C.muted
 };
 
 function useInView(options = {}) {
@@ -108,21 +108,21 @@ export default function LandingPage() {
           letter-spacing: 0.1px;
           transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
         }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(61,74,42,0.18); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(53,53,53,0.18); }
         .btn-secondary {
           font-family: 'DM Sans', sans-serif;
           font-weight: 500;
           transition: background 0.2s ease, color 0.2s ease;
         }
-        .btn-secondary:hover { background: rgba(61,74,42,0.06) !important; }
+        .btn-secondary:hover { background: rgba(53,53,53,0.06) !important; }
 
         .plan-card { transition: transform 0.25s ease, box-shadow 0.25s ease; }
-        .plan-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(61,74,42,0.12); }
+        .plan-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(53,53,53,0.10); }
 
         .nav-link {
           font-family: 'DM Sans', sans-serif;
           font-size: 14px;
-          color: #3D4A2A;
+          color: #353535;
           text-decoration: none;
           font-weight: 500;
           position: relative;
@@ -133,7 +133,7 @@ export default function LandingPage() {
           position: absolute;
           bottom: 0; left: 0;
           width: 0; height: 1px;
-          background: #3D4A2A;
+          background: #353535;
           transition: width 0.25s ease;
         }
         .nav-link:hover::after { width: 100%; }
@@ -322,7 +322,7 @@ export default function LandingPage() {
                     </div>
                   ))}
                 </div>
-                <button className="btn-primary" onClick={() => router.push('/signup')} style={{ width: '100%', padding: '13px', background: C.main, border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '600', color: C.dark, cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
+                <button className="btn-primary" onClick={() => router.push('/signup')} style={{ width: '100%', padding: '13px', background: C.caramel, border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '600', color: '#fff', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }}>
                   Commencer
                 </button>
               </div>
@@ -347,7 +347,7 @@ export default function LandingPage() {
               <p style={{ fontSize: '14px', color: C.main, lineHeight: '1.85', margin: '0 0 24px', fontWeight: '300' }}>
                 La plateforme de mini-boutiques pour les vendeurs malgaches. Simple, rapide, adaptée à votre quotidien.
               </p>
-              <a href="https://wa.me/261345159568" rel="noreferrer" target="_blank" style={{ fontSize: '13px', color: C.caramel, textDecoration: 'none', fontWeight: '500', borderBottom: `1px solid ${C.caramel}40`, paddingBottom: '1px' }}>
+              <a href="https://wa.me/261345159568" rel="noreferrer" target="_blank" style={{ fontSize: '13px', color: C.caramel, textDecoration: 'none', fontWeight: '500', borderBottom: `1px solid ${C.caramel}60`, paddingBottom: '1px' }}>
                 Nous contacter sur WhatsApp
               </a>
             </div>
@@ -378,9 +378,9 @@ export default function LandingPage() {
               ))}
             </div>
           </div>
-          <div style={{ borderTop: '1px solid #4A5A32', paddingTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-            <p style={{ fontSize: '12px', color: C.muted, margin: 0, fontWeight: '300' }}>powered by keyros.</p>
-            <p style={{ fontSize: '12px', color: C.muted, margin: 0, fontWeight: '300' }}>Madagascar</p>
+          <div style={{ borderTop: `1px solid #484848`, paddingTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+            <p style={{ fontSize: '12px', color: '#888', margin: 0, fontWeight: '300' }}>powered by keyros.</p>
+            <p style={{ fontSize: '12px', color: '#888', margin: 0, fontWeight: '300' }}>Madagascar</p>
           </div>
         </div>
       </footer>
