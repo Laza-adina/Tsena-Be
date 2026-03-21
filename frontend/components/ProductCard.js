@@ -1,21 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ArrowRight } from "lucide-react";
 
 /* ══════════════════════════════════════════════════════════
-   MODAL — inchangé fonctionnellement, police theme injectée
+   MODAL
 ══════════════════════════════════════════════════════════ */
 const Modal = ({ product, theme, onClose, handleWhatsapp }) => {
-  const [mounted, setMounted] = useState(false);
   const c = theme?.colors ?? {};
   const fontDisplay = theme?.fonts?.display ? `'${theme.fonts.display}', ` : "";
   const fontBody = theme?.fonts?.body ? `'${theme.fonts.body}', ` : "";
 
+  // Overflow body + Escape — pas de setState ici
   useEffect(() => {
-    setMounted(true);
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = "auto";
@@ -29,8 +29,6 @@ const Modal = ({ product, theme, onClose, handleWhatsapp }) => {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
-
-  if (!mounted) return null;
 
   return createPortal(
     <AnimatePresence mode="wait">
@@ -61,7 +59,7 @@ const Modal = ({ product, theme, onClose, handleWhatsapp }) => {
           onClick={onClose}
         />
 
-        {/* Modal */}
+        {/* Panel */}
         <motion.div
           initial={{ opacity: 0, y: 36, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -102,15 +100,13 @@ const Modal = ({ product, theme, onClose, handleWhatsapp }) => {
               }}
             >
               {product.image_url ? (
-                <img
+                <Image
                   src={product.image_url}
                   alt={product.name}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    display: "block",
-                  }}
+                  fill
+                  style={{ objectFit: "cover" }}
+                  sizes="(max-width: 700px) 100vw, 44vw"
+                  unoptimized
                 />
               ) : (
                 <div
@@ -144,7 +140,7 @@ const Modal = ({ product, theme, onClose, handleWhatsapp }) => {
               )}
             </div>
 
-            {/* Content */}
+            {/* Contenu */}
             <div
               style={{
                 flex: 1,
@@ -155,14 +151,14 @@ const Modal = ({ product, theme, onClose, handleWhatsapp }) => {
                 fontFamily: `${fontBody}system-ui, sans-serif`,
               }}
             >
-              {/* Close */}
+              {/* Fermer */}
               <button
                 onClick={onClose}
                 style={{
                   position: "absolute",
                   top: "20px",
                   right: "20px",
-                  background: `${c.surface}`,
+                  background: c.surface,
                   border: `1px solid ${c.border}`,
                   width: "36px",
                   height: "36px",
@@ -297,12 +293,12 @@ const Modal = ({ product, theme, onClose, handleWhatsapp }) => {
                   e.currentTarget.style.opacity = "1";
                   e.currentTarget.style.transform = "none";
                 }}
-                onMouseDown={(e) =>
-                  (e.currentTarget.style.transform = "scale(0.98)")
-                }
-                onMouseUp={(e) =>
-                  (e.currentTarget.style.transform = "translateY(-1px)")
-                }
+                onMouseDown={(e) => {
+                  e.currentTarget.style.transform = "scale(0.98)";
+                }}
+                onMouseUp={(e) => {
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                }}
               >
                 <svg
                   width="16"
@@ -342,35 +338,24 @@ const Modal = ({ product, theme, onClose, handleWhatsapp }) => {
 ══════════════════════════════════════════════════════════ */
 const ProductCard = ({ product, theme, onTrack }) => {
   const [modalOpen, setModalOpen] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-  const [isPC, setIsPC] = useState(true);
 
   const c = theme?.colors ?? {};
   const fontDisp = theme?.fonts?.display ? `'${theme.fonts.display}', ` : "";
   const fontBody = theme?.fonts?.body ? `'${theme.fonts.body}', ` : "";
 
-  useEffect(() => {
-    const check = () => setIsPC(window.innerWidth > 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
-
-  const handleWhatsapp = (e) => {
-    e.stopPropagation();
-    if (onTrack) onTrack();
-    if (product.whatsappLink) window.open(product.whatsappLink, "_blank");
-  };
-
-  const handleCardClick = () => {
-    if (isPC) setModalOpen(true);
-    else setExpanded((v) => !v);
-  };
+  const handleWhatsapp = useCallback(
+    (e) => {
+      e.stopPropagation();
+      if (onTrack) onTrack();
+      if (product.whatsappLink) window.open(product.whatsappLink, "_blank");
+    },
+    [onTrack, product.whatsappLink],
+  );
 
   return (
     <>
       <div
-        onClick={handleCardClick}
+        onClick={() => setModalOpen(true)}
         style={{
           width: "100%",
           position: "relative",
@@ -397,24 +382,29 @@ const ProductCard = ({ product, theme, onTrack }) => {
         {/* Image */}
         {product.image_url ? (
           <div
-            style={{ width: "100%", aspectRatio: "1/1", overflow: "hidden" }}
+            style={{
+              width: "100%",
+              aspectRatio: "1/1",
+              overflow: "hidden",
+              position: "relative",
+            }}
           >
-            <img
+            <Image
               src={product.image_url}
               alt={product.name}
+              fill
               style={{
-                width: "100%",
-                height: "100%",
                 objectFit: "cover",
-                display: "block",
                 transition: "transform .4s cubic-bezier(0.22,0.68,0,1.2)",
               }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.transform = "scale(1.06)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.transform = "scale(1)")
-              }
+              sizes="(max-width: 480px) 50vw, (max-width: 1100px) 25vw, 20vw"
+              unoptimized
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "scale(1.06)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "scale(1)";
+              }}
             />
           </div>
         ) : (
@@ -450,7 +440,7 @@ const ProductCard = ({ product, theme, onTrack }) => {
 
         {/* Body */}
         <div
-          style={{ padding: "13px 14px 42px", position: "relative", zIndex: 3 }}
+          style={{ padding: "13px 14px 16px", position: "relative", zIndex: 3 }}
         >
           {product.reference && (
             <p
@@ -481,57 +471,16 @@ const ProductCard = ({ product, theme, onTrack }) => {
             {product.name}
           </h3>
 
-          {/* Description expandable mobile */}
-          {product.description && !isPC && (
-            <div style={{ marginBottom: "9px" }}>
-              <p
-                style={{
-                  fontSize: "12px",
-                  color: c.textMuted,
-                  lineHeight: "1.6",
-                  margin: 0,
-                  overflow: "hidden",
-                  transition: "max-height .36s ease",
-                  ...(expanded
-                    ? { maxHeight: "600px", display: "block" }
-                    : {
-                        maxHeight: "34px",
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                      }),
-                }}
-              >
-                {product.description}
-              </p>
-              {!expanded && product.description.length > 60 && (
-                <span
-                  style={{
-                    fontSize: "11px",
-                    color: c.accent,
-                    display: "block",
-                    marginTop: "2px",
-                  }}
-                >
-                  Voir plus
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* PC hint */}
-          {isPC && (
-            <p
-              style={{
-                fontSize: "11px",
-                color: c.textMuted,
-                margin: "0 0 8px",
-                opacity: 0.55,
-              }}
-            >
-              Voir les details
-            </p>
-          )}
+          <p
+            style={{
+              fontSize: "11px",
+              color: c.textMuted,
+              margin: "0 0 8px",
+              opacity: 0.55,
+            }}
+          >
+            Voir les details
+          </p>
 
           <p
             style={{
@@ -577,50 +526,28 @@ const ProductCard = ({ product, theme, onTrack }) => {
               transition: "opacity .15s, transform .1s",
               letterSpacing: ".01em",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.opacity = ".82")}
-            onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-            onMouseDown={(e) =>
-              (e.currentTarget.style.transform = "scale(0.98)")
-            }
-            onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.opacity = ".82";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.opacity = "1";
+            }}
+            onMouseDown={(e) => {
+              e.currentTarget.style.transform = "scale(0.98)";
+            }}
+            onMouseUp={(e) => {
+              e.currentTarget.style.transform = "scale(1)";
+            }}
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
               <path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.558 4.115 1.535 5.843L.057 24l6.305-1.654A11.954 11.954 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.823 9.823 0 0 1-5.001-1.366l-.359-.213-3.722.976.995-3.633-.234-.374A9.818 9.818 0 0 1 2.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z" />
             </svg>
-            Commander via WhatsApp
+            Commander
           </button>
         </div>
-
-        {/* Chevron mobile */}
-        {!isPC && (
-          <div
-            style={{
-              position: "absolute",
-              bottom: "12px",
-              right: "12px",
-              color: c.textMuted,
-              lineHeight: 0,
-              zIndex: 4,
-              transition: "transform .28s ease",
-              transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
-            }}
-          >
-            <svg
-              width="13"
-              height="13"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </div>
-        )}
       </div>
 
-      {/* Modal PC */}
       {modalOpen && (
         <Modal
           product={product}

@@ -1,13 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 import { getSession, saveSession } from "../../../../lib/auth";
 import api from "../../../../lib/api";
 import { THEMES, DEFAULT_THEME } from "../../../../lib/themes";
 
+const C = {
+  main: "#CCD5AE",
+  light: "#E9EDC9",
+  cream: "#FEFAE0",
+  beige: "#FAEDCD",
+  caramel: "#D4A373",
+  dark: "#3D4A2A",
+  text: "#2D2D2D",
+  muted: "#6A7A52",
+};
+
 /* ══════════════════════════════════════════════════════════════
-   ThemePickerModal — INCHANGÉ
+   ThemePickerModal — INCHANGÉ fonctionnellement
 ══════════════════════════════════════════════════════════════ */
 function ThemePickerModal({ localTheme, setLocalTheme }) {
   const [open, setOpen] = useState(false);
@@ -29,219 +42,138 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
 
         .tpm-btn {
           display: inline-flex; align-items: center; gap: 9px;
-          padding: 9px 14px;
-          border-radius: 8px;
-          border: 1px solid #e2e2e2;
-          background: #fafafa;
-          cursor: pointer;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 13px; font-weight: 500; color: #2a2a2a;
+          padding: 9px 14px; border-radius: 8px;
+          border: 1.5px solid ${C.light}; background: ${C.cream};
+          cursor: pointer; font-family: 'DM Sans', sans-serif;
+          font-size: 13px; font-weight: 500; color: ${C.dark};
           transition: box-shadow .15s, border-color .15s, background .15s;
           user-select: none;
         }
-        .tpm-btn:hover {
-          background: #fff;
-          border-color: #c8c8c8;
-          box-shadow: 0 2px 10px rgba(0,0,0,.07);
-        }
-        .tpm-btn-dots { display: flex; gap: 4px; }
-        .tpm-btn-dot  { width: 11px; height: 11px; border-radius: 50%; transition: transform .2s; }
-        .tpm-btn:hover .tpm-btn-dot { transform: scale(1.2); }
+        .tpm-btn:hover { background:#fff; border-color:${C.caramel}; box-shadow:0 2px 10px rgba(61,74,42,.1); }
+        .tpm-btn-dots { display:flex; gap:4px; }
+        .tpm-btn-dot  { width:11px; height:11px; border-radius:50%; transition:transform .2s; }
+        .tpm-btn:hover .tpm-btn-dot { transform:scale(1.2); }
 
         .tpm-overlay {
-          position: fixed; inset: 0;
-          background: rgba(10,10,10,.46);
-          backdrop-filter: blur(5px);
-          -webkit-backdrop-filter: blur(5px);
-          z-index: 1000;
-          animation: tpm-fog .2s ease forwards;
+          position:fixed; inset:0; background:rgba(61,74,42,.45);
+          backdrop-filter:blur(5px); z-index:1000;
+          animation:tpm-fog .2s ease forwards;
         }
-        @keyframes tpm-fog { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes tpm-fog { from{opacity:0} to{opacity:1} }
 
         .tpm-close {
-          width: 28px; height: 28px; border-radius: 7px;
-          border: 1px solid #ececec; background: transparent;
-          cursor: pointer; flex-shrink: 0;
-          display: flex; align-items: center; justify-content: center;
-          color: #aaa; transition: background .12s, color .12s;
+          width:28px; height:28px; border-radius:7px;
+          border:1px solid ${C.light}; background:transparent;
+          cursor:pointer; flex-shrink:0;
+          display:flex; align-items:center; justify-content:center;
+          color:${C.muted}; transition:background .12s, color .12s;
         }
-        .tpm-close:hover { background: #f3f3f3; color: #333; }
+        .tpm-close:hover { background:${C.light}; color:${C.dark}; }
 
         .tpm-apply {
-          border: none; border-radius: 8px;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 13px; font-weight: 600; color: #fff;
-          cursor: pointer;
-          transition: opacity .15s, transform .15s;
+          border:none; border-radius:8px; font-family:'DM Sans',sans-serif;
+          font-size:13px; font-weight:600; color:#fff;
+          cursor:pointer; transition:opacity .15s, transform .15s;
         }
-        .tpm-apply:hover { opacity: .87; transform: translateY(-1px); }
+        .tpm-apply:hover { opacity:.87; transform:translateY(-1px); }
 
         .tpm-sheet {
-          position: fixed;
-          bottom: 0; left: 0; right: 0;
-          height: 70vh; max-height: 530px;
-          background: #fff;
-          border-radius: 20px 20px 0 0;
-          z-index: 1001;
-          display: flex; flex-direction: column;
-          font-family: 'DM Sans', sans-serif;
-          animation: tpm-rise .3s cubic-bezier(.32,1.4,.6,1) forwards;
+          position:fixed; bottom:0; left:0; right:0;
+          height:70vh; max-height:530px; background:${C.cream};
+          border-radius:20px 20px 0 0; z-index:1001;
+          display:flex; flex-direction:column; font-family:'DM Sans',sans-serif;
+          animation:tpm-rise .3s cubic-bezier(.32,1.4,.6,1) forwards;
         }
-        @keyframes tpm-rise {
-          from { transform: translateY(100%); opacity: 0 }
-          to   { transform: translateY(0);    opacity: 1 }
-        }
+        @keyframes tpm-rise { from{transform:translateY(100%);opacity:0} to{transform:translateY(0);opacity:1} }
 
-        .tpm-sheet-drag {
-          flex-shrink: 0; padding: 12px 0 0;
-          display: flex; justify-content: center;
-        }
-        .tpm-drag-pill {
-          width: 36px; height: 4px;
-          border-radius: 2px; background: #e0e0e0;
-        }
+        .tpm-sheet-drag { flex-shrink:0; padding:12px 0 0; display:flex; justify-content:center; }
+        .tpm-drag-pill  { width:36px; height:4px; border-radius:2px; background:${C.light}; }
 
         .tpm-sheet-head {
-          flex-shrink: 0;
-          padding: 12px 18px 13px;
-          display: flex; align-items: center; justify-content: space-between;
-          border-bottom: 1px solid #f0f0f0;
+          flex-shrink:0; padding:12px 18px 13px;
+          display:flex; align-items:center; justify-content:space-between;
+          border-bottom:1px solid ${C.light};
         }
-        .tpm-sheet-title {
-          font-family: 'Syne', sans-serif;
-          font-size: 16px; font-weight: 700; color: #111;
-        }
-        .tpm-sheet-sub { font-size: 11px; color: #bbb; margin-top: 2px; }
+        .tpm-sheet-title { font-family:'Cormorant Garamond',Georgia,serif; font-size:18px; font-weight:700; color:${C.dark}; }
+        .tpm-sheet-sub   { font-size:11px; color:${C.muted}; margin-top:2px; }
 
-        .tpm-sheet-body {
-          flex: 1; overflow-y: auto; overflow-x: hidden;
-          padding: 14px 14px 0;
-          -webkit-overflow-scrolling: touch;
-        }
-        .tpm-sheet-body::-webkit-scrollbar { width: 3px; }
-        .tpm-sheet-body::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+        .tpm-sheet-body { flex:1; overflow-y:auto; overflow-x:hidden; padding:14px 14px 0; }
+        .tpm-sheet-body::-webkit-scrollbar { width:3px; }
+        .tpm-sheet-body::-webkit-scrollbar-thumb { background:${C.light}; border-radius:2px; }
 
-        .tpm-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 9px;
-        }
+        .tpm-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; }
 
         .tpm-card {
-          border-radius: 10px;
-          padding: 11px 10px 10px;
-          cursor: pointer;
-          border: 2px solid transparent;
-          position: relative;
-          transition: transform .15s, box-shadow .15s;
-          outline: 1.5px solid rgba(0,0,0,.06);
+          border-radius:10px; padding:11px 10px 10px; cursor:pointer;
+          border:2px solid transparent; position:relative;
+          transition:transform .15s, box-shadow .15s;
+          outline:1.5px solid rgba(61,74,42,.1);
         }
-        .tpm-card:hover  { transform: translateY(-2px); box-shadow: 0 5px 16px rgba(0,0,0,.1); }
-        .tpm-card.active { outline: none; }
-
-        .tpm-card-dots  { display: flex; gap: 4px; margin-bottom: 8px; }
-        .tpm-dot        { width: 13px; height: 13px; border-radius: 50%; }
-        .tpm-card-name  { font-size: 12px; font-weight: 600; line-height: 1.3; }
-        .tpm-card-style { font-size: 10px; margin-top: 1px; opacity: .65; }
-        .tpm-card-check {
-          position: absolute; top: 8px; right: 8px;
-          width: 16px; height: 16px; border-radius: 50%;
-          display: flex; align-items: center; justify-content: center;
-        }
+        .tpm-card:hover  { transform:translateY(-2px); box-shadow:0 5px 16px rgba(61,74,42,.12); }
+        .tpm-card.active { outline:none; }
+        .tpm-card-dots  { display:flex; gap:4px; margin-bottom:8px; }
+        .tpm-dot        { width:13px; height:13px; border-radius:50%; }
+        .tpm-card-name  { font-size:12px; font-weight:600; line-height:1.3; }
+        .tpm-card-style { font-size:10px; margin-top:1px; opacity:.65; }
+        .tpm-card-check { position:absolute; top:8px; right:8px; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
 
         .tpm-sheet-foot {
-          flex-shrink: 0;
-          padding: 13px 16px 20px;
-          border-top: 1px solid #f0f0f0;
-          background: #fff;
-          display: flex; align-items: center; justify-content: space-between; gap: 12px;
+          flex-shrink:0; padding:13px 16px 20px; border-top:1px solid ${C.light};
+          background:${C.cream}; display:flex; align-items:center; justify-content:space-between; gap:12px;
         }
-        .tpm-foot-label { font-size: 11px; color: #bbb; }
-        .tpm-foot-name  { font-size: 13px; font-weight: 600; color: #111; margin-top: 1px; }
+        .tpm-foot-label { font-size:11px; color:${C.muted}; }
+        .tpm-foot-name  { font-size:13px; font-weight:600; color:${C.dark}; margin-top:1px; }
 
         .tpm-panel {
-          position: fixed;
-          top: 50%; right: 0;
-          transform: translateY(-50%);
-          width: 290px;
-          height: 65vh; max-height: 560px;
-          background: #fff;
-          border-radius: 16px 0 0 16px;
-          z-index: 1001;
-          display: flex; flex-direction: column;
-          box-shadow: -6px 0 36px rgba(0,0,0,.13);
-          font-family: 'DM Sans', sans-serif;
-          animation: tpm-slide-in .3s cubic-bezier(.32,1.3,.6,1) forwards;
+          position:fixed; top:50%; right:0; transform:translateY(-50%);
+          width:290px; height:65vh; max-height:560px;
+          background:${C.cream}; border-radius:16px 0 0 16px;
+          z-index:1001; display:flex; flex-direction:column;
+          box-shadow:-6px 0 36px rgba(61,74,42,.14); font-family:'DM Sans',sans-serif;
+          animation:tpm-slide-in .3s cubic-bezier(.32,1.3,.6,1) forwards;
         }
         @keyframes tpm-slide-in {
-          from { transform: translateY(-50%) translateX(100%); opacity: 0 }
-          to   { transform: translateY(-50%) translateX(0);    opacity: 1 }
+          from{transform:translateY(-50%) translateX(100%);opacity:0}
+          to{transform:translateY(-50%) translateX(0);opacity:1}
         }
-
         .tpm-panel-head {
-          flex-shrink: 0;
-          padding: 22px 18px 16px;
-          border-bottom: 1px solid #f0f0f0;
-          display: flex; align-items: flex-start; justify-content: space-between;
+          flex-shrink:0; padding:22px 18px 16px; border-bottom:1px solid ${C.light};
+          display:flex; align-items:flex-start; justify-content:space-between;
         }
-        .tpm-panel-title {
-          font-family: 'Syne', sans-serif;
-          font-size: 19px; font-weight: 700; color: #111; line-height: 1.15;
-        }
-        .tpm-panel-sub { font-size: 11px; color: #bbb; margin-top: 4px; }
+        .tpm-panel-title { font-family:'Cormorant Garamond',Georgia,serif; font-size:22px; font-weight:700; color:${C.dark}; line-height:1.15; }
+        .tpm-panel-sub   { font-size:11px; color:${C.muted}; margin-top:4px; }
 
-        .tpm-panel-body {
-          flex: 1; overflow-y: auto; overflow-x: hidden;
-          padding: 12px 12px 0;
-        }
-        .tpm-panel-body::-webkit-scrollbar { width: 3px; }
-        .tpm-panel-body::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+        .tpm-panel-body { flex:1; overflow-y:auto; overflow-x:hidden; padding:12px 12px 0; }
+        .tpm-panel-body::-webkit-scrollbar { width:3px; }
+        .tpm-panel-body::-webkit-scrollbar-thumb { background:${C.light}; border-radius:2px; }
 
-        .tpm-list { display: flex; flex-direction: column; gap: 6px; }
-
+        .tpm-list { display:flex; flex-direction:column; gap:6px; }
         .tpm-row {
-          display: flex; align-items: center; gap: 11px;
-          border-radius: 10px;
-          padding: 10px 12px;
-          cursor: pointer;
-          border: 2px solid transparent;
-          transition: background .12s, border-color .12s, box-shadow .12s;
-          outline: 1.5px solid rgba(0,0,0,.06);
+          display:flex; align-items:center; gap:11px; border-radius:10px;
+          padding:10px 12px; cursor:pointer; border:2px solid transparent;
+          transition:background .12s, border-color .12s, box-shadow .12s;
+          outline:1.5px solid rgba(61,74,42,.08);
         }
-        .tpm-row:hover  { background: rgba(0,0,0,.02); box-shadow: 0 2px 8px rgba(0,0,0,.05); }
-        .tpm-row.active { outline: none; }
+        .tpm-row:hover  { background:rgba(61,74,42,.04); box-shadow:0 2px 8px rgba(61,74,42,.06); }
+        .tpm-row.active { outline:none; }
+        .tpm-row-dots  { display:flex; gap:4px; flex-shrink:0; }
+        .tpm-row-info  { flex:1; min-width:0; }
+        .tpm-row-name  { font-size:13px; font-weight:600; color:${C.dark}; }
+        .tpm-row-style { font-size:11px; color:${C.muted}; margin-top:1px; }
+        .tpm-row-check { flex-shrink:0; margin-left:auto; width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; }
 
-        .tpm-row-dots  { display: flex; gap: 4px; flex-shrink: 0; }
-        .tpm-row-info  { flex: 1; min-width: 0; }
-        .tpm-row-name  { font-size: 13px; font-weight: 600; color: #1a1a1a; }
-        .tpm-row-style { font-size: 11px; color: #999; margin-top: 1px; }
-        .tpm-row-check {
-          flex-shrink: 0; margin-left: auto;
-          width: 16px; height: 16px; border-radius: 50%;
-          display: flex; align-items: center; justify-content: center;
-        }
+        .tpm-panel-foot { flex-shrink:0; padding:13px 14px 18px; border-top:1px solid ${C.light}; background:${C.cream}; border-radius:0 0 0 16px; }
+        .tpm-apply-full { display:block; width:100%; padding:10px; text-align:center; }
 
-        .tpm-panel-foot {
-          flex-shrink: 0;
-          padding: 13px 14px 18px;
-          border-top: 1px solid #f0f0f0;
-          background: #fff;
-          border-radius: 0 0 0 16px;
-        }
-        .tpm-apply-full {
-          display: block; width: 100%; padding: 10px;
-          text-align: center;
-        }
-
-        .tpm-mobile-only  { display: flex !important; }
-        .tpm-desktop-only { display: none  !important; }
-        @media (min-width: 640px) {
-          .tpm-mobile-only  { display: none  !important; }
-          .tpm-desktop-only { display: flex  !important; }
+        .tpm-mobile-only  { display:flex !important; }
+        .tpm-desktop-only { display:none  !important; }
+        @media (min-width:640px) {
+          .tpm-mobile-only  { display:none  !important; }
+          .tpm-desktop-only { display:flex  !important; }
         }
       `}</style>
 
@@ -262,7 +194,7 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
           height="11"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="#aaa"
+          stroke={C.muted}
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -275,6 +207,7 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
         <>
           <div className="tpm-overlay" onClick={() => setOpen(false)} />
 
+          {/* MOBILE */}
           <div
             className="tpm-sheet tpm-mobile-only"
             onClick={(e) => e.stopPropagation()}
@@ -284,9 +217,9 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
             </div>
             <div className="tpm-sheet-head">
               <div>
-                <div className="tpm-sheet-title">Theme boutique</div>
+                <div className="tpm-sheet-title">Th&egrave;me boutique</div>
                 <div className="tpm-sheet-sub">
-                  Choisissez l'ambiance de votre vitrine
+                  Choisissez l&apos;ambiance de votre vitrine
                 </div>
               </div>
               <button
@@ -369,18 +302,15 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
             </div>
             <div className="tpm-sheet-foot">
               <div>
-                <div className="tpm-foot-label">Selectionne</div>
+                <div className="tpm-foot-label">S&eacute;lectionn&eacute;</div>
                 <div className="tpm-foot-name">
-                  {current.label} · {current.style}
+                  {current.label} &middot; {current.style}
                 </div>
               </div>
               <button
                 className="tpm-apply"
                 type="button"
-                style={{
-                  background: current.colors.primary,
-                  padding: "9px 20px",
-                }}
+                style={{ background: C.dark, padding: "9px 20px" }}
                 onClick={() => setOpen(false)}
               >
                 Appliquer
@@ -388,6 +318,7 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
             </div>
           </div>
 
+          {/* DESKTOP */}
           <div
             className="tpm-panel tpm-desktop-only"
             onClick={(e) => e.stopPropagation()}
@@ -395,7 +326,7 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
             <div className="tpm-panel-head">
               <div>
                 <div className="tpm-panel-title">
-                  Theme
+                  Th&egrave;me
                   <br />
                   boutique
                 </div>
@@ -478,10 +409,10 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
               <button
                 className="tpm-apply tpm-apply-full"
                 type="button"
-                style={{ background: current.colors.primary }}
+                style={{ background: C.dark }}
                 onClick={() => setOpen(false)}
               >
-                Appliquer — {current.label}
+                Appliquer &mdash; {current.label}
               </button>
             </div>
           </div>
@@ -492,7 +423,7 @@ function ThemePickerModal({ localTheme, setLocalTheme }) {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   Page principale — redesign
+   Page principale
 ══════════════════════════════════════════════════════════════ */
 export default function ProfilPage() {
   const router = useRouter();
@@ -509,16 +440,7 @@ export default function ProfilPage() {
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    const session = getSession();
-    if (!session) {
-      router.push("/login");
-      return;
-    }
-    fetchProfile();
-  }, []);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       const { data } = await api.get("/auth/me");
       const u = data.user;
@@ -538,7 +460,16 @@ export default function ProfilPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const session = getSession();
+    if (!session) {
+      router.push("/login");
+      return;
+    }
+    fetchProfile();
+  }, [router, fetchProfile]);
 
   const handleSave = async () => {
     setError("");
@@ -547,7 +478,7 @@ export default function ProfilPage() {
     try {
       await api.put("/auth/profile", { ...form, theme: localTheme });
       localStorage.setItem("shop_theme", localTheme);
-      setSuccess("Profil mis a jour.");
+      setSuccess("Profil mis \u00e0 jour.");
       const session = getSession();
       saveSession(session.token, { ...session.user, shopName: form.shopName });
     } catch (err) {
@@ -568,7 +499,7 @@ export default function ProfilPage() {
       });
       setForm((f) => ({ ...f, profileImageUrl: data.profileImageUrl }));
     } catch {
-      setError("Erreur lors de l'upload.");
+      setError("Erreur lors de l\u0027upload.");
     }
   };
 
@@ -580,7 +511,7 @@ export default function ProfilPage() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#f7f7f5",
+          background: C.cream,
         }}
       >
         <div
@@ -593,11 +524,11 @@ export default function ProfilPage() {
         >
           <div
             style={{
-              width: "32px",
-              height: "32px",
+              width: "28px",
+              height: "28px",
               borderRadius: "50%",
-              border: "2px solid #e0e0e0",
-              borderTopColor: "#111",
+              border: `2px solid ${C.light}`,
+              borderTopColor: C.dark,
               animation: "spin .7s linear infinite",
             }}
           />
@@ -605,8 +536,9 @@ export default function ProfilPage() {
           <span
             style={{
               fontSize: "13px",
-              color: "#999",
-              fontFamily: "system-ui, sans-serif",
+              color: C.muted,
+              fontFamily: "'DM Sans', sans-serif",
+              fontWeight: 300,
             }}
           >
             Chargement...
@@ -618,339 +550,211 @@ export default function ProfilPage() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Epilogue:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap');
 
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
 
-        .pf-root {
-          min-height: 100vh;
-          background: #f7f7f5;
-          font-family: 'Epilogue', system-ui, sans-serif;
-          color: #111;
-        }
+        .pf-root { min-height:100vh; background:${C.cream}; font-family:'DM Sans',sans-serif; color:${C.text}; }
 
-        /* ── Navbar ── */
         .pf-nav {
-          position: sticky; top: 0; z-index: 100;
-          background: #111;
-          display: flex; align-items: center;
-          height: 52px;
-          padding: 0 20px;
+          background:${C.cream}; border-bottom:1px solid ${C.light};
+          height:60px; display:flex; align-items:center;
+          position:sticky; top:0; z-index:100;
         }
+        .pf-nav-inner { display:flex; align-items:center; justify-content:space-between; width:100%; padding:0 40px; }
         .pf-nav-brand {
-          font-family: 'Syne', sans-serif;
-          font-size: 17px; font-weight: 800;
-          color: #fff; letter-spacing: -.3px;
-          text-decoration: none; flex-shrink: 0;
+          font-family:'Cormorant Garamond',Georgia,serif;
+          font-size:22px; font-weight:700; color:${C.dark}; text-decoration:none; letter-spacing:-0.5px;
         }
-        .pf-nav-links {
-          display: flex; align-items: center; gap: 4px;
-          margin-left: auto;
-        }
+        .pf-nav-links { display:flex; align-items:center; gap:24px; }
         .pf-nav-link {
-          font-size: 12px; font-weight: 500;
-          color: #aaa; text-decoration: none;
-          padding: 6px 12px; border-radius: 6px;
-          transition: color .15s, background .15s;
-          letter-spacing: .01em;
+          font-size:14px; font-weight:500; color:${C.dark};
+          text-decoration:none; position:relative; padding-bottom:2px;
         }
-        .pf-nav-link:hover { color: #fff; background: rgba(255,255,255,.08); }
-        .pf-nav-link.active { color: #fff; }
+        .pf-nav-link::after { content:''; position:absolute; bottom:0; left:0; width:0; height:1px; background:${C.dark}; transition:width .25s; }
+        .pf-nav-link:hover::after { width:100%; }
+        .pf-nav-link.active::after { width:100%; }
 
-        /* ── Layout desktop: sidebar gauche + form droite ── */
-        .pf-layout {
-          display: grid;
-          grid-template-columns: 1fr;
-          min-height: calc(100vh - 52px);
-        }
-        @media (min-width: 900px) {
-          .pf-layout {
-            grid-template-columns: 280px 1fr;
-          }
-        }
+        .pf-layout { display:grid; grid-template-columns:1fr; min-height:calc(100vh - 60px); }
+        @media (min-width:900px) { .pf-layout { grid-template-columns:260px 1fr; } }
 
-        /* ── Sidebar ── */
         .pf-sidebar {
-          display: none;
-          background: #fff;
-          border-right: 1px solid #ebebeb;
-          padding: 40px 28px;
-          flex-direction: column;
-          gap: 32px;
-          position: sticky;
-          top: 52px;
-          height: calc(100vh - 52px);
-          overflow-y: auto;
+          display:none; background:${C.light}; border-right:1px solid ${C.main};
+          padding:48px 28px; flex-direction:column; gap:32px;
+          position:sticky; top:60px; height:calc(100vh - 60px); overflow-y:auto;
         }
-        @media (min-width: 900px) {
-          .pf-sidebar { display: flex; }
-        }
+        @media (min-width:900px) { .pf-sidebar { display:flex; } }
 
-        .pf-sidebar-avatar-wrap {
-          display: flex; flex-direction: column; align-items: center; gap: 14px;
-        }
+        .pf-sidebar-avatar-wrap { display:flex; flex-direction:column; align-items:center; gap:14px; }
         .pf-sidebar-avatar {
-          width: 88px; height: 88px; border-radius: 50%;
-          border: 3px solid #f0f0f0;
-          object-fit: cover; cursor: pointer;
-          transition: border-color .2s, transform .2s;
-          display: block;
+          width:88px; height:88px; border-radius:50%;
+          border:3px solid ${C.main}; cursor:pointer;
+          transition:border-color .2s, transform .2s; overflow:hidden; position:relative;
         }
-        .pf-sidebar-avatar:hover { border-color: #111; transform: scale(1.03); }
+        .pf-sidebar-avatar:hover { border-color:${C.caramel}; transform:scale(1.03); }
         .pf-avatar-placeholder {
-          width: 88px; height: 88px; border-radius: 50%;
-          background: #f2f2f2; border: 2px dashed #d8d8d8;
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer; transition: border-color .2s, background .2s;
+          width:88px; height:88px; border-radius:50%;
+          background:${C.main}; border:2px dashed ${C.muted};
+          display:flex; align-items:center; justify-content:center;
+          cursor:pointer; transition:border-color .2s, background .2s;
         }
-        .pf-avatar-placeholder:hover { border-color: #999; background: #ebebeb; }
-
+        .pf-avatar-placeholder:hover { border-color:${C.caramel}; background:${C.beige}; }
         .pf-sidebar-name {
-          font-family: 'Syne', sans-serif;
-          font-size: 17px; font-weight: 700;
-          color: #111; text-align: center; line-height: 1.2;
-          word-break: break-word;
+          font-family:'Cormorant Garamond',Georgia,serif;
+          font-size:18px; font-weight:700; color:${C.dark}; text-align:center; line-height:1.2; word-break:break-word;
         }
-        .pf-sidebar-hint {
-          font-size: 11px; color: #bbb; text-align: center;
-          margin-top: -8px;
-        }
-
-        .pf-sidebar-divider {
-          height: 1px; background: #f0f0f0; width: 100%;
-        }
-
+        .pf-sidebar-hint { font-size:11px; color:${C.muted}; text-align:center; margin-top:-6px; font-weight:300; }
+        .pf-sidebar-divider { height:1px; background:${C.main}; width:100%; }
         .pf-sidebar-section-title {
-          font-size: 10px; font-weight: 600;
-          letter-spacing: .08em; text-transform: uppercase;
-          color: #bbb; margin-bottom: 10px;
+          font-size:10px; font-weight:600; letter-spacing:.1em;
+          text-transform:uppercase; color:${C.muted}; margin-bottom:10px;
         }
+        .pf-info-item { display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:1px solid ${C.main}; }
+        .pf-info-item:last-child { border-bottom:none; }
+        .pf-info-icon { width:30px; height:30px; border-radius:8px; background:${C.main}; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:${C.muted}; }
+        .pf-info-text { flex:1; min-width:0; }
+        .pf-info-label { font-size:10px; color:${C.muted}; font-weight:600; margin-bottom:2px; text-transform:uppercase; letter-spacing:.05em; }
+        .pf-info-val   { font-size:13px; color:${C.dark}; font-weight:500; word-break:break-all; }
+        .pf-info-empty { font-size:13px; color:${C.muted}; font-style:italic; font-weight:300; }
 
-        .pf-info-item {
-          display: flex; align-items: flex-start; gap: 10px;
-          padding: 10px 0;
-          border-bottom: 1px solid #f5f5f5;
-        }
-        .pf-info-item:last-child { border-bottom: none; }
-        .pf-info-icon {
-          width: 32px; height: 32px; border-radius: 8px;
-          background: #f5f5f5;
-          display: flex; align-items: center; justify-content: center;
-          flex-shrink: 0; color: #555;
-        }
-        .pf-info-text { flex: 1; min-width: 0; }
-        .pf-info-label { font-size: 10px; color: #bbb; font-weight: 500; margin-bottom: 2px; text-transform: uppercase; letter-spacing: .05em; }
-        .pf-info-val   { font-size: 13px; color: #222; font-weight: 500; word-break: break-all; }
-        .pf-info-empty { font-size: 13px; color: #ccc; font-style: italic; }
+        .pf-main { padding:40px 24px 80px; }
+        @media (min-width:640px)  { .pf-main { padding:48px 40px 80px; } }
+        @media (min-width:1100px) { .pf-main { padding:56px 64px 80px; } }
 
-        /* ── Main ── */
-        .pf-main {
-          padding: 32px 20px 60px;
-        }
-        @media (min-width: 640px) {
-          .pf-main { padding: 40px 40px 60px; }
-        }
-        @media (min-width: 1100px) {
-          .pf-main { padding: 48px 64px 60px; }
-        }
-
-        .pf-page-header {
-          margin-bottom: 32px;
-          display: flex; align-items: flex-end; justify-content: space-between;
-          flex-wrap: wrap; gap: 12px;
+        .pf-page-header { margin-bottom:40px; }
+        .pf-page-eyebrow {
+          display:inline-block; font-size:10px; font-weight:600; letter-spacing:2px;
+          text-transform:uppercase; color:${C.muted}; background:${C.light};
+          padding:4px 16px; border-radius:20px; margin-bottom:16px;
         }
         .pf-page-title {
-          font-family: 'Syne', sans-serif;
-          font-size: 28px; font-weight: 800;
-          color: #111; line-height: 1.05; letter-spacing: -.5px;
+          font-family:'Cormorant Garamond',Georgia,serif;
+          font-size:38px; font-weight:700; color:${C.dark}; line-height:1.05; letter-spacing:-1px;
         }
-        .pf-page-sub {
-          font-size: 13px; color: #999; margin-top: 6px;
-        }
+        .pf-page-sub { font-size:15px; color:${C.muted}; margin-top:8px; font-weight:300; line-height:1.7; }
 
-        /* ── Alerts ── */
         .pf-alert {
-          display: flex; align-items: flex-start; gap: 10px;
-          padding: 13px 16px; border-radius: 10px;
-          font-size: 13px; font-weight: 500;
-          margin-bottom: 20px;
-          animation: pf-fade-in .2s ease;
+          display:flex; align-items:flex-start; gap:10px;
+          padding:13px 18px; border-radius:10px;
+          font-size:13px; font-weight:500; margin-bottom:24px;
+          animation:pf-fade-in .2s ease;
         }
-        @keyframes pf-fade-in { from { opacity: 0; transform: translateY(-4px) } to { opacity: 1; transform: none } }
-        .pf-alert-err  { background: #fdf2f2; border: 1px solid #f5c5c5; color: #b91c1c; }
-        .pf-alert-ok   { background: #f0faf4; border: 1px solid #a7d7b8; color: #166534; }
+        @keyframes pf-fade-in { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:none} }
+        .pf-alert-err { background:#FEF2F2; border:1px solid #FECACA; color:#991B1B; }
+        .pf-alert-ok  { background:${C.light}; border:1px solid ${C.main}; color:${C.dark}; }
 
-        /* ── Form card sections ── */
-        .pf-sections {
-          display: flex; flex-direction: column; gap: 20px;
-        }
+        .pf-sections { display:flex; flex-direction:column; gap:20px; }
 
-        .pf-section {
-          background: #fff;
-          border: 1px solid #ebebeb;
-          border-radius: 14px;
-          overflow: hidden;
-        }
+        .pf-section { background:#fff; border:1px solid ${C.light}; border-radius:20px; overflow:hidden; transition:box-shadow .2s; }
+        .pf-section:hover { box-shadow:0 4px 20px rgba(61,74,42,.07); }
 
         .pf-section-header {
-          padding: 18px 22px 0;
-          border-bottom: 1px solid #f5f5f5;
-          padding-bottom: 14px;
-          margin-bottom: 20px;
-          display: flex; align-items: center; gap: 10px;
+          padding:20px 24px 16px; border-bottom:1px solid ${C.light};
+          display:flex; align-items:center; gap:12px; background:${C.cream};
         }
-        .pf-section-icon {
-          width: 30px; height: 30px; border-radius: 8px;
-          background: #f5f5f5;
-          display: flex; align-items: center; justify-content: center;
-          color: #555; flex-shrink: 0;
-        }
-        .pf-section-label {
-          font-family: 'Syne', sans-serif;
-          font-size: 14px; font-weight: 700;
-          color: #111;
-        }
+        .pf-section-icon { width:32px; height:32px; border-radius:8px; background:${C.light}; display:flex; align-items:center; justify-content:center; color:${C.muted}; flex-shrink:0; }
+        .pf-section-label { font-family:'Cormorant Garamond',Georgia,serif; font-size:16px; font-weight:700; color:${C.dark}; letter-spacing:-0.3px; }
 
-        .pf-section-body {
-          padding: 0 22px 22px;
-          display: flex; flex-direction: column; gap: 18px;
-        }
+        .pf-section-body { padding:22px 24px 24px; display:flex; flex-direction:column; gap:18px; }
 
-        /* ── Field ── */
-        .pf-field { display: flex; flex-direction: column; gap: 6px; }
-        .pf-label {
-          font-size: 12px; font-weight: 600;
-          color: #555; letter-spacing: .02em; text-transform: uppercase;
-        }
-        .pf-hint {
-          font-size: 12px; font-weight: 400; color: #bbb;
-          text-transform: none; letter-spacing: 0;
-          display: inline-block; margin-left: 6px;
-        }
+        .pf-field { display:flex; flex-direction:column; gap:6px; }
+        .pf-label { font-size:11px; font-weight:600; color:${C.muted}; letter-spacing:.08em; text-transform:uppercase; }
+        .pf-hint  { font-size:11px; font-weight:300; color:${C.muted}; text-transform:none; letter-spacing:0; margin-left:6px; }
         .pf-input, .pf-textarea {
-          width: 100%;
-          padding: 11px 14px;
-          border: 1.5px solid #e8e8e8;
-          border-radius: 8px;
-          font-family: 'Epilogue', system-ui, sans-serif;
-          font-size: 14px; color: #111;
-          background: #fafafa;
-          outline: none;
-          transition: border-color .15s, background .15s, box-shadow .15s;
-          -webkit-appearance: none;
+          width:100%; padding:11px 14px;
+          border:1.5px solid ${C.light}; border-radius:10px;
+          font-family:'DM Sans',sans-serif; font-size:14px; font-weight:400;
+          color:${C.dark}; background:${C.cream}; outline:none;
+          transition:border-color .15s, background .15s, box-shadow .15s;
         }
         .pf-input:focus, .pf-textarea:focus {
-          border-color: #111;
-          background: #fff;
-          box-shadow: 0 0 0 3px rgba(0,0,0,.06);
+          border-color:${C.caramel}; background:#fff;
+          box-shadow:0 0 0 3px rgba(212,163,115,.15);
         }
-        .pf-input::placeholder, .pf-textarea::placeholder { color: #ccc; }
-        .pf-textarea { resize: vertical; line-height: 1.6; min-height: 90px; }
+        .pf-input::placeholder, .pf-textarea::placeholder { color:${C.muted}; opacity:.5; font-weight:300; }
+        .pf-textarea { resize:vertical; line-height:1.65; min-height:90px; }
 
-        /* ── Mobile avatar (inside main, only < 900px) ── */
-        .pf-mobile-avatar {
-          display: flex; align-items: center; gap: 16px;
-        }
-        @media (min-width: 900px) {
-          .pf-mobile-avatar-section { display: none; }
-        }
-
+        .pf-mobile-avatar { display:flex; align-items:center; gap:16px; }
+        @media (min-width:900px) { .pf-mobile-avatar-section { display:none; } }
         .pf-mobile-avatar-img {
-          width: 72px; height: 72px; border-radius: 50%;
-          object-fit: cover; border: 2px solid #e8e8e8;
-          display: block; cursor: pointer;
-          transition: border-color .2s;
+          width:72px; height:72px; border-radius:50%;
+          border:2px solid ${C.main}; cursor:pointer;
+          overflow:hidden; position:relative; flex-shrink:0;
         }
-        .pf-mobile-avatar-img:hover { border-color: #111; }
         .pf-mobile-avatar-placeholder {
-          width: 72px; height: 72px; border-radius: 50%;
-          background: #f2f2f2; border: 2px dashed #d8d8d8;
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer; flex-shrink: 0;
+          width:72px; height:72px; border-radius:50%;
+          background:${C.main}; border:2px dashed ${C.muted};
+          display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
         }
-        .pf-mobile-avatar-info { flex: 1; }
-        .pf-mobile-avatar-name {
-          font-family: 'Syne', sans-serif;
-          font-size: 16px; font-weight: 700; color: #111;
-        }
-        .pf-mobile-avatar-hint { font-size: 12px; color: #bbb; margin-top: 3px; }
+        .pf-mobile-avatar-info { flex:1; }
+        .pf-mobile-avatar-name { font-family:'Cormorant Garamond',Georgia,serif; font-size:17px; font-weight:700; color:${C.dark}; }
+        .pf-mobile-avatar-hint { font-size:12px; color:${C.muted}; margin-top:3px; font-weight:300; }
 
-        /* ── Save button ── */
-        .pf-save-bar {
-          margin-top: 24px;
-          display: flex; align-items: center; justify-content: flex-end;
-          gap: 12px;
-        }
+        .pf-grid-2 { display:grid; grid-template-columns:1fr; gap:18px; }
+        @media (min-width:640px) { .pf-grid-2 { grid-template-columns:1fr 1fr; } }
+
+        .pf-save-bar { margin-top:28px; display:flex; align-items:center; justify-content:flex-end; }
         .pf-btn-save {
-          display: inline-flex; align-items: center; gap: 8px;
-          padding: 12px 28px;
-          background: #111; color: #fff;
-          border: none; border-radius: 10px;
-          font-family: 'Epilogue', system-ui, sans-serif;
-          font-size: 14px; font-weight: 600;
-          cursor: pointer;
-          transition: background .15s, transform .15s, box-shadow .15s;
-          letter-spacing: .01em;
+          display:inline-flex; align-items:center; gap:8px;
+          padding:13px 32px; background:${C.dark}; color:${C.cream};
+          border:none; border-radius:8px; font-family:'DM Sans',sans-serif;
+          font-size:14px; font-weight:600; cursor:pointer;
+          transition:transform .2s, box-shadow .2s; letter-spacing:.01em;
         }
-        .pf-btn-save:hover:not(:disabled) {
-          background: #222;
-          box-shadow: 0 4px 16px rgba(0,0,0,.18);
-          transform: translateY(-1px);
-        }
-        .pf-btn-save:disabled {
-          background: #bbb; cursor: not-allowed;
-        }
-        .pf-btn-save-spinner {
-          width: 14px; height: 14px; border-radius: 50%;
-          border: 2px solid rgba(255,255,255,.4);
-          border-top-color: #fff;
-          animation: spin .6s linear infinite;
+        .pf-btn-save:hover:not(:disabled) { transform:translateY(-2px); box-shadow:0 8px 24px rgba(61,74,42,.18); }
+        .pf-btn-save:disabled { background:${C.muted}; cursor:not-allowed; }
+        .pf-btn-spinner {
+          width:14px; height:14px; border-radius:50%;
+          border:2px solid rgba(255,255,255,.4); border-top-color:#fff;
+          animation:spin .6s linear infinite;
         }
 
-        /* ── Two-col grid for fields on wide screens ── */
-        .pf-grid-2 {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 18px;
-        }
-        @media (min-width: 640px) {
-          .pf-grid-2 { grid-template-columns: 1fr 1fr; }
+        @media (max-width:768px) {
+          .pf-nav-links { display:none; }
+          .pf-page-title { font-size:28px !important; }
         }
       `}</style>
 
       <div className="pf-root">
-        {/* ── Navbar ── */}
+        {/* Navbar */}
         <nav className="pf-nav">
-          <a href="/dashboard" className="pf-nav-brand">
-            Tsen@be
-          </a>
-          <div className="pf-nav-links">
-            <a href="/dashboard" className="pf-nav-link">
-              Accueil
-            </a>
-            <a href="/dashboard/produits" className="pf-nav-link">
-              Produits
-            </a>
-            <a href="/dashboard/stats" className="pf-nav-link">
-              Stats
-            </a>
-            <a href="/dashboard/profil" className="pf-nav-link active">
-              Profil
-            </a>
+          <div className="pf-nav-inner">
+            <Link href="/dashboard" className="pf-nav-brand">
+              Tsen<span style={{ color: C.caramel }}>@</span>be
+            </Link>
+            <div className="pf-nav-links">
+              <Link href="/dashboard" className="pf-nav-link">
+                Accueil
+              </Link>
+              <Link href="/dashboard/produits" className="pf-nav-link">
+                Produits
+              </Link>
+              <Link href="/dashboard/stats" className="pf-nav-link">
+                Stats
+              </Link>
+              <Link href="/dashboard/profil" className="pf-nav-link active">
+                Profil
+              </Link>
+            </div>
           </div>
         </nav>
 
         <div className="pf-layout">
-          {/* ── Sidebar desktop ── */}
+          {/* Sidebar */}
           <aside className="pf-sidebar">
             <div className="pf-sidebar-avatar-wrap">
               <label style={{ cursor: "pointer" }}>
                 {form.profileImageUrl ? (
-                  <img
-                    src={form.profileImageUrl}
-                    alt="profil"
-                    className="pf-sidebar-avatar"
-                  />
+                  <div className="pf-sidebar-avatar">
+                    <Image
+                      src={form.profileImageUrl}
+                      alt="profil"
+                      fill
+                      style={{ objectFit: "cover" }}
+                      sizes="88px"
+                      unoptimized
+                    />
+                  </div>
                 ) : (
                   <div className="pf-avatar-placeholder">
                     <svg
@@ -958,7 +762,7 @@ export default function ProfilPage() {
                       height="28"
                       viewBox="0 0 24 24"
                       fill="none"
-                      stroke="#bbb"
+                      stroke={C.muted}
                       strokeWidth="1.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -991,10 +795,12 @@ export default function ProfilPage() {
               <div className="pf-sidebar-section-title">Infos boutique</div>
               {[
                 {
+                  label: "Nom",
+                  val: form.shopName,
                   icon: (
                     <svg
-                      width="14"
-                      height="14"
+                      width="13"
+                      height="13"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
@@ -1006,14 +812,14 @@ export default function ProfilPage() {
                       <circle cx="12" cy="10" r="3" />
                     </svg>
                   ),
-                  label: "Nom",
-                  val: form.shopName,
                 },
                 {
+                  label: "WhatsApp",
+                  val: form.whatsapp,
                   icon: (
                     <svg
-                      width="14"
-                      height="14"
+                      width="13"
+                      height="13"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
@@ -1024,14 +830,14 @@ export default function ProfilPage() {
                       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.22h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.82a16 16 0 0 0 6 6l1.27-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
                     </svg>
                   ),
-                  label: "WhatsApp",
-                  val: form.whatsapp,
                 },
                 {
+                  label: "Facebook",
+                  val: form.facebookUrl,
                   icon: (
                     <svg
-                      width="14"
-                      height="14"
+                      width="13"
+                      height="13"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
@@ -1042,18 +848,16 @@ export default function ProfilPage() {
                       <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
                     </svg>
                   ),
-                  label: "Facebook",
-                  val: form.facebookUrl,
                 },
-              ].map((item, i) => (
-                <div className="pf-info-item" key={i}>
+              ].map((item) => (
+                <div className="pf-info-item" key={item.label}>
                   <div className="pf-info-icon">{item.icon}</div>
                   <div className="pf-info-text">
                     <div className="pf-info-label">{item.label}</div>
                     {item.val ? (
                       <div className="pf-info-val">{item.val}</div>
                     ) : (
-                      <div className="pf-info-empty">Non renseigne</div>
+                      <div className="pf-info-empty">Non renseign&eacute;</div>
                     )}
                   </div>
                 </div>
@@ -1061,15 +865,14 @@ export default function ProfilPage() {
             </div>
           </aside>
 
-          {/* ── Main ── */}
+          {/* Main */}
           <main className="pf-main">
             <div className="pf-page-header">
-              <div>
-                <h1 className="pf-page-title">Mon profil</h1>
-                <p className="pf-page-sub">
-                  Personnalisez votre boutique en ligne
-                </p>
-              </div>
+              <div className="pf-page-eyebrow">Dashboard</div>
+              <h1 className="pf-page-title">Mon profil</h1>
+              <p className="pf-page-sub">
+                Personnalisez votre boutique en ligne
+              </p>
             </div>
 
             {error && (
@@ -1112,17 +915,22 @@ export default function ProfilPage() {
             )}
 
             <div className="pf-sections">
-              {/* ── Photo + nom (mobile only) ── */}
+              {/* Mobile avatar */}
               <div className="pf-section pf-mobile-avatar-section">
                 <div className="pf-section-body" style={{ paddingTop: "22px" }}>
                   <div className="pf-mobile-avatar">
-                    <label style={{ cursor: "pointer", flexShrink: 0 }}>
+                    <label style={{ cursor: "pointer" }}>
                       {form.profileImageUrl ? (
-                        <img
-                          src={form.profileImageUrl}
-                          alt="profil"
-                          className="pf-mobile-avatar-img"
-                        />
+                        <div className="pf-mobile-avatar-img">
+                          <Image
+                            src={form.profileImageUrl}
+                            alt="profil"
+                            fill
+                            style={{ objectFit: "cover" }}
+                            sizes="72px"
+                            unoptimized
+                          />
+                        </div>
                       ) : (
                         <div className="pf-mobile-avatar-placeholder">
                           <svg
@@ -1130,7 +938,7 @@ export default function ProfilPage() {
                             height="24"
                             viewBox="0 0 24 24"
                             fill="none"
-                            stroke="#bbb"
+                            stroke={C.muted}
                             strokeWidth="1.5"
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -1159,7 +967,7 @@ export default function ProfilPage() {
                 </div>
               </div>
 
-              {/* ── Identite ── */}
+              {/* Identité */}
               <div className="pf-section">
                 <div className="pf-section-header">
                   <div className="pf-section-icon">
@@ -1177,7 +985,7 @@ export default function ProfilPage() {
                       <path d="M9 9h6M9 13h6M9 17h4" />
                     </svg>
                   </div>
-                  <span className="pf-section-label">Identite</span>
+                  <span className="pf-section-label">Identit&eacute;</span>
                 </div>
                 <div className="pf-section-body">
                   <div className="pf-field">
@@ -1200,14 +1008,14 @@ export default function ProfilPage() {
                       onChange={(e) =>
                         setForm({ ...form, description: e.target.value })
                       }
-                      placeholder="Decrivez votre boutique en quelques mots..."
+                      placeholder="D&#233;crivez votre boutique en quelques mots..."
                       rows={3}
                     />
                   </div>
                 </div>
               </div>
 
-              {/* ── Contact ── */}
+              {/* Contact */}
               <div className="pf-section">
                 <div className="pf-section-header">
                   <div className="pf-section-icon">
@@ -1230,7 +1038,7 @@ export default function ProfilPage() {
                   <div className="pf-grid-2">
                     <div className="pf-field">
                       <label className="pf-label">
-                        WhatsApp
+                        WhatsApp{" "}
                         <span className="pf-hint">ex: 261341234567</span>
                       </label>
                       <input
@@ -1245,8 +1053,7 @@ export default function ProfilPage() {
                     </div>
                     <div className="pf-field">
                       <label className="pf-label">
-                        Facebook
-                        <span className="pf-hint">optionnel</span>
+                        Facebook <span className="pf-hint">optionnel</span>
                       </label>
                       <input
                         type="text"
@@ -1262,7 +1069,7 @@ export default function ProfilPage() {
                 </div>
               </div>
 
-              {/* ── Theme ── */}
+              {/* Apparence */}
               <div className="pf-section">
                 <div className="pf-section-header">
                   <div className="pf-section-icon">
@@ -1284,8 +1091,10 @@ export default function ProfilPage() {
                 </div>
                 <div className="pf-section-body">
                   <div className="pf-field">
-                    <label className="pf-label">Theme de la boutique</label>
-                    <div style={{ marginTop: "2px" }}>
+                    <label className="pf-label">
+                      Th&egrave;me de la boutique
+                    </label>
+                    <div style={{ marginTop: "4px" }}>
                       <ThemePickerModal
                         localTheme={localTheme}
                         setLocalTheme={setLocalTheme}
@@ -1296,14 +1105,13 @@ export default function ProfilPage() {
               </div>
             </div>
 
-            {/* ── Save bar ── */}
             <div className="pf-save-bar">
               <button
                 className="pf-btn-save"
                 onClick={handleSave}
                 disabled={saving}
               >
-                {saving && <div className="pf-btn-save-spinner" />}
+                {saving && <div className="pf-btn-spinner" />}
                 {saving ? "Sauvegarde..." : "Enregistrer"}
               </button>
             </div>

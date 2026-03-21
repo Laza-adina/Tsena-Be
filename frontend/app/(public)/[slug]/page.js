@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 import { THEMES, DEFAULT_THEME } from "../../../lib/themes";
 import api from "../../../lib/api";
 import ProductCard from "../../../components/ProductCard";
@@ -10,16 +11,6 @@ const hexToRgb = (hex) => {
   const c = (hex || "#888888").replace("#", "");
   if (c.length < 6) return "128,128,128";
   return `${parseInt(c.slice(0, 2), 16)}, ${parseInt(c.slice(2, 4), 16)}, ${parseInt(c.slice(4, 6), 16)}`;
-};
-
-const isDarkColor = (hex) => {
-  if (!hex || !hex.startsWith("#")) return false;
-  const h = hex.replace("#", "");
-  if (h.length < 6) return false;
-  const r = parseInt(h.slice(0, 2), 16) / 255;
-  const g = parseInt(h.slice(2, 4), 16) / 255;
-  const b = parseInt(h.slice(4, 6), 16) / 255;
-  return 0.299 * r + 0.587 * g + 0.114 * b < 0.45;
 };
 
 export default function PublicShopPage() {
@@ -61,13 +52,15 @@ export default function PublicShopPage() {
   const theme = THEMES[vendor?.theme] ?? THEMES[DEFAULT_THEME];
   const c = theme?.colors ?? THEMES[DEFAULT_THEME].colors;
   const fonts = theme?.fonts ?? {};
-  const dark = isDarkColor(c.background);
 
-  const trackWhatsapp = async (productId) => {
-    try {
-      await api.post(`/public/${slug}/track`, { productId });
-    } catch {}
-  };
+  const trackWhatsapp = useCallback(
+    async (productId) => {
+      try {
+        await api.post(`/public/${slug}/track`, { productId });
+      } catch {}
+    },
+    [slug],
+  );
 
   if (loading) {
     const defC = THEMES[DEFAULT_THEME].colors;
@@ -125,29 +118,27 @@ export default function PublicShopPage() {
     );
   }
 
-  const hasCover = vendor?.coverImageUrl;
+  const hasCover = Boolean(vendor?.coverImageUrl);
 
   return (
     <>
-      {/* ── Google Fonts dynamique selon le theme ── */}
       {fonts.import && <link rel="stylesheet" href={fonts.import} />}
 
       <style>{`
         :root {
           --font-display: ${fonts.display ? `'${fonts.display}'` : "system-ui"}, system-ui, sans-serif;
           --font-body:    ${fonts.body ? `'${fonts.body}'` : "system-ui"}, system-ui, sans-serif;
-          --c-bg:         ${c.background};
-          --c-primary:    ${c.primary};
-          --c-accent:     ${c.accent};
-          --c-text:       ${c.text};
-          --c-muted:      ${c.textMuted};
-          --c-surface:    ${c.surface};
-          --c-card:       ${c.card};
-          --c-border:     ${c.border};
+          --c-bg:      ${c.background};
+          --c-primary: ${c.primary};
+          --c-accent:  ${c.accent};
+          --c-text:    ${c.text};
+          --c-muted:   ${c.textMuted};
+          --c-surface: ${c.surface};
+          --c-card:    ${c.card};
+          --c-border:  ${c.border};
         }
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
         body { background: var(--c-bg); }
 
         .sp-page {
@@ -155,194 +146,112 @@ export default function PublicShopPage() {
           background: var(--c-bg);
           font-family: var(--font-body);
           color: var(--c-text);
-          position: relative;
         }
 
         /* ── Cover ── */
         .sp-cover {
-          position: relative;
-          width: 100%;
-          height: 280px;
-          overflow: hidden;
-          flex-shrink: 0;
+          position: relative; width: 100%; height: 280px; overflow: hidden;
         }
         @media (min-width: 900px) { .sp-cover { height: 340px; } }
 
-        .sp-cover-img {
-          width: 100%; height: 100%;
-          object-fit: cover; object-position: center;
-          display: block;
-        }
-
         .sp-cover-overlay {
           position: absolute; inset: 0;
-          background: linear-gradient(
-            to bottom,
-            transparent 0%,
-            rgba(0,0,0,0.15) 60%,
-            rgba(0,0,0,0.55) 100%
-          );
+          background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0.55) 100%);
         }
 
         .sp-no-cover {
           width: 100%; height: 180px;
           background: var(--c-surface);
           border-bottom: 1px solid var(--c-border);
-          display: flex; align-items: center; justify-content: center;
-          overflow: hidden; position: relative;
+          position: relative; overflow: hidden;
         }
-
         .sp-no-cover-pattern {
           position: absolute; inset: 0; opacity: 0.04;
-          background-image: repeating-linear-gradient(
-            45deg,
-            var(--c-primary) 0, var(--c-primary) 1px,
-            transparent 0, transparent 50%
-          );
+          background-image: repeating-linear-gradient(45deg, var(--c-primary) 0, var(--c-primary) 1px, transparent 0, transparent 50%);
           background-size: 24px 24px;
         }
 
-        /* ── Avatar sur cover ── */
-        .sp-hero {
-          position: relative;
-          max-width: 1280px;
-          margin: 0 auto;
-          padding: 0 24px;
-        }
+        /* ── Hero ── */
+        .sp-hero { position: relative; max-width: 1280px; margin: 0 auto; padding: 0 24px; }
 
         .sp-profile-anchor {
-          display: flex;
-          align-items: flex-end;
-          gap: 20px;
-          transform: translateY(-40px);
-          margin-bottom: -20px;
+          display: flex; align-items: flex-end; gap: 20px;
+          transform: translateY(-40px); margin-bottom: -20px;
         }
         @media (max-width: 640px) {
           .sp-profile-anchor {
-            flex-direction: column;
-            align-items: center;
-            transform: translateY(-48px);
-            margin-bottom: -28px;
-            gap: 12px;
+            flex-direction: column; align-items: center;
+            transform: translateY(-48px); margin-bottom: -28px; gap: 12px;
           }
         }
 
         .sp-avatar-ring {
-          width: 96px; height: 96px;
-          border-radius: 50%;
+          width: 96px; height: 96px; border-radius: 50%;
           border: 3px solid var(--c-bg);
           box-shadow: 0 4px 20px rgba(0,0,0,0.25);
           overflow: hidden; flex-shrink: 0;
           background: var(--c-surface);
           display: flex; align-items: center; justify-content: center;
+          position: relative;
         }
         @media (min-width: 640px) { .sp-avatar-ring { width: 112px; height: 112px; border-width: 4px; } }
 
-        .sp-avatar-ring img {
-          width: 100%; height: 100%; object-fit: cover; display: block;
-        }
-
-        .sp-shop-meta {
-          padding-bottom: 8px;
-          flex: 1; min-width: 0;
-        }
+        .sp-shop-meta { padding-bottom: 8px; flex: 1; min-width: 0; }
         @media (max-width: 640px) { .sp-shop-meta { text-align: center; } }
 
         .sp-shop-name {
           font-family: var(--font-display);
           font-size: clamp(22px, 4vw, 34px);
-          font-weight: 800;
-          line-height: 1.1;
-          letter-spacing: -0.03em;
-          color: var(--c-text);
+          font-weight: 800; line-height: 1.1;
+          letter-spacing: -0.03em; color: var(--c-text);
           margin-bottom: 4px;
         }
-
         .sp-shop-desc {
-          font-size: 14px;
-          color: var(--c-muted);
-          line-height: 1.5;
+          font-size: 14px; color: var(--c-muted); line-height: 1.5;
           max-width: 480px;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
+          display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
         }
-
-        /* ── Contact pills ── */
-        .sp-contacts {
-          display: flex; gap: 10px; flex-wrap: wrap;
-          margin-top: 10px;
-        }
+        .sp-contacts { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
         @media (max-width: 640px) { .sp-contacts { justify-content: center; } }
 
         .sp-contact-pill {
           display: inline-flex; align-items: center; gap: 8px;
-          padding: 8px 16px;
-          border-radius: 999px;
-          background: var(--c-surface);
-          border: 1px solid var(--c-border);
-          font-family: var(--font-body);
-          font-size: 13px; font-weight: 500;
-          color: var(--c-text);
-          cursor: pointer; text-decoration: none;
-          transition: background .15s, border-color .15s, transform .12s;
+          padding: 8px 16px; border-radius: 999px;
+          background: var(--c-surface); border: 1px solid var(--c-border);
+          font-family: var(--font-body); font-size: 13px; font-weight: 500;
+          color: var(--c-text); cursor: pointer; text-decoration: none;
+          transition: border-color .15s, transform .12s;
           backdrop-filter: blur(10px);
         }
         .sp-contact-pill:hover { border-color: var(--c-primary); transform: translateY(-1px); }
-
-        .sp-wa-pill  { color: #25D366; }
-        .sp-fb-pill  { color: #1877F2; }
+        .sp-wa-pill { color: #25D366; }
+        .sp-fb-pill { color: #1877F2; }
 
         /* ── Divider ── */
-        .sp-divider {
-          height: 1px;
-          background: var(--c-border);
-          max-width: 1280px; margin: 0 auto 32px;
-          padding: 0 24px;
-        }
+        .sp-divider { max-width: 1280px; margin: 0 auto 32px; padding: 0 24px; }
         .sp-divider-inner { height: 1px; background: var(--c-border); }
 
-        /* ── Main content ── */
-        .sp-main {
-          max-width: 1280px;
-          margin: 0 auto;
-          padding: 0 24px 80px;
-        }
+        /* ── Main ── */
+        .sp-main { max-width: 1280px; margin: 0 auto; padding: 0 24px 80px; }
 
         /* ── Search ── */
         .sp-search-wrap {
           position: sticky; top: 0; z-index: 20;
-          padding: 16px 0 24px;
-          background: var(--c-bg);
+          padding: 16px 0 24px; background: var(--c-bg);
         }
         @media (min-width: 900px) { .sp-search-wrap { padding-top: 0; } }
 
-        .sp-search-inner {
-          position: relative;
-          max-width: 560px;
-        }
-
+        .sp-search-inner { position: relative; max-width: 560px; }
         .sp-search-icon {
-          position: absolute; left: 14px; top: 50%;
-          transform: translateY(-50%);
-          color: var(--c-muted); opacity: 0.6;
-          pointer-events: none;
-          display: flex;
+          position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+          color: var(--c-muted); opacity: 0.6; pointer-events: none; display: flex;
         }
-
         .sp-search-input {
-          width: 100%;
-          padding: 12px 16px 12px 42px;
-          background: var(--c-surface);
-          border: 1.5px solid var(--c-border);
-          border-radius: 12px;
-          font-family: var(--font-body);
-          font-size: 14px;
-          color: var(--c-text);
-          outline: none;
-          backdrop-filter: blur(12px);
-          transition: border-color .15s, box-shadow .15s;
+          width: 100%; padding: 12px 16px 12px 42px;
+          background: var(--c-surface); border: 1.5px solid var(--c-border);
+          border-radius: 12px; font-family: var(--font-body);
+          font-size: 14px; color: var(--c-text); outline: none;
+          backdrop-filter: blur(12px); transition: border-color .15s, box-shadow .15s;
         }
         .sp-search-input:focus {
           border-color: var(--c-primary);
@@ -351,66 +260,51 @@ export default function PublicShopPage() {
         .sp-search-input::placeholder { color: var(--c-muted); opacity: 0.55; }
 
         /* ── Section title ── */
-        .sp-section-title {
-          display: flex; align-items: center; gap: 12px;
-          margin-bottom: 22px;
-        }
-
+        .sp-section-title { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
         .sp-section-label {
-          font-family: var(--font-display);
-          font-size: 13px; font-weight: 700;
-          letter-spacing: .1em; text-transform: uppercase;
-          color: var(--c-text);
+          font-family: var(--font-display); font-size: 13px; font-weight: 700;
+          letter-spacing: .1em; text-transform: uppercase; color: var(--c-text);
         }
-
         .sp-section-count {
-          font-size: 12px; font-weight: 500;
-          color: var(--c-muted);
-          background: var(--c-surface);
-          border: 1px solid var(--c-border);
-          border-radius: 999px;
-          padding: 2px 10px;
+          font-size: 12px; font-weight: 500; color: var(--c-muted);
+          background: var(--c-surface); border: 1px solid var(--c-border);
+          border-radius: 999px; padding: 2px 10px;
         }
 
-        /* ── Grid ── */
+        /* ── Grid — TOUJOURS 2 colonnes minimum ── */
         .sp-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-          gap: 18px;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 12px;
         }
+        @media (min-width: 640px)  { .sp-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; } }
+        @media (min-width: 900px)  { .sp-grid { grid-template-columns: repeat(3, 1fr); gap: 18px; } }
         @media (min-width: 1100px) { .sp-grid { grid-template-columns: repeat(4, 1fr); } }
         @media (min-width: 1280px) { .sp-grid { grid-template-columns: repeat(5, 1fr); } }
-        @media (max-width: 480px)  { .sp-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } }
 
-        /* ── Empty ── */
         .sp-empty {
-          text-align: center;
-          padding: 80px 0;
-          font-size: 14px;
-          color: var(--c-muted);
-          opacity: 0.7;
+          text-align: center; padding: 80px 0;
+          font-size: 14px; color: var(--c-muted); opacity: 0.7;
         }
 
-        /* ── Powered ── */
         .sp-footer {
-          text-align: center;
-          font-size: 11px;
-          letter-spacing: .05em;
-          color: var(--c-muted);
-          opacity: 0.4;
-          padding: 24px;
-          margin-top: 16px;
+          text-align: center; font-size: 11px; letter-spacing: .05em;
+          color: var(--c-muted); opacity: 0.4; padding: 24px; margin-top: 16px;
         }
       `}</style>
 
-      <div className="sp-page" data-dark={dark}>
-        {/* ── Cover photo ── */}
+      <div className="sp-page">
+        {/* Cover */}
         {hasCover ? (
           <div className="sp-cover">
-            <img
+            <Image
               src={vendor.coverImageUrl}
               alt="Couverture"
-              className="sp-cover-img"
+              fill
+              style={{ objectFit: "cover", objectPosition: "center" }}
+              sizes="100vw"
+              priority
+              unoptimized
             />
             <div className="sp-cover-overlay" />
           </div>
@@ -420,12 +314,19 @@ export default function PublicShopPage() {
           </div>
         )}
 
-        {/* ── Profile anchor ── */}
+        {/* Profile anchor */}
         <div className="sp-hero">
           <div className="sp-profile-anchor">
             <div className="sp-avatar-ring">
               {vendor.profileImageUrl ? (
-                <img src={vendor.profileImageUrl} alt={vendor.shopName} />
+                <Image
+                  src={vendor.profileImageUrl}
+                  alt={vendor.shopName || "Avatar"}
+                  fill
+                  style={{ objectFit: "cover" }}
+                  sizes="112px"
+                  unoptimized
+                />
               ) : (
                 <svg
                   width="36"
@@ -492,12 +393,12 @@ export default function PublicShopPage() {
           </div>
         </div>
 
-        {/* ── Divider ── */}
-        <div className="sp-divider" style={{ padding: "0 24px" }}>
+        {/* Divider */}
+        <div className="sp-divider">
           <div className="sp-divider-inner" />
         </div>
 
-        {/* ── Produits ── */}
+        {/* Produits */}
         <main className="sp-main">
           <div className="sp-search-wrap">
             <div className="sp-search-inner">
