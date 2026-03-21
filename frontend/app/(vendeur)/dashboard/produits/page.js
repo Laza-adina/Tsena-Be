@@ -27,6 +27,7 @@ export default function ProduitsPage() {
   const [editing, setEditing] = useState(null);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [currency, setCurrency] = useState('MGA');
   const [form, setForm] = useState({
     name: "",
     reference: "",
@@ -49,11 +50,12 @@ export default function ProduitsPage() {
 
   useEffect(() => {
     const session = getSession();
-    if (!session) {
-      router.push("/login");
-      return;
-    }
+    if (!session) { router.push('/login'); return; }
     fetchProducts();
+    // Récupérer la devise du vendeur
+    api.get('/auth/me').then(({ data }) => {
+      setCurrency(data.user?.display_currency || 'MGA');
+    }).catch(() => {});
   }, [router, fetchProducts]);
 
   useEffect(() => {
@@ -140,6 +142,11 @@ export default function ProduitsPage() {
     } catch {
       setError("Erreur lors de l\u0027upload de l\u0027image.");
     }
+  };
+  const formatPrice = (price) => {
+    if (currency === 'USD') return `$${price.toLocaleString()}`;
+    if (currency === 'EUR') return `€${price.toLocaleString()}`;
+    return `${price.toLocaleString()} Ar`;
   };
 
   if (loading)
@@ -576,7 +583,9 @@ export default function ProduitsPage() {
                     />
                   </div>
                   <div className="pr-field">
-                    <label className="pr-label">Prix</label>
+                  <label className="pr-label">
+                    Prix <span className="pr-hint">en {currency === 'USD' ? 'dollars' : currency === 'EUR' ? 'euros' : 'ariary'}</span>
+                  </label>
                     <input
                       type="number"
                       className="pr-input"
@@ -761,7 +770,7 @@ export default function ProduitsPage() {
                         &middot;
                       </span>
                       <span className="pr-product-price">
-                        {p.price.toLocaleString()} Ar
+                        {formatPrice(p.price)}
                       </span>
                     </div>
                   </div>
