@@ -419,6 +419,13 @@ export default function ProfilPage() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const [initialWhatsapp, setInitialWhatsapp] = useState("");
+  const [whatsappCode, setWhatsappCode] = useState("");
+  const [whatsappVerificationToken, setWhatsappVerificationToken] = useState("");
+  const [sendingWhatsappCode, setSendingWhatsappCode] = useState(false);
+  const [verifyingWhatsappCode, setVerifyingWhatsappCode] = useState(false);
+  const [whatsappChangeVerified, setWhatsappChangeVerified] = useState(false);
+  const [devWhatsappCode, setDevWhatsappCode] = useState("");
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -439,10 +446,59 @@ export default function ProfilPage() {
         coverImageUrl: u.cover_image_url || "",
         displayCurrency: u.display_currency || "MGA",
       });
+      setInitialWhatsapp(u.whatsapp || "");
+      setWhatsappCode("");
+      setWhatsappVerificationToken("");
+      setWhatsappChangeVerified(false);
+      setDevWhatsappCode("");
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const whatsappChanged = (form.whatsapp || "").trim() !== (initialWhatsapp || "").trim();
+
+  const handleSendWhatsappCode = async () => {
+    setError("");
+    setSuccess("");
+    setSendingWhatsappCode(true);
+    try {
+      const { data } = await api.post("/auth/whatsapp/send-code", {
+        whatsapp: form.whatsapp,
+        purpose: "change",
+      });
+      setSuccess("Code WhatsApp envoyé.");
+      setWhatsappChangeVerified(false);
+      setWhatsappVerificationToken("");
+      setDevWhatsappCode(data?.devCode || "");
+    } catch (err) {
+      setError(err.response?.data?.error || "Erreur lors de l'envoi du code.");
+    } finally {
+      setSendingWhatsappCode(false);
+    }
+  };
+
+  const handleVerifyWhatsappCode = async () => {
+    setError("");
+    setSuccess("");
+    setVerifyingWhatsappCode(true);
+    try {
+      const { data } = await api.post("/auth/whatsapp/verify-code", {
+        whatsapp: form.whatsapp,
+        code: whatsappCode,
+        purpose: "change",
+      });
+      setWhatsappVerificationToken(data.verificationToken);
+      setWhatsappChangeVerified(true);
+      setSuccess("Nouveau numéro WhatsApp vérifié.");
+    } catch (err) {
+      setWhatsappChangeVerified(false);
+      setWhatsappVerificationToken("");
+      setError(err.response?.data?.error || "Code invalide.");
+    } finally {
+      setVerifyingWhatsappCode(false);
+    }
+  };
 
   useEffect(() => {
     const session = getSession();
@@ -456,15 +512,27 @@ export default function ProfilPage() {
   const handleSave = async () => {
     setError("");
     setSuccess("");
+
+    if (whatsappChanged && !whatsappVerificationToken) {
+      setError("Veuillez vérifier le nouveau numéro WhatsApp avant de sauvegarder.");
+      return;
+    }
+
     setSaving(true);
     try {
       await api.put("/auth/profile", {
         ...form,
         theme: localTheme,
         displayCurrency: form.displayCurrency,
+        whatsappVerificationToken: whatsappVerificationToken || undefined,
       });
       localStorage.setItem("shop_theme", localTheme);
       setSuccess("Profil mis \u00e0 jour.");
+      setInitialWhatsapp(form.whatsapp || "");
+      setWhatsappCode("");
+      setWhatsappVerificationToken("");
+      setWhatsappChangeVerified(false);
+      setDevWhatsappCode("");
       const session = getSession();
       saveSession(session.token, { ...session.user, shopName: form.shopName });
     } catch (err) {
@@ -1140,11 +1208,81 @@ export default function ProfilPage() {
                         type="text"
                         className="pf-input"
                         value={form.whatsapp}
-                        onChange={(e) =>
-                          setForm({ ...form, whatsapp: e.target.value })
-                        }
+                        onChange={(e) => {
+                          const nextWhatsapp = e.target.value;
+                          setForm({ ...form, whatsapp: nextWhatsapp });
+                          setWhatsappVerificationToken("");
+                          setWhatsappChangeVerified(false);
+                          setWhatsappCode("");
+                          setDevWhatsappCode("");
+                        }}
                         placeholder="261341234567"
                       />
+
+                      {whatsappChanged && (
+                        <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                          <button
+                            type="button"
+                            onClick={handleSendWhatsappCode}
+                            disabled={sendingWhatsappCode || !form.whatsapp}
+                            style={{
+                              alignSelf: "flex-start",
+                              padding: "8px 12px",
+                              border: "none",
+                              borderRadius: "8px",
+                              background: C.caramel,
+                              color: "#fff",
+                              fontSize: "12px",
+                              fontWeight: 600,
+                              cursor: sendingWhatsappCode || !form.whatsapp ? "not-allowed" : "pointer",
+                              opacity: sendingWhatsappCode || !form.whatsapp ? 0.65 : 1,
+                            }}
+                          >
+                            {sendingWhatsappCode ? "Envoi..." : "Envoyer code"}
+                          </button>
+
+                          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                            <input
+                              type="text"
+                              className="pf-input"
+                              value={whatsappCode}
+                              onChange={(e) => setWhatsappCode(e.target.value)}
+                              placeholder="Code reçu"
+                              style={{ maxWidth: "220px" }}
+                            />
+                            <button
+                              type="button"
+                              onClick={handleVerifyWhatsappCode}
+                              disabled={verifyingWhatsappCode || !whatsappCode}
+                              style={{
+                                padding: "8px 12px",
+                                border: "none",
+                                borderRadius: "8px",
+                                background: C.dark,
+                                color: "#fff",
+                                fontSize: "12px",
+                                fontWeight: 600,
+                                cursor: verifyingWhatsappCode || !whatsappCode ? "not-allowed" : "pointer",
+                                opacity: verifyingWhatsappCode || !whatsappCode ? 0.65 : 1,
+                              }}
+                            >
+                              {verifyingWhatsappCode ? "Vérification..." : "Vérifier"}
+                            </button>
+                          </div>
+
+                          {devWhatsappCode && (
+                            <div style={{ fontSize: "11px", color: C.muted }}>
+                              Code de test (dev): {devWhatsappCode}
+                            </div>
+                          )}
+
+                          {whatsappChangeVerified && (
+                            <div style={{ fontSize: "11px", color: "#1f6f2a", fontWeight: 600 }}>
+                              ✓ Nouveau numéro vérifié
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div className="pf-field">
                       <label className="pf-label">

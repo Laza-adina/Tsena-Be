@@ -17,9 +17,16 @@ const C = {
 
 export default function SignupPage() {
   const router = useRouter();
-  const [form, setForm]       = useState({ email: '', password: '', shopName: '', whatsapp: '' });
+  const [form, setForm]       = useState({ password: '', shopName: '', whatsapp: '', code: '' });
   const [error, setError]     = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
+  const [verifyingCode, setVerifyingCode] = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
+  const [whatsappVerified, setWhatsappVerified] = useState(false);
+  const [verificationToken, setVerificationToken] = useState('');
+  const [devCode, setDevCode] = useState('');
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -27,11 +34,64 @@ export default function SignupPage() {
     return () => clearTimeout(t);
   }, []);
 
+  const handleSendCode = async () => {
+    setError('');
+    setSuccess('');
+    setSendingCode(true);
+    try {
+      const { data } = await api.post('/auth/whatsapp/send-code', {
+        whatsapp: form.whatsapp,
+        purpose: 'signup'
+      });
+      setCodeSent(true);
+      setWhatsappVerified(false);
+      setVerificationToken('');
+      setSuccess('Code envoyé sur votre WhatsApp.');
+      setDevCode(data?.devCode || '');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Erreur lors de l\'envoi du code.');
+    } finally {
+      setSendingCode(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    setError('');
+    setSuccess('');
+    setVerifyingCode(true);
+    try {
+      const { data } = await api.post('/auth/whatsapp/verify-code', {
+        whatsapp: form.whatsapp,
+        code: form.code,
+        purpose: 'signup'
+      });
+      setWhatsappVerified(true);
+      setVerificationToken(data.verificationToken);
+      setSuccess('Numéro WhatsApp vérifié.');
+    } catch (err) {
+      setWhatsappVerified(false);
+      setVerificationToken('');
+      setError(err.response?.data?.error || 'Code invalide.');
+    } finally {
+      setVerifyingCode(false);
+    }
+  };
+
   const handleSubmit = async () => {
     setError('');
+    setSuccess('');
+    if (!whatsappVerified || !verificationToken) {
+      setError('Veuillez vérifier votre numéro WhatsApp avant de créer le compte.');
+      return;
+    }
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/signup', form);
+      const { data } = await api.post('/auth/signup', {
+        shopName: form.shopName,
+        password: form.password,
+        whatsapp: form.whatsapp,
+        whatsappVerificationToken: verificationToken,
+      });
       saveSession(data.token, data.user);
       router.push('/dashboard');
     } catch (err) {
@@ -117,6 +177,11 @@ export default function SignupPage() {
               {error}
             </div>
           )}
+          {success && (
+            <div style={{ padding: '12px 14px', background: '#eef8ef', border: '1px solid #bfe3c1', borderRadius: '8px', marginBottom: '20px', fontSize: '13px', color: '#1f6f2a', fontWeight: '400' }}>
+              {success}
+            </div>
+          )}
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
 
@@ -127,17 +192,6 @@ export default function SignupPage() {
                 value={form.shopName}
                 onChange={e => setForm({ ...form, shopName: e.target.value })}
                 placeholder="Ex : Fringues Miora"
-                style={inputStyle}
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>E-mail</label>
-              <input
-                type="email"
-                value={form.email}
-                onChange={e => setForm({ ...form, email: e.target.value })}
-                placeholder="votre@email.com"
                 style={inputStyle}
               />
             </div>
@@ -163,12 +217,79 @@ export default function SignupPage() {
               <input
                 type="text"
                 value={form.whatsapp}
-                onChange={e => setForm({ ...form, whatsapp: e.target.value })}
+                onChange={e => {
+                  const nextWhatsapp = e.target.value;
+                  setForm({ ...form, whatsapp: nextWhatsapp });
+                  setWhatsappVerified(false);
+                  setVerificationToken('');
+                  setCodeSent(false);
+                  setDevCode('');
+                }}
                 onKeyDown={e => e.key === 'Enter' && handleSubmit()}
                 placeholder="261341234567"
                 style={inputStyle}
               />
             </div>
+
+            <button
+              className="btn-signup"
+              onClick={handleSendCode}
+              disabled={sendingCode || !form.whatsapp}
+              style={{
+                width: '100%', padding: '12px',
+                background: sendingCode ? C.muted : C.caramel,
+                color: C.cream, border: 'none', borderRadius: '8px',
+                fontSize: '13px', fontWeight: '600',
+                cursor: sendingCode || !form.whatsapp ? 'not-allowed' : 'pointer',
+                fontFamily: "'DM Sans', sans-serif",
+                letterSpacing: '0.2px'
+              }}
+            >
+              {sendingCode ? 'Envoi du code…' : 'Envoyer le code WhatsApp'}
+            </button>
+
+            {codeSent && (
+              <>
+                <div>
+                  <label style={labelStyle}>Code de vérification</label>
+                  <input
+                    type="text"
+                    value={form.code}
+                    onChange={e => setForm({ ...form, code: e.target.value })}
+                    placeholder="Entrez le code reçu"
+                    style={inputStyle}
+                  />
+                </div>
+                <button
+                  className="btn-signup"
+                  onClick={handleVerifyCode}
+                  disabled={verifyingCode || !form.code}
+                  style={{
+                    width: '100%', padding: '12px',
+                    background: verifyingCode ? C.muted : C.dark,
+                    color: C.cream, border: 'none', borderRadius: '8px',
+                    fontSize: '13px', fontWeight: '600',
+                    cursor: verifyingCode || !form.code ? 'not-allowed' : 'pointer',
+                    fontFamily: "'DM Sans', sans-serif",
+                    letterSpacing: '0.2px'
+                  }}
+                >
+                  {verifyingCode ? 'Vérification…' : 'Vérifier le numéro'}
+                </button>
+              </>
+            )}
+
+            {devCode && (
+              <p style={{ fontSize: '12px', color: C.muted, marginTop: '-6px' }}>
+                Code de test (dev): {devCode}
+              </p>
+            )}
+
+            {whatsappVerified && (
+              <p style={{ fontSize: '12px', color: '#1f6f2a', marginTop: '-6px', fontWeight: 600 }}>
+                ✓ Numéro WhatsApp vérifié
+              </p>
+            )}
 
             <button
               className="btn-signup"

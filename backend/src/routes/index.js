@@ -15,6 +15,8 @@ const subs = require('../controllers/subscriptionsController');
 
 router.post('/auth/signup',           auth.signup);
 router.post('/auth/login',            auth.login);
+router.post('/auth/whatsapp/send-code', auth.sendWhatsappCode);
+router.post('/auth/whatsapp/verify-code', auth.verifyWhatsappCode);
 
 // Page publique boutique
 router.get('/public/:slug',           shop.getPublicShop);

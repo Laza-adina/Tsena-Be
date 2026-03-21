@@ -17,7 +17,7 @@ const C = {
 
 export default function LoginPage() {
   const router = useRouter();
-  const [form, setForm]       = useState({ email: '', password: '' });
+  const [form, setForm]       = useState({ whatsapp: '', password: '' });
   const [error, setError]     = useState('');
   const [loading, setLoading] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -114,14 +114,14 @@ export default function LoginPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
             <div>
               <label style={{ fontSize: '12px', fontWeight: '600', color: C.dark, display: 'block', marginBottom: '7px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                E-mail
+                Numéro WhatsApp
               </label>
               <input
-                type="email"
-                value={form.email}
-                onChange={e => setForm({ ...form, email: e.target.value })}
+                type="text"
+                value={form.whatsapp}
+                onChange={e => setForm({ ...form, whatsapp: e.target.value })}
                 onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-                placeholder="votre@email.com"
+                placeholder="261341234567"
                 style={inputStyle}
               />
             </div>
