@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { getSession, clearSession } from '../../../lib/auth';
 import api from '../../../lib/api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Link } from 'lucide-react';
+import Link from 'next/link';
 
 const C = {
   cream:   '#FFFFFF',
