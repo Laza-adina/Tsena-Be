@@ -6,7 +6,7 @@ const auth    = require('../controllers/authController');
 const shop    = require('../controllers/productsController');
 const admin   = require('../controllers/adminController');
 const upload_ctrl = require('../controllers/uploadController');
-const upload      = require('../middleware/upload');
+const { upload, uploadCover } = require('../middleware/upload');
 const qrcode = require('../controllers/qrcodeController');
 const subs = require('../controllers/subscriptionsController');
 // ════════════════════════════════
@@ -23,6 +23,8 @@ router.post('/public/:slug/track',    shop.trackWhatsapp);
 // Setup premier admin (une seule fois)
 router.post('/admin/setup',           admin.setupAdmin);
 router.post('/admin/login',           admin.adminLogin);
+//pdc
+router.post('/upload/cover', authVendeur, uploadCover.single('image'), upload_ctrl.uploadCoverImage);
 
 // ════════════════════════════════
 // VENDEUR — token vendeur requis

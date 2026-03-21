@@ -48,3 +48,22 @@ exports.deleteImage = async (req, res) => {
     res.status(500).json({ error: "Erreur lors de la suppression." });
   }
 };
+//pdc
+exports.uploadCoverImage = async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Aucune image fournie.' });
+
+    const db = require('../config/supabase');
+    await db.from('users')
+      .update({ cover_image_url: req.file.path })
+      .eq('id', req.user.id);
+
+    return res.json({
+      message: 'Photo de couverture mise à jour.',
+      coverImageUrl: req.file.path
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur lors de l'upload." });
+  }
+};
