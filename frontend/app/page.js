@@ -293,7 +293,7 @@ export default function LandingPage() {
                 <p className="price-num" style={{ fontSize: '42px', color: C.dark, margin: '0 0 4px', lineHeight: 1 }}>0 Ar</p>
                 <p style={{ fontSize: '13px', color: C.muted, margin: '0 0 28px', fontWeight: '300' }}>pendant 7 jours</p>
                 <div style={{ marginBottom: '28px' }}>
-                  {["Catalogue jusqu'à 5 produits", 'Bouton WhatsApp', 'Lien unique', 'QR Code', 'Statistiques'].map(f => (
+                  {["Catalogue illimité", 'Bouton WhatsApp', 'Lien unique', 'QR Code', 'Statistiques'].map(f => (
                     <div key={f} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                       <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: C.muted, flexShrink: 0 }} />
                       <p style={{ fontSize: '13px', color: C.muted, margin: 0, fontWeight: '300' }}>{f}</p>
