@@ -12,6 +12,8 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   'https://tsenabe.app',
+  'https://www.tsenabe.app',
+    
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
