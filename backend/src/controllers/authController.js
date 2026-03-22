@@ -119,6 +119,37 @@ const generateToken = (user) =>
     { expiresIn: process.env.JWT_EXPIRES_IN || "7d" },
   );
 
+const sendWhatsappMessage = async (to, text) => {
+  const accessToken = process.env.META_API_KEY;
+  const phoneNumberId = process.env.META_PHONE_NUMBER_ID;
+
+  if (!accessToken || !phoneNumberId) {
+    console.log("Message WhatsApp (Non envoyé, clé API manquante) :", text);
+    return { sent: false };
+  }
+
+  const response = await fetch(`https://graph.facebook.com/v20.0/${phoneNumberId}/messages`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      to: String(to).replace(/\D/g, ''),
+      type: 'text',
+      text: { body: text },
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    console.error("WhatsApp API error:", errText);
+    return { sent: false };
+  }
+  return { sent: true };
+};
+
 exports.sendWhatsappCode = async (req, res) => {
   try {
     const purpose = req.body?.purpose || 'signup';
@@ -278,19 +309,17 @@ exports.signup = async (req, res) => {
     const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verifyToken}`;
 
     try {
-      await sendEmail({
-        to: user.email,
-        subject: "Vérifiez votre adresse email",
-        text: `Veuillez vérifier votre email en cliquant sur ce lien : ${verifyUrl}`,
-        html: `<p>Veuillez vérifier votre email en cliquant sur <a href="${verifyUrl}">ce lien</a>.</p>`,
-      });
+      await sendWhatsappMessage(
+        normalizedWhatsapp,
+        `Bienvenue sur Tsenabe ! Veuillez vérifier votre compte en cliquant sur ce lien : ${verifyUrl}`
+      );
     } catch (e) {
-      console.error("Erreur envoi email verification", e);
+      console.error("Erreur envoi WhatsApp verification", e);
     }
 
-    // Ne pas retourner de token, l'utilisateur doit d'abord vérifier son email
+    // Ne pas retourner de token, l'utilisateur doit d'abord vérifier son compte
     return res.status(201).json({
-      message: 'Compte créé !',
+      message: 'Compte créé ! Un lien de vérification a été envoyé sur WhatsApp.',
       token: generateToken(user),
       user: {
         id: user.id, email: user.email,
@@ -466,15 +495,17 @@ exports.verifyEmail = async (req, res) => {
 
 exports.forgotPassword = async (req, res) => {
   try {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ error: "Email requis." });
+    const rawWhatsapp = req.body?.whatsapp;
+    if (!rawWhatsapp) return res.status(400).json({ error: "Numéro WhatsApp requis." });
+    
+    const whatsapp = rawWhatsapp.replace(/\D/g, '');
 
     const { data: user } = await db
       .from("users")
-      .select("id, email")
-      .eq("email", email)
+      .select("id, whatsapp")
+      .eq("whatsapp", whatsapp)
       .maybeSingle();
-    if (!user) return res.status(404).json({ error: "Compte introuvable." });
+    if (!user) return res.status(404).json({ error: "Compte introuvable avec ce numéro WhatsApp." });
 
     const resetToken = crypto.randomBytes(32).toString("hex");
     const resetExpires = new Date();
@@ -490,14 +521,12 @@ exports.forgotPassword = async (req, res) => {
 
     const resetUrl = `${process.env.FRONTEND_URL}/login/reset-password?token=${resetToken}`;
 
-    await sendEmail({
-      to: user.email,
-      subject: "Réinitialisation de mot de passe",
-      text: `Réinitialisez votre mot de passe ici: ${resetUrl}`,
-      html: `<p>Cliquez <a href="${resetUrl}">ici</a> pour réinitialiser votre mot de passe. Ce lien expire dans 1 heure.</p>`,
-    });
+    await sendWhatsappMessage(
+      user.whatsapp,
+      `Vous avez demandé une réinitialisation de mot de passe. Cliquez sur ce lien pour choisir un nouveau mot de passe : ${resetUrl}\n(Ce lien expire dans 1 heure)`
+    );
 
-    res.json({ message: "Email de réinitialisation envoyé." });
+    res.json({ message: "Lien de réinitialisation envoyé sur WhatsApp." });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Erreur serveur." });

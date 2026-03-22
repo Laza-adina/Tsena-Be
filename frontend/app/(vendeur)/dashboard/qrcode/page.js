@@ -224,7 +224,7 @@ export default function QRCodePage() {
           }}
         >
         {qrCode && (
-            <img
+            <Image
               src={qrCode}
               alt="QR Code"
               style={{ width: "200px", height: "200px", display: "block" }}
