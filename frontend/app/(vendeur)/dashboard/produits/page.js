@@ -8,34 +8,40 @@ import { getSession } from "../../../../lib/auth";
 import api from "../../../../lib/api";
 
 const C = {
-  main:    "#D9D9D9",
-  light:   "#EBEBEB",
-  cream:   "#FFFFFF",
-  beige:   "#F5F5F5",
+  main: "#D9D9D9",
+  light: "#EBEBEB",
+  cream: "#FFFFFF",
+  beige: "#F5F5F5",
   caramel: "#3C6E71",
-  dark:    "#353535",
-  text:    "#353535",
-  muted:   "#284B63",
+  dark: "#353535",
+  text: "#353535",
+  muted: "#284B63",
 };
 
 export default function ProduitsPage() {
   const router = useRouter();
   const [products, setProducts] = useState([]);
-  const [search, setSearch]     = useState("");
-  const [loading, setLoading]   = useState(true);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [editing, setEditing]   = useState(null);
-  const [error, setError]       = useState("");
-  const [saving, setSaving]     = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
   const [currency, setCurrency] = useState("MGA");
   const [menuOpen, setMenuOpen] = useState(false);
   const [form, setForm] = useState({
-    name: "", reference: "", price: "", description: "", imageUrl: "",
+    name: "",
+    reference: "",
+    price: "",
+    description: "",
+    imageUrl: "",
   });
 
   const fetchProducts = useCallback(async (searchTerm = "") => {
     try {
-      const params = searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : "";
+      const params = searchTerm
+        ? `?search=${encodeURIComponent(searchTerm)}`
+        : "";
       const { data } = await api.get(`/products${params}`);
       setProducts(data.products);
     } finally {
@@ -45,11 +51,17 @@ export default function ProduitsPage() {
 
   useEffect(() => {
     const session = getSession();
-    if (!session) { router.push("/login"); return; }
+    if (!session) {
+      router.push("/login");
+      return;
+    }
     fetchProducts();
-    api.get("/auth/me").then(({ data }) => {
-      setCurrency(data.user?.display_currency || "MGA");
-    }).catch(() => {});
+    api
+      .get("/auth/me")
+      .then(({ data }) => {
+        setCurrency(data.user?.display_currency || "MGA");
+      })
+      .catch(() => {});
   }, [router, fetchProducts]);
 
   useEffect(() => {
@@ -58,24 +70,48 @@ export default function ProduitsPage() {
   }, [search, fetchProducts]);
 
   const resetForm = () => {
-    setForm({ name: "", reference: "", price: "", description: "", imageUrl: "" });
+    setForm({
+      name: "",
+      reference: "",
+      price: "",
+      description: "",
+      imageUrl: "",
+    });
     setEditing(null);
     setError("");
   };
 
-  const openAdd = () => { resetForm(); setShowForm(true); };
+  const openAdd = () => {
+    resetForm();
+    setShowForm(true);
+  };
   const openEdit = (p) => {
-    setForm({ name: p.name, reference: p.reference, price: p.price, description: p.description || "", imageUrl: p.image_url || "" });
+    setForm({
+      name: p.name,
+      reference: p.reference,
+      price: p.price,
+      description: p.description || "",
+      imageUrl: p.image_url || "",
+    });
     setEditing(p.id);
     setShowForm(true);
   };
 
   const handleSave = async () => {
     setError("");
-    if (!form.name || !form.price) { setError("Nom et prix requis."); return; }
+    if (!form.name || !form.price) {
+      setError("Nom et prix requis.");
+      return;
+    }
     setSaving(true);
     try {
-      const payload = { name: form.name, reference: form.reference, price: parseInt(form.price), description: form.description, imageUrl: form.imageUrl };
+      const payload = {
+        name: form.name,
+        reference: form.reference,
+        price: parseInt(form.price),
+        description: form.description,
+        imageUrl: form.imageUrl,
+      };
       if (editing) await api.put(`/products/${editing}`, payload);
       else await api.post("/products", payload);
       await fetchProducts();
@@ -104,7 +140,9 @@ export default function ProduitsPage() {
     const formData = new FormData();
     formData.append("image", file);
     try {
-      const { data } = await api.post("/upload/product", formData, { headers: { "Content-Type": "multipart/form-data" } });
+      const { data } = await api.post("/upload/product", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       setForm((f) => ({ ...f, imageUrl: data.imageUrl }));
     } catch {
       setError("Erreur lors de l'upload de l'image.");
@@ -117,15 +155,49 @@ export default function ProduitsPage() {
     return `${price.toLocaleString()} Ar`;
   };
 
-  if (loading) return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.cream }}>
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
-        <div style={{ width: "28px", height: "28px", borderRadius: "50%", border: `2px solid ${C.light}`, borderTopColor: C.dark, animation: "spin .7s linear infinite" }} />
-        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-        <span style={{ fontSize: "13px", color: C.muted, fontFamily: "'DM Sans', sans-serif", fontWeight: 300 }}>Chargement…</span>
+  if (loading)
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: C.cream,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "14px",
+          }}
+        >
+          <div
+            style={{
+              width: "28px",
+              height: "28px",
+              borderRadius: "50%",
+              border: `2px solid ${C.light}`,
+              borderTopColor: C.dark,
+              animation: "spin .7s linear infinite",
+            }}
+          />
+          <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+          <span
+            style={{
+              fontSize: "13px",
+              color: C.muted,
+              fontFamily: "'DM Sans', sans-serif",
+              fontWeight: 300,
+            }}
+          >
+            Chargement…
+          </span>
+        </div>
       </div>
-    </div>
-  );
+    );
 
   return (
     <>
@@ -353,24 +425,84 @@ export default function ProduitsPage() {
       `}</style>
 
       <div className="pr-root">
-
         {/* Navbar */}
         <nav className="pr-nav">
           <div className="pr-nav-inner">
             <Link href="/dashboard" className="pr-nav-brand">
-              Tsen<span style={{ color: C.caramel }}>@</span>be
-              <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: "11px", fontWeight: 300, color: C.muted, marginLeft: "8px" }}>by Keyros</span>
+              Tsen
+              <Image
+                src="/logo.png"
+                alt="@"
+                width={25}
+                height={25}
+                style={{
+                  display: "inline-block",
+                  verticalAlign: "middle",
+                  margin: "0 0 5px 0",
+                }}
+              />
+              be
+              <span
+                style={{
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: "11px",
+                  fontWeight: 300,
+                  color: C.muted,
+                  marginLeft: "8px",
+                }}
+              >
+                by Keyros
+              </span>
             </Link>
             <div className="pr-nav-links">
-              <Link href="/dashboard" className="pr-nav-link">Accueil</Link>
-              <Link href="/dashboard/produits" className="pr-nav-link active">Produits</Link>
-              <Link href="/dashboard/stats" className="pr-nav-link">Stats</Link>
-              <Link href="/dashboard/profil" className="pr-nav-link">Profil</Link>
+              <Link href="/dashboard" className="pr-nav-link">
+                Accueil
+              </Link>
+              <Link href="/dashboard/produits" className="pr-nav-link active">
+                Produits
+              </Link>
+              <Link href="/dashboard/stats" className="pr-nav-link">
+                Stats
+              </Link>
+              <Link href="/dashboard/profil" className="pr-nav-link">
+                Profil
+              </Link>
             </div>
-            <button className="pr-hamburger" onClick={() => setMenuOpen(!menuOpen)}>
-              <div style={{ width: "22px", height: "2px", background: C.dark, transition: "transform .2s", transform: menuOpen ? "rotate(45deg) translateY(7px)" : "none" }} />
-              <div style={{ width: "22px", height: "2px", background: C.dark, opacity: menuOpen ? 0 : 1, transition: "opacity .2s" }} />
-              <div style={{ width: "22px", height: "2px", background: C.dark, transition: "transform .2s", transform: menuOpen ? "rotate(-45deg) translateY(-7px)" : "none" }} />
+            <button
+              className="pr-hamburger"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
+              <div
+                style={{
+                  width: "22px",
+                  height: "2px",
+                  background: C.dark,
+                  transition: "transform .2s",
+                  transform: menuOpen
+                    ? "rotate(45deg) translateY(7px)"
+                    : "none",
+                }}
+              />
+              <div
+                style={{
+                  width: "22px",
+                  height: "2px",
+                  background: C.dark,
+                  opacity: menuOpen ? 0 : 1,
+                  transition: "opacity .2s",
+                }}
+              />
+              <div
+                style={{
+                  width: "22px",
+                  height: "2px",
+                  background: C.dark,
+                  transition: "transform .2s",
+                  transform: menuOpen
+                    ? "rotate(-45deg) translateY(-7px)"
+                    : "none",
+                }}
+              />
             </button>
           </div>
         </nav>
@@ -378,27 +510,48 @@ export default function ProduitsPage() {
         {/* Mobile menu */}
         {menuOpen && (
           <div className="pr-mobile-nav">
-            <Link href="/dashboard" onClick={() => setMenuOpen(false)}>Accueil</Link>
-            <Link href="/dashboard/produits" onClick={() => setMenuOpen(false)}>Produits</Link>
-            <Link href="/dashboard/stats" onClick={() => setMenuOpen(false)}>Stats</Link>
-            <Link href="/dashboard/profil" onClick={() => setMenuOpen(false)}>Profil</Link>
+            <Link href="/dashboard" onClick={() => setMenuOpen(false)}>
+              Accueil
+            </Link>
+            <Link href="/dashboard/produits" onClick={() => setMenuOpen(false)}>
+              Produits
+            </Link>
+            <Link href="/dashboard/stats" onClick={() => setMenuOpen(false)}>
+              Stats
+            </Link>
+            <Link href="/dashboard/profil" onClick={() => setMenuOpen(false)}>
+              Profil
+            </Link>
           </div>
         )}
 
         <div className="pr-body">
-
           {/* Header */}
           <div className="pr-page-header">
             <div>
               <div className="pr-page-eyebrow">Dashboard</div>
               <h1 className="pr-page-title">Produits</h1>
               <p className="pr-page-sub">
-                {products.length} article{products.length !== 1 ? "s" : ""} dans votre catalogue
+                {products.length} article{products.length !== 1 ? "s" : ""} dans
+                votre catalogue
               </p>
             </div>
-            <button className="pr-btn-primary pr-btn-primary-full" onClick={openAdd}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+            <button
+              className="pr-btn-primary pr-btn-primary-full"
+              onClick={openAdd}
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
               </svg>
               Ajouter un produit
             </button>
@@ -407,20 +560,51 @@ export default function ProduitsPage() {
           {/* Search */}
           <div className="pr-search-wrap">
             <span className="pr-search-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
               </svg>
             </span>
-            <input type="text" className="pr-search-input" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Rechercher par nom ou référence…" />
+            <input
+              type="text"
+              className="pr-search-input"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher par nom ou référence…"
+            />
           </div>
 
           {/* Formulaire */}
           {showForm && (
             <div className="pr-form-card">
               <div className="pr-form-header">
-                <span className="pr-form-title">{editing ? "Modifier le produit" : "Nouveau produit"}</span>
-                <button className="pr-form-close" onClick={() => { setShowForm(false); resetForm(); }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <span className="pr-form-title">
+                  {editing ? "Modifier le produit" : "Nouveau produit"}
+                </span>
+                <button
+                  className="pr-form-close"
+                  onClick={() => {
+                    setShowForm(false);
+                    resetForm();
+                  }}
+                >
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <path d="M18 6L6 18M6 6l12 12" />
                   </svg>
                 </button>
@@ -429,8 +613,20 @@ export default function ProduitsPage() {
               <div className="pr-form-body">
                 {error && (
                   <div className="pr-alert pr-alert-err">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: "1px" }}>
-                      <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+                    <svg
+                      width="15"
+                      height="15"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{ flexShrink: 0, marginTop: "1px" }}
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
                     </svg>
                     {error}
                   </div>
@@ -439,45 +635,137 @@ export default function ProduitsPage() {
                 <div className="pr-form-grid">
                   <div className="pr-field">
                     <label className="pr-label">Nom du produit</label>
-                    <input type="text" className="pr-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex: Robe fleurie" />
+                    <input
+                      type="text"
+                      className="pr-input"
+                      value={form.name}
+                      onChange={(e) =>
+                        setForm({ ...form, name: e.target.value })
+                      }
+                      placeholder="Ex: Robe fleurie"
+                    />
                   </div>
                   <div className="pr-field">
-                    <label className="pr-label">Référence <span className="pr-hint">auto si vide</span></label>
-                    <input type="text" className="pr-input" value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} placeholder="Ex: REF-001" />
+                    <label className="pr-label">
+                      Référence <span className="pr-hint">auto si vide</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="pr-input"
+                      value={form.reference}
+                      onChange={(e) =>
+                        setForm({ ...form, reference: e.target.value })
+                      }
+                      placeholder="Ex: REF-001"
+                    />
                   </div>
                   <div className="pr-field">
-                    <label className="pr-label">Prix <span className="pr-hint">en {currency === "USD" ? "dollars" : currency === "EUR" ? "euros" : "ariary"}</span></label>
-                    <input type="number" className="pr-input" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="Ex: 25000" />
+                    <label className="pr-label">
+                      Prix{" "}
+                      <span className="pr-hint">
+                        en{" "}
+                        {currency === "USD"
+                          ? "dollars"
+                          : currency === "EUR"
+                            ? "euros"
+                            : "ariary"}
+                      </span>
+                    </label>
+                    <input
+                      type="number"
+                      className="pr-input"
+                      value={form.price}
+                      onChange={(e) =>
+                        setForm({ ...form, price: e.target.value })
+                      }
+                      placeholder="Ex: 25000"
+                    />
                   </div>
                   <div className="pr-field">
-                    <label className="pr-label">Description <span className="pr-hint">optionnel</span></label>
-                    <input type="text" className="pr-input" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Courte description" />
+                    <label className="pr-label">
+                      Description <span className="pr-hint">optionnel</span>
+                    </label>
+                    <input
+                      type="text"
+                      className="pr-input"
+                      value={form.description}
+                      onChange={(e) =>
+                        setForm({ ...form, description: e.target.value })
+                      }
+                      placeholder="Courte description"
+                    />
                   </div>
                   <div className="pr-field" style={{ gridColumn: "1 / -1" }}>
                     <label className="pr-label">Image du produit</label>
                     <label className="pr-file-label">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" />
+                      <svg
+                        width="15"
+                        height="15"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
                       </svg>
                       {form.imageUrl ? "Changer l'image" : "Choisir une image"}
-                      <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: "none" }} />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        style={{ display: "none" }}
+                      />
                     </label>
                     {form.imageUrl && (
                       <div className="pr-image-preview">
-                        <Image src={form.imageUrl} alt="preview" fill style={{ objectFit: "cover" }} sizes="72px" unoptimized />
+                        <Image
+                          src={form.imageUrl}
+                          alt="preview"
+                          fill
+                          style={{ objectFit: "cover" }}
+                          sizes="72px"
+                          unoptimized
+                        />
                       </div>
                     )}
                   </div>
                 </div>
 
                 <div className="pr-form-actions">
-                  <button className="pr-btn-primary" onClick={handleSave} disabled={saving}>
+                  <button
+                    className="pr-btn-primary"
+                    onClick={handleSave}
+                    disabled={saving}
+                  >
                     {saving && (
-                      <div style={{ width: "13px", height: "13px", borderRadius: "50%", border: "2px solid rgba(255,255,255,.4)", borderTopColor: "#fff", animation: "spin .6s linear infinite" }} />
+                      <div
+                        style={{
+                          width: "13px",
+                          height: "13px",
+                          borderRadius: "50%",
+                          border: "2px solid rgba(255,255,255,.4)",
+                          borderTopColor: "#fff",
+                          animation: "spin .6s linear infinite",
+                        }}
+                      />
                     )}
-                    {saving ? "Sauvegarde…" : editing ? "Mettre à jour" : "Ajouter"}
+                    {saving
+                      ? "Sauvegarde…"
+                      : editing
+                        ? "Mettre à jour"
+                        : "Ajouter"}
                   </button>
-                  <button className="pr-btn-cancel" onClick={() => { setShowForm(false); resetForm(); }}>
+                  <button
+                    className="pr-btn-cancel"
+                    onClick={() => {
+                      setShowForm(false);
+                      resetForm();
+                    }}
+                  >
                     Annuler
                   </button>
                 </div>
@@ -489,15 +777,42 @@ export default function ProduitsPage() {
           {products.length === 0 ? (
             <div className="pr-empty">
               <div className="pr-empty-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <polyline points="21 15 16 10 5 21" />
                 </svg>
               </div>
               <p className="pr-empty-title">Pas encore de produits</p>
-              <p className="pr-empty-sub">Ajoutez votre premier article pour remplir votre boutique</p>
-              <button className="pr-btn-primary" onClick={openAdd} style={{ margin: "0 auto" }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+              <p className="pr-empty-sub">
+                Ajoutez votre premier article pour remplir votre boutique
+              </p>
+              <button
+                className="pr-btn-primary"
+                onClick={openAdd}
+                style={{ margin: "0 auto" }}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
                 Ajouter un produit
               </button>
@@ -508,12 +823,28 @@ export default function ProduitsPage() {
                 <div key={p.id} className="pr-product-row">
                   {p.image_url ? (
                     <div className="pr-product-img">
-                      <Image src={p.image_url} alt={p.name} fill style={{ objectFit: "cover" }} sizes="52px" unoptimized />
+                      <Image
+                        src={p.image_url}
+                        alt={p.name}
+                        fill
+                        style={{ objectFit: "cover" }}
+                        sizes="52px"
+                        unoptimized
+                      />
                     </div>
                   ) : (
                     <div className="pr-product-img-placeholder">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                        <rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
+                      <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                      >
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
                       </svg>
                     </div>
                   )}
@@ -522,14 +853,25 @@ export default function ProduitsPage() {
                     <div className="pr-product-name">{p.name}</div>
                     <div className="pr-product-meta">
                       <span>{p.reference}</span>
-                      <span style={{ margin: "0 6px", opacity: 0.4 }}>&middot;</span>
-                      <span className="pr-product-price">{formatPrice(p.price)}</span>
+                      <span style={{ margin: "0 6px", opacity: 0.4 }}>
+                        &middot;
+                      </span>
+                      <span className="pr-product-price">
+                        {formatPrice(p.price)}
+                      </span>
                     </div>
                   </div>
 
                   <div className="pr-product-actions">
-                    <button className="pr-btn-edit" onClick={() => openEdit(p)}>Modifier</button>
-                    <button className="pr-btn-delete" onClick={() => handleDelete(p.id)}>Supprimer</button>
+                    <button className="pr-btn-edit" onClick={() => openEdit(p)}>
+                      Modifier
+                    </button>
+                    <button
+                      className="pr-btn-delete"
+                      onClick={() => handleDelete(p.id)}
+                    >
+                      Supprimer
+                    </button>
                   </div>
                 </div>
               ))}

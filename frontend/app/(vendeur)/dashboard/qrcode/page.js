@@ -140,7 +140,19 @@ export default function QRCodePage() {
               letterSpacing: "-0.3px",
             }}
           >
-            Tsen<span style={{ color: C.caramel }}>@</span>be
+            Tsen
+            <Image
+              src="/logo.png"
+              alt="@"
+              width={25}
+              height={25}
+              style={{
+                display: "inline-block",
+                verticalAlign: "middle",
+                margin: "0 0 5px 0",
+              }}
+            />
+            be
             <span
               style={{
                 fontFamily: "'DM Sans', sans-serif",

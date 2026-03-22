@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const C = {
   main:    '#D9D9D9',   // gris clair — sections alternées
@@ -170,10 +171,47 @@ export default function LandingPage() {
       `}</style>
 
       {/* NAVBAR */}
-      <nav style={{ background: C.cream, borderBottom: `1px solid ${C.light}`, height: '60px', display: 'flex', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', padding: '0 40px' }} className="nav-inner">
-          <span className="brand-name" style={{ fontSize: '22px', color: C.dark }}>
-            Tsen<span style={{ color: C.caramel }}>@</span>be
+      <nav
+        style={{
+          background: C.cream,
+          borderBottom: `1px solid ${C.light}`,
+          height: "60px",
+          display: "flex",
+          alignItems: "center",
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            width: "100%",
+            padding: "0 40px",
+          }}
+          className="nav-inner"
+        >
+          <span
+            className="brand-name"
+            style={{ fontSize: "22px", color: C.dark }}
+          >
+            Tsen
+            <span>
+              <Image
+                src="/logo.png"
+                alt="@"
+                width={25}
+                height={25}
+                style={{
+                  display: "inline-block",
+                  verticalAlign: "middle",
+                  margin: "0 0 5px 0",
+                }}
+              />
+            </span>
+            be
           </span>
           <div className="nav-links">
             <a href="#comment" className="nav-link">Comment ça marche</a>
@@ -360,8 +398,23 @@ export default function LandingPage() {
           <div className="footer-grid" style={{ marginBottom: '48px' }}>
 
             <div>
-              <p className="brand-name" style={{ fontSize: '24px', color: C.cream, margin: '0 0 14px' }}>
-                Tsen<span style={{ color: C.caramel }}>@</span>be
+              <p
+                className="brand-name"
+                style={{ fontSize: "24px", color: C.cream, margin: "0 0 14px" }}
+              >
+                Tsen
+                <Image
+                  src="/logo_light.png"
+                  alt="@"
+                  width={25}
+                  height={25}
+                  style={{
+                    display: "inline-block",
+                    verticalAlign: "middle",
+                    margin: "0 0 5px 0",
+                  }}
+                />
+                be
               </p>
               <p style={{ fontSize: '14px', color: C.footerText, lineHeight: '1.85', margin: '0 0 24px', fontWeight: '300' }}>
                 La plateforme de mini-boutiques pour les vendeurs malgaches. Simple, rapide, adaptée à votre quotidien.

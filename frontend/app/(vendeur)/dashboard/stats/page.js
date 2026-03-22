@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -55,13 +55,16 @@ export default function StatsPage() {
 
   useEffect(() => {
     const session = getSession();
-    if (!session) { router.push('/login'); return; }
+    if (!session) {
+      router.push("/login");
+      return;
+    }
     fetchStats();
   }, [router]);
 
   const fetchStats = async () => {
     try {
-      const { data } = await api.get('/stats');
+      const { data } = await api.get("/stats");
       setStats(data.stats);
     } finally {
       setLoading(false);
