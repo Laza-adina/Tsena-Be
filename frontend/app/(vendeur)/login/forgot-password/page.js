@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import api from "../../../lib/api";
+import api from "../../../../lib/api";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -15,14 +15,10 @@ const C = {
   muted: "#284B63",
 };
 
-export default function SignupPage() {
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-    shopName: "",
-    whatsapp: "",
-  });
+export default function ForgotPasswordPage() {
+  const [email, setEmail] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [visible, setVisible] = useState(false);
 
@@ -31,19 +27,15 @@ export default function SignupPage() {
     return () => clearTimeout(t);
   }, []);
 
-  const [successMsg, setSuccessMsg] = useState("");
-
   const handleSubmit = async () => {
     setError("");
-    setSuccessMsg("");
+    setSuccess("");
     setLoading(true);
     try {
-      const { data } = await api.post("/auth/signup", form);
-      setSuccessMsg(
-        data.message || "Compte créé ! Veuillez vérifier votre email.",
-      );
+      const { data } = await api.post("/auth/forgot-password", { email });
+      setSuccess(data.message || "Email envoyé.");
     } catch (err) {
-      setError(err.response?.data?.error || "Erreur lors de la création.");
+      setError(err.response?.data?.error || "Erreur de connexion.");
     } finally {
       setLoading(false);
     }
@@ -70,17 +62,6 @@ export default function SignupPage() {
     transition: "border-color 0.2s ease, box-shadow 0.2s ease",
   };
 
-  const labelStyle = {
-    fontSize: "12px",
-    fontWeight: "600",
-    color: C.dark,
-    display: "block",
-    marginBottom: "7px",
-    textTransform: "uppercase",
-    letterSpacing: "1px",
-    fontFamily: "'DM Sans', sans-serif",
-  };
-
   return (
     <div
       style={{
@@ -90,7 +71,6 @@ export default function SignupPage() {
         justifyContent: "center",
         background: C.cream,
         fontFamily: "'DM Sans', sans-serif",
-        padding: "40px 0",
       }}
     >
       <style>{`
@@ -101,14 +81,14 @@ export default function SignupPage() {
           box-shadow: 0 0 0 3px ${C.caramel}22 !important;
         }
         input::placeholder { color: ${C.muted}; opacity: 0.5; }
-        .btn-signup {
+        .btn-submit {
           transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        .btn-signup:hover:not(:disabled) {
+        .btn-submit:hover:not(:disabled) {
           transform: translateY(-2px);
           box-shadow: 0 8px 24px rgba(53,53,53,0.18);
         }
-        .link-login {
+        .link-back {
           color: ${C.dark};
           font-weight: 600;
           text-decoration: none;
@@ -116,7 +96,7 @@ export default function SignupPage() {
           padding-bottom: 1px;
           transition: border-color 0.2s;
         }
-        .link-login:hover { border-color: ${C.dark}; }
+        .link-back:hover { border-color: ${C.dark}; }
       `}</style>
 
       <div style={{ width: "100%", maxWidth: "400px", padding: "0 24px" }}>
@@ -139,12 +119,12 @@ export default function SignupPage() {
               <Image
                 src="/logo.png"
                 alt="@"
-                width={15}
-                height={15}
+                width={25}
+                height={25}
                 style={{
                   display: "inline-block",
                   verticalAlign: "middle",
-                  margin: "0 2px",
+                  margin: "0 0 5px 0",
                 }}
               />
               be
@@ -170,7 +150,7 @@ export default function SignupPage() {
               fontWeight: "300",
             }}
           >
-            Créez votre boutique en ligne
+            Réinitialiser votre mot de passe
           </p>
         </div>
 
@@ -200,7 +180,7 @@ export default function SignupPage() {
             </div>
           )}
 
-          {successMsg && (
+          {success && (
             <div
               style={{
                 padding: "12px 14px",
@@ -209,11 +189,11 @@ export default function SignupPage() {
                 borderRadius: "8px",
                 marginBottom: "20px",
                 fontSize: "13px",
-                color: "#0a0",
+                color: "#080",
                 fontWeight: "400",
               }}
             >
-              {successMsg}
+              {success}
             </div>
           )}
 
@@ -221,129 +201,65 @@ export default function SignupPage() {
             style={{ display: "flex", flexDirection: "column", gap: "18px" }}
           >
             <div>
-              <label style={labelStyle}>Nom de la boutique</label>
-              <input
-                type="text"
-                value={form.shopName}
-                onChange={(e) => setForm({ ...form, shopName: e.target.value })}
-                placeholder="Ex : Fringues Miora"
-                style={inputStyle}
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>E-mail</label>
-              <input
-                type="email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                placeholder="votre@email.com"
-                style={inputStyle}
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>Mot de passe</label>
-              <input
-                type="password"
-                value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                placeholder="Minimum 6 caractères"
-                style={inputStyle}
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>
-                Numéro WhatsApp
-                <span
-                  style={{
-                    color: C.muted,
-                    fontWeight: "300",
-                    marginLeft: "8px",
-                    fontSize: "11px",
-                    textTransform: "none",
-                    letterSpacing: "0",
-                  }}
-                >
-                  ex : 261341234567
-                </span>
+              <label
+                style={{
+                  fontSize: "12px",
+                  fontWeight: "600",
+                  color: C.dark,
+                  display: "block",
+                  marginBottom: "7px",
+                  textTransform: "uppercase",
+                  letterSpacing: "1px",
+                }}
+              >
+                E-mail
               </label>
               <input
-                type="text"
-                value={form.whatsapp}
-                onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
-                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-                placeholder="261341234567"
+                type="email"
+                placeholder="Votre adresse e-mail"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 style={inputStyle}
               />
             </div>
 
             <button
-              className="btn-signup"
+              className="btn-submit"
               onClick={handleSubmit}
-              disabled={loading}
+              disabled={loading || !email}
               style={{
+                marginTop: "10px",
                 width: "100%",
-                padding: "13px",
-                background: loading ? C.muted : C.dark,
-                color: C.cream,
+                padding: "14px",
+                background: C.caramel,
+                color: "#fff",
                 border: "none",
                 borderRadius: "8px",
-                fontSize: "14px",
+                fontSize: "15px",
                 fontWeight: "600",
-                cursor: loading ? "not-allowed" : "pointer",
+                cursor: loading || !email ? "not-allowed" : "pointer",
                 fontFamily: "'DM Sans', sans-serif",
-                marginTop: "6px",
-                letterSpacing: "0.2px",
+                opacity: loading || !email ? 0.7 : 1,
               }}
             >
-              {loading ? "Création…" : "Créer ma boutique"}
+              {loading ? "Envoi..." : "Envoyer le lien"}
             </button>
           </div>
         </div>
 
-        <p
+        <div
           style={{
             ...fadeItem(240),
             textAlign: "center",
-            fontSize: "13px",
+            marginTop: "32px",
+            fontSize: "14px",
             color: C.muted,
-            marginTop: "24px",
-            fontWeight: "300",
           }}
         >
-          Déjà un compte ?{" "}
-          <Link href="/login" className="link-login">
-            Se connecter
+          <Link href="/login" className="link-back">
+            Retour à la connexion
           </Link>
-        </p>
-
-        <p
-          style={{
-            ...fadeItem(320),
-            textAlign: "center",
-            fontSize: "12px",
-            color: C.muted,
-            marginTop: "44px",
-            fontWeight: "300",
-            opacity: 0.7,
-          }}
-        >
-          Tsen
-          <Image
-            src="/logo.png"
-            alt="@"
-            width={22}
-            height={22}
-            style={{
-              display: "inline-block",
-              verticalAlign: "middle",
-              margin: "0 0 5px 0",
-            }}
-          />
-          be — Développé par Keyros · Madagascar
-        </p>
+        </div>
       </div>
     </div>
   );
