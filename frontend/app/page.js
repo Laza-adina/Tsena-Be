@@ -440,7 +440,7 @@ export default function LandingPage() {
               <p style={{ fontSize: '10px', fontWeight: '600', color: C.footerText, margin: '0 0 22px', textTransform: 'uppercase', letterSpacing: '2px' }}>Contact</p>
               {[
                 { label: 'WhatsApp', href: 'https://wa.me/261345159568' },
-                { label: 'Facebook', href: '#' },
+                { label: 'Facebook', href: 'https://www.facebook.com/profile.php?id=61586337260046' },
               ].map(link => (
                 <a key={link.label} href={link.href} rel="noreferrer" target="_blank" className="footer-link">{link.label}</a>
               ))}
