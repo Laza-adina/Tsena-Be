@@ -230,7 +230,7 @@ export default function LoginPage() {
                 >
                   Mot de passe
                 </label>
-                <Link
+                {/* <Link
                   href="/login/forgot-password"
                   style={{
                     fontSize: "12px",
@@ -243,7 +243,7 @@ export default function LoginPage() {
                   onMouseOut={(e) => (e.target.style.opacity = 0.8)}
                 >
                   Mot de passe oublié ?
-                </Link>
+                </Link> */}
               </div>
               <input
                 type="password"
