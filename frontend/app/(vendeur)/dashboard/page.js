@@ -6,7 +6,6 @@ import { getSession, clearSession, saveSession } from '../../../lib/auth';
 import api from '../../../lib/api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import Link from 'next/link';
-import Image from 'next/image';
 
 const C = {
   cream: "#FFFFFF",
