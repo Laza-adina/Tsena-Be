@@ -200,19 +200,41 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label
+              <div
                 style={{
-                  fontSize: "12px",
-                  fontWeight: "600",
-                  color: C.dark,
-                  display: "block",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                   marginBottom: "7px",
-                  textTransform: "uppercase",
-                  letterSpacing: "1px",
                 }}
               >
-                Mot de passe
-              </label>
+                <label
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: "600",
+                    color: C.dark,
+                    display: "block",
+                    textTransform: "uppercase",
+                    letterSpacing: "1px",
+                  }}
+                >
+                  Mot de passe
+                </label>
+                <Link
+                  href="/login/forgot-password"
+                  style={{
+                    fontSize: "12px",
+                    color: C.dark,
+                    textDecoration: "none",
+                    opacity: 0.8,
+                    transition: "opacity 0.2s",
+                  }}
+                  onMouseOver={(e) => (e.target.style.opacity = 1)}
+                  onMouseOut={(e) => (e.target.style.opacity = 0.8)}
+                >
+                  Mot de passe oublié ?
+                </Link>
+              </div>
               <input
                 type="password"
                 value={form.password}

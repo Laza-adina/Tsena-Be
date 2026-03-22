@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSession } from "../../../../lib/auth";
 import api from "../../../../lib/api";
-import Link from "next/link";
+import Link from 'next/link';
 import Image from "next/image";
 
 const C = {
@@ -223,8 +223,8 @@ export default function QRCodePage() {
             marginBottom: "20px",
           }}
         >
-          {qrCode && (
-            <Image
+        {qrCode && (
+            <img
               src={qrCode}
               alt="QR Code"
               style={{ width: "200px", height: "200px", display: "block" }}

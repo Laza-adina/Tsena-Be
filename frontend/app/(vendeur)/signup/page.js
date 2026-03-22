@@ -1,9 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import api from "../../../lib/api";
-import { saveSession } from "../../../lib/auth";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -19,9 +17,13 @@ const C = {
 
 export default function SignupPage() {
   const router = useRouter();
-  const [form, setForm]       = useState({ password: '', shopName: '', whatsapp: '', code: '' });
-  const [error, setError]     = useState('');
-  const [success, setSuccess] = useState('');
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+    shopName: "",
+    whatsapp: "",
+  });
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [sendingCode, setSendingCode] = useState(false);
   const [verifyingCode, setVerifyingCode] = useState(false);
@@ -36,64 +38,11 @@ export default function SignupPage() {
     return () => clearTimeout(t);
   }, []);
 
-  const handleSendCode = async () => {
-    setError('');
-    setSuccess('');
-    setSendingCode(true);
-    try {
-      const { data } = await api.post('/auth/whatsapp/send-code', {
-        whatsapp: form.whatsapp,
-        purpose: 'signup'
-      });
-      setCodeSent(true);
-      setWhatsappVerified(false);
-      setVerificationToken('');
-      setSuccess('Code envoyé sur votre WhatsApp.');
-      setDevCode(data?.devCode || '');
-    } catch (err) {
-      setError(err.response?.data?.error || 'Erreur lors de l\'envoi du code.');
-    } finally {
-      setSendingCode(false);
-    }
-  };
-
-  const handleVerifyCode = async () => {
-    setError('');
-    setSuccess('');
-    setVerifyingCode(true);
-    try {
-      const { data } = await api.post('/auth/whatsapp/verify-code', {
-        whatsapp: form.whatsapp,
-        code: form.code,
-        purpose: 'signup'
-      });
-      setWhatsappVerified(true);
-      setVerificationToken(data.verificationToken);
-      setSuccess('Numéro WhatsApp vérifié.');
-    } catch (err) {
-      setWhatsappVerified(false);
-      setVerificationToken('');
-      setError(err.response?.data?.error || 'Code invalide.');
-    } finally {
-      setVerifyingCode(false);
-    }
-  };
-
   const handleSubmit = async () => {
-    setError('');
-    setSuccess('');
-    if (!whatsappVerified || !verificationToken) {
-      setError('Veuillez vérifier votre numéro WhatsApp avant de créer le compte.');
-      return;
-    }
+    setError("");
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/signup', {
-        shopName: form.shopName,
-        password: form.password,
-        whatsapp: form.whatsapp,
-        whatsappVerificationToken: verificationToken,
-      });
+      const { data } = await api.post("/auth/signup", form);
       saveSession(data.token, data.user);
       router.push("/dashboard");
     } catch (err) {
@@ -251,11 +200,6 @@ export default function SignupPage() {
               }}
             >
               {error}
-            </div>
-          )}
-          {success && (
-            <div style={{ padding: '12px 14px', background: '#eef8ef', border: '1px solid #bfe3c1', borderRadius: '8px', marginBottom: '20px', fontSize: '13px', color: '#1f6f2a', fontWeight: '400' }}>
-              {success}
             </div>
           )}
 

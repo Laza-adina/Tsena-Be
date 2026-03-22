@@ -1,9 +1,9 @@
 "use client";
 
+import { useRouter } from 'next/navigation';
+import { getSession, saveSession } from '../../../../lib/auth';
+import api from '../../../../lib/api';
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { getSession } from "../../../../lib/auth";
-import api from "../../../../lib/api";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -38,12 +38,17 @@ export default function AbonnementPage() {
     try {
       const { data: meData } = await api.get("/auth/me");
       const u = meData.user;
-      setUser({
-        ...getSession().user,
+  
+      const session = getSession();
+      const updatedUser = {
+        ...session.user,
         plan: u.plan,
-        planExpiresAt: u.plan_expires_at,
-      });
-      fetchHistory();
+        planExpiresAt: u.plan_expires_at
+      };
+      saveSession(session.token, updatedUser);
+      setUser(updatedUser);
+  
+      await fetchHistory();
     } catch {
       setLoading(false);
     }
