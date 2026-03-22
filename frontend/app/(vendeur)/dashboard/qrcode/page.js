@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSession } from "../../../../lib/auth";
 import api from "../../../../lib/api";
-import { Link } from "next/link";
-import Image from "next/image";
+import Link from "next/link";
+
 
 const C = {
   cream: "#FFFFFF",
@@ -140,19 +140,13 @@ export default function QRCodePage() {
               letterSpacing: "-0.3px",
             }}
           >
-            Tsen
-            <Image
-              src="/logo.png"
-              alt="@"
-              width={25}
-              height={25}
-              style={{
-                display: "inline-block",
-                verticalAlign: "middle",
-                margin: "0 0 5px 0",
-              }}
-            />
-            be
+          Tsen
+<img
+  src="/logo.png"
+  alt="@"
+  style={{ width: "25px", height: "25px", display: "inline-block", verticalAlign: "middle", margin: "0 0 5px 0" }}
+/>
+be
             <span
               style={{
                 fontFamily: "'DM Sans', sans-serif",
@@ -223,13 +217,13 @@ export default function QRCodePage() {
             marginBottom: "20px",
           }}
         >
-          {qrCode && (
-            <Image
-              src={qrCode}
-              alt="QR Code"
-              style={{ width: "200px", height: "200px", display: "block" }}
-            />
-          )}
+        {qrCode && (
+  <img
+    src={qrCode}
+    alt="QR Code"
+    style={{ width: "200px", height: "200px", display: "block" }}
+  />
+)}
         </div>
 
         {/* URL */}

@@ -167,7 +167,7 @@ export default function DashboardPage() {
           }}
         >
           Tsen
-          <Image
+          <img
             src="/logo.png"
             alt="@"
             width={25}

@@ -1,9 +1,8 @@
 // src/controllers/authController.js
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto");
+
 const db = require("../config/supabase");
-const sendEmail = require("../utils/sendEmail");
 
 const toSlug = (text) =>
   text
@@ -56,46 +55,38 @@ exports.signup = async (req, res) => {
 
     const hashed = await bcrypt.hash(password, 10);
 
-    const verifyToken = crypto.randomBytes(32).toString("hex");
+  
 
-    const trialExpires = new Date();
-    trialExpires.setDate(trialExpires.getDate() + 7);
+const trialExpires = new Date();
+trialExpires.setDate(trialExpires.getDate() + 7);
 
-    const { data: user, error } = await db
-      .from("users")
-      .insert([
-        {
-          email,
-          password: hashed,
-          shop_name: shopName,
-          shop_slug: slug,
-          whatsapp: whatsapp || null,
-          plan: "trial",
-          plan_expires_at: trialExpires.toISOString(),
-          verify_token: verifyToken,
-          is_verified: false,
-        },
-      ])
-      .select(
-        "id, email, shop_name, shop_slug, plan, plan_expires_at, verify_token",
-      )
-      .single();
+const { data: user, error } = await db
+  .from('users')
+  .insert([{
+    email,
+    password: hashed,
+    shop_name: shopName,
+    shop_slug: slug,
+    whatsapp: whatsapp || null,
+    plan: 'trial',
+    plan_expires_at: trialExpires.toISOString(),
+    is_verified: true,
+  }])
+  .select('id, email, shop_name, shop_slug, plan, plan_expires_at')
+  .single();
 
-    if (error) throw error;
+if (error) throw error;
 
-    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verifyToken}`;
-
-    try {
-      await sendEmail({
-        to: user.email,
-        subject: "Vérifiez votre adresse email",
-        text: `Veuillez vérifier votre email en cliquant sur ce lien : ${verifyUrl}`,
-        html: `<p>Veuillez vérifier votre email en cliquant sur <a href="${verifyUrl}">ce lien</a>.</p>`,
-      });
-    } catch (e) {
-      console.error("Erreur envoi email verification", e);
-    }
-
+return res.status(201).json({
+  message: 'Compte créé !',
+  token: generateToken(user),
+  user: {
+    id: user.id, email: user.email,
+    shopName: user.shop_name, shopSlug: user.shop_slug,
+    shopUrl: `${process.env.FRONTEND_URL}/${user.shop_slug}`,
+    plan: user.plan, planExpiresAt: user.plan_expires_at
+  }
+});
     // Ne pas retourner de token, l'utilisateur doit d'abord vérifier son email
     return res.status(201).json({
       message:
@@ -126,12 +117,6 @@ exports.login = async (req, res) => {
       return res
         .status(403)
         .json({ error: "Compte désactivé. Contactez le support." });
-    if (user.is_verified === false)
-      return res
-        .status(403)
-        .json({
-          error: "Veuillez vérifier votre email avant de vous connecter.",
-        });
 
     const ok = await bcrypt.compare(password, user.password);
     if (!ok)
