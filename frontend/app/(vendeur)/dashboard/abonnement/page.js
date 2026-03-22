@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getSession } from '../../../../lib/auth';
+import { getSession, saveSession } from '../../../../lib/auth';
 import api from '../../../../lib/api';
 
 const C = {
@@ -33,12 +33,17 @@ export default function AbonnementPage() {
     try {
       const { data: meData } = await api.get('/auth/me');
       const u = meData.user;
-      setUser({
-        ...getSession().user,
+  
+      const session = getSession();
+      const updatedUser = {
+        ...session.user,
         plan: u.plan,
         planExpiresAt: u.plan_expires_at
-      });
-      fetchHistory();
+      };
+      saveSession(session.token, updatedUser);
+      setUser(updatedUser);
+  
+      await fetchHistory();
     } catch {
       setLoading(false);
     }
