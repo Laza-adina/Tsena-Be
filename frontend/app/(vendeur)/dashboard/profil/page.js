@@ -815,7 +815,19 @@ export default function ProfilPage() {
         <nav className="pf-nav">
           <div className="pf-nav-inner">
             <Link href="/dashboard" className="pf-nav-brand">
-              Tsen<span style={{ color: C.caramel }}>@</span>be
+              Tsen
+              <Image
+                src="/logo.png"
+                alt="@"
+                width={25}
+                height={25}
+                style={{
+                  display: "inline-block",
+                  verticalAlign: "middle",
+                  margin: "0 0 5px 0",
+                }}
+              />
+              be
             </Link>
             <div className="pf-nav-links">
               <Link href="/dashboard" className="pf-nav-link">
