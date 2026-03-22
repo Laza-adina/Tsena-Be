@@ -257,12 +257,11 @@ exports.trackWhatsapp = async (req, res) => {
 exports.getStats = async (req, res) => {
   try {
     const since = new Date();
-    since.setDate(since.getDate() - 6);
-    since.setHours(0, 0, 0, 0);
+    since.setDate(since.getDate() - 30);
 
     const { data: views } = await db
       .from('page_views')
-      .select('event_type, created_at')
+      .select('event_type')
       .eq('user_id', req.user.id)
       .gte('created_at', since.toISOString());
 
@@ -271,43 +270,16 @@ exports.getStats = async (req, res) => {
       .select('id', { count: 'exact', head: true })
       .eq('user_id', req.user.id);
 
-    // Construire les données par jour pour les 7 derniers jours
-    const days = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      d.setHours(0, 0, 0, 0);
-      const nextD = new Date(d);
-      nextD.setDate(nextD.getDate() + 1);
-
-      const dayViews = (views || []).filter(v => {
-        const t = new Date(v.created_at);
-        return t >= d && t < nextD;
+      res.json({
+        stats: {
+          last30Days: {
+            pageViews:      (views || []).filter(v => v.event_type === 'page_view').length,
+            whatsappClicks: (views || []).filter(v => v.event_type === 'whatsapp_click').length
+          },
+          productCount: productCount || 0
+        }
       });
-
-      days.push({
-        jour: i === 0 ? 'Auj' : `J-${i}`,
-        date: d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }),
-        vues: dayViews.filter(v => v.event_type === 'page_view').length,
-        clics: dayViews.filter(v => v.event_type === 'whatsapp_click').length
-      });
-    }
-
-    const totalViews = (views || []).filter(v => v.event_type === 'page_view').length;
-    const totalClics = (views || []).filter(v => v.event_type === 'whatsapp_click').length;
-
-    res.json({
-      stats: {
-        last30Days: {
-          pageViews: totalViews,
-          whatsappClicks: totalClics
-        },
-        productCount: productCount || 0,
-        chartData: days
-      }
-    });
-  } catch (err) {
-    console.error(err);
+  } catch {
     res.status(500).json({ error: 'Erreur serveur.' });
   }
 };

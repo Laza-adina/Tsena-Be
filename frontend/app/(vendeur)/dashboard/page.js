@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getSession, clearSession, saveSession } from '../../../lib/auth';
+import { getSession, clearSession } from '../../../lib/auth';
 import api from '../../../lib/api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import Link from 'next/link';
@@ -34,17 +34,6 @@ export default function DashboardPage() {
     }
     setUser(session.user);
     fetchStats();
-    // Rafraichir le profil pour avoir planExpiresAt à jour
-    api.get('/auth/me').then(({ data }) => {
-      const u = data.user;
-      const updated = {
-        ...session.user,
-        plan: u.plan,
-        planExpiresAt: u.plan_expires_at
-      };
-      saveSession(session.token, updated);
-      setUser(updated);
-    }).catch(() => {});
   }, [router]);
 
   const fetchStats = async () => {
@@ -70,14 +59,14 @@ export default function DashboardPage() {
     transition: `opacity 0.7s cubic-bezier(0.16,1,0.3,1) ${delay}ms, transform 0.7s cubic-bezier(0.16,1,0.3,1) ${delay}ms`,
   });
 
-  const chartData = stats?.chartData || [
-    { jour: 'J-6', date: '', vues: 0, clics: 0 },
-    { jour: 'J-5', date: '', vues: 0, clics: 0 },
-    { jour: 'J-4', date: '', vues: 0, clics: 0 },
-    { jour: 'J-3', date: '', vues: 0, clics: 0 },
-    { jour: 'J-2', date: '', vues: 0, clics: 0 },
-    { jour: 'J-1', date: '', vues: 0, clics: 0 },
-    { jour: 'Auj', date: '', vues: 0, clics: 0 },
+  const chartData = [
+    { jour: 'J-6', vues: 0, clics: 0 },
+    { jour: 'J-5', vues: 0, clics: 0 },
+    { jour: 'J-4', vues: 0, clics: 0 },
+    { jour: 'J-3', vues: 0, clics: 0 },
+    { jour: 'J-2', vues: 0, clics: 0 },
+    { jour: 'J-1', vues: 0, clics: 0 },
+    { jour: "Auj", vues: stats?.last30Days?.pageViews || 0, clics: stats?.last30Days?.whatsappClicks || 0 },
   ];
 
   const cardStyle = {
@@ -467,12 +456,8 @@ export default function DashboardPage() {
                 tickLine={false}
               />
               <Tooltip
-                contentStyle={{ border: `1px solid ${C.light}`, borderRadius: '10px', fontSize: '12px', fontFamily: 'DM Sans, sans-serif', background: C.cream, color: C.dark }}
+                contentStyle={{ border: `1px solid ${C.light}`, borderRadius: '10px', fontSize: '12px', fontFamily: 'DM Sans, sans-serif', background: C.cream, color: C.dark, boxShadow: '0 4px 16px rgba(53,53,53,0.08)' }}
                 cursor={{ fill: C.light }}
-                labelFormatter={(label, payload) => {
-                  const item = payload?.[0]?.payload;
-                  return item?.date ? `${label} — ${item.date}` : label;
-                }}
               />
               <Bar
                 dataKey="vues"

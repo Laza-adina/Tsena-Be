@@ -38,17 +38,12 @@ export default function AbonnementPage() {
     try {
       const { data: meData } = await api.get("/auth/me");
       const u = meData.user;
-  
-      const session = getSession();
-      const updatedUser = {
-        ...session.user,
+      setUser({
+        ...getSession().user,
         plan: u.plan,
         planExpiresAt: u.plan_expires_at
-      };
-      saveSession(session.token, updatedUser);
-      setUser(updatedUser);
-  
-      await fetchHistory();
+      });
+      fetchHistory();
     } catch {
       setLoading(false);
     }
