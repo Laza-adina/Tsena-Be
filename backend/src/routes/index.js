@@ -13,10 +13,12 @@ const subs = require("../controllers/subscriptionsController");
 // PUBLIC — pas de token requis
 // ════════════════════════════════
 
-router.post('/auth/signup',           auth.signup);
-router.post('/auth/login',            auth.login);
-router.post('/auth/whatsapp/send-code', auth.sendWhatsappCode);
-router.post('/auth/whatsapp/verify-code', auth.verifyWhatsappCode);
+router.post("/auth/signup", auth.signup);
+router.post("/auth/login", auth.login);
+router.post("/auth/whatsapp/send-code", auth.sendWhatsappCode);
+router.post("/auth/whatsapp/verify-code", auth.verifyWhatsappCode);
+router.post("/auth/forgot-password", auth.forgotPassword);
+router.post("/auth/reset-password", auth.resetPassword);
 
 // Page publique boutique
 router.get("/public/:slug", shop.getPublicShop);

@@ -3,15 +3,22 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const db = require("../config/supabase");
-const sendEmail = require("../utils/sendEmail");
+const sendWhatsappMessage = require("../utils/sendWhatsappMessage");
 
 const otpStore = new Map();
-const OTP_TTL_MS = 5 * 60 * 1000;
+const OTP_TTL_MS = 10 * 60 * 1000;
 
-const normalizeWhatsapp = (value = '') => String(value).replace(/\D/g, '');
+const normalizeWhatsapp = (value = "") => {
+  const digits = String(value).replace(/\D/g, "");
+  if (/^0\d{9}$/.test(digits)) {
+    return `261${digits.slice(1)}`;
+  }
+  return digits;
+};
 const isValidWhatsapp = (value) => /^\d{10,15}$/.test(value);
 
-const createOtpCode = () => Math.floor(100000 + Math.random() * 900000).toString();
+const createOtpCode = () =>
+  Math.floor(100000 + Math.random() * 900000).toString();
 
 const setOtp = ({ whatsapp, purpose, code }) => {
   const key = `${purpose}:${whatsapp}`;
@@ -29,7 +36,7 @@ const verifyOtp = ({ whatsapp, purpose, code }) => {
     otpStore.delete(key);
     return false;
   }
-  if (entry.code !== String(code || '').trim()) return false;
+  if (entry.code !== String(code || "").trim()) return false;
   otpStore.delete(key);
   return true;
 };
@@ -37,19 +44,19 @@ const verifyOtp = ({ whatsapp, purpose, code }) => {
 const createWhatsappVerificationToken = ({ whatsapp, purpose }) =>
   jwt.sign(
     {
-      type: 'whatsapp_verification',
+      type: "whatsapp_verification",
       whatsapp,
       purpose,
     },
     process.env.JWT_SECRET,
-    { expiresIn: '10m' }
+    { expiresIn: "10m" },
   );
 
 const verifyWhatsappVerificationToken = ({ token, whatsapp, purpose }) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     return (
-      decoded?.type === 'whatsapp_verification' &&
+      decoded?.type === "whatsapp_verification" &&
       decoded?.purpose === purpose &&
       decoded?.whatsapp === whatsapp
     );
@@ -59,44 +66,11 @@ const verifyWhatsappVerificationToken = ({ token, whatsapp, purpose }) => {
 };
 
 const sendWhatsappOtpMessage = async ({ whatsapp, code }) => {
-  const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
-  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
-  const templateName = process.env.WHATSAPP_TEMPLATE_NAME;
-  const templateLanguage = process.env.WHATSAPP_TEMPLATE_LANGUAGE || 'fr';
-
-  if (!accessToken || !phoneNumberId || !templateName) {
-    return { sent: false, reason: 'not_configured' };
-  }
-
-  const response = await fetch(`https://graph.facebook.com/v20.0/${phoneNumberId}/messages`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      messaging_product: 'whatsapp',
-      to: whatsapp,
-      type: 'template',
-      template: {
-        name: templateName,
-        language: { code: templateLanguage },
-        components: [
-          {
-            type: 'body',
-            parameters: [{ type: 'text', text: code }],
-          },
-        ],
-      },
-    }),
+  return sendWhatsappMessage({
+    to: whatsapp,
+    message: `Votre code de vérification est : ${code}. Ce code expire dans 10 minutes.`,
+    templateParams: [code],
   });
-
-  if (!response.ok) {
-    const raw = await response.text();
-    throw new Error(`WhatsApp API error (${response.status}): ${raw}`);
-  }
-
-  return { sent: true };
 };
 
 const toSlug = (text) =>
@@ -119,58 +93,29 @@ const generateToken = (user) =>
     { expiresIn: process.env.JWT_EXPIRES_IN || "7d" },
   );
 
-const sendWhatsappMessage = async (to, text) => {
-  const accessToken = process.env.META_API_KEY;
-  const phoneNumberId = process.env.META_PHONE_NUMBER_ID;
-
-  if (!accessToken || !phoneNumberId) {
-    console.log("Message WhatsApp (Non envoyé, clé API manquante) :", text);
-    return { sent: false };
-  }
-
-  const response = await fetch(`https://graph.facebook.com/v20.0/${phoneNumberId}/messages`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      messaging_product: 'whatsapp',
-      to: String(to).replace(/\D/g, ''),
-      type: 'text',
-      text: { body: text },
-    }),
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    console.error("WhatsApp API error:", errText);
-    return { sent: false };
-  }
-  return { sent: true };
-};
-
 exports.sendWhatsappCode = async (req, res) => {
   try {
-    const purpose = req.body?.purpose || 'signup';
+    const purpose = req.body?.purpose || "signup";
     const whatsapp = normalizeWhatsapp(req.body?.whatsapp);
 
-    if (!['signup', 'change'].includes(purpose)) {
-      return res.status(400).json({ error: 'Type de vérification invalide.' });
+    if (!["signup", "change"].includes(purpose)) {
+      return res.status(400).json({ error: "Type de vérification invalide." });
     }
 
     if (!isValidWhatsapp(whatsapp)) {
-      return res.status(400).json({ error: 'Numéro WhatsApp invalide.' });
+      return res.status(400).json({ error: "Numéro WhatsApp invalide." });
     }
 
-    if (purpose === 'signup') {
+    if (purpose === "signup") {
       const { data: existing } = await db
-        .from('users')
-        .select('id')
-        .eq('whatsapp', whatsapp)
+        .from("users")
+        .select("id")
+        .eq("whatsapp", whatsapp)
         .maybeSingle();
       if (existing) {
-        return res.status(409).json({ error: 'Ce numéro WhatsApp est déjà utilisé.' });
+        return res
+          .status(409)
+          .json({ error: "Ce numéro WhatsApp est déjà utilisé." });
       }
     }
 
@@ -181,99 +126,115 @@ exports.sendWhatsappCode = async (req, res) => {
       const sendResult = await sendWhatsappOtpMessage({ whatsapp, code });
 
       if (sendResult.sent) {
-        return res.json({ message: 'Code envoyé sur WhatsApp.' });
+        return res.json({ message: "Code envoyé sur WhatsApp." });
       }
 
-      if (process.env.NODE_ENV === 'production') {
+      if (process.env.NODE_ENV === "production") {
         return res.status(503).json({
-          error: 'Service WhatsApp non configuré. Contactez le support technique.',
+          error:
+            "Service WhatsApp non configuré. Vérifiez WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID et WHATSAPP_TEMPLATE_NAME.",
         });
       }
 
       return res.json({
-        message: 'Envoi WhatsApp non configuré en local. Utilisez le code de test ci-dessous.',
+        message: `Envoi WhatsApp non configuré (${sendResult.reason}). Utilisez le code de test ci-dessous.`,
         devCode: code,
       });
     } catch (sendErr) {
       console.error(sendErr);
 
-      if (process.env.NODE_ENV === 'production') {
+      if (process.env.NODE_ENV === "production") {
         return res.status(502).json({
-          error: 'Impossible d\'envoyer le code WhatsApp pour le moment.',
+          error: "Impossible d'envoyer le code WhatsApp pour le moment.",
         });
       }
 
       return res.json({
-        message: 'Échec envoi WhatsApp en local. Utilisez le code de test ci-dessous.',
+        message: `Échec envoi WhatsApp en local (${sendErr.message}). Utilisez le code de test ci-dessous.`,
         devCode: code,
       });
     }
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: 'Erreur serveur.' });
+    return res.status(500).json({ error: "Erreur serveur." });
   }
 };
 
 exports.verifyWhatsappCode = async (req, res) => {
   try {
-    const purpose = req.body?.purpose || 'signup';
+    const purpose = req.body?.purpose || "signup";
     const whatsapp = normalizeWhatsapp(req.body?.whatsapp);
-    const code = String(req.body?.code || '').trim();
+    const code = String(req.body?.code || "").trim();
 
-    if (!['signup', 'change'].includes(purpose)) {
-      return res.status(400).json({ error: 'Type de vérification invalide.' });
+    if (!["signup", "change"].includes(purpose)) {
+      return res.status(400).json({ error: "Type de vérification invalide." });
     }
 
     if (!isValidWhatsapp(whatsapp)) {
-      return res.status(400).json({ error: 'Numéro WhatsApp invalide.' });
+      return res.status(400).json({ error: "Numéro WhatsApp invalide." });
     }
 
     if (!code) {
-      return res.status(400).json({ error: 'Code de vérification requis.' });
+      return res.status(400).json({ error: "Code de vérification requis." });
     }
 
     const isValid = verifyOtp({ whatsapp, purpose, code });
     if (!isValid) {
-      return res.status(400).json({ error: 'Code invalide ou expiré.' });
+      return res.status(400).json({ error: "Code invalide ou expiré." });
     }
 
-    const verificationToken = createWhatsappVerificationToken({ whatsapp, purpose });
-    return res.json({ message: 'Numéro vérifié.', verificationToken });
+    const verificationToken = createWhatsappVerificationToken({
+      whatsapp,
+      purpose,
+    });
+    return res.json({ message: "Numéro vérifié.", verificationToken });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: 'Erreur serveur.' });
+    return res.status(500).json({ error: "Erreur serveur." });
   }
 };
 
 exports.signup = async (req, res) => {
   try {
-    const { password, shopName, whatsapp, whatsappVerificationToken } = req.body;
+    const { password, shopName, whatsapp, whatsappVerificationToken } =
+      req.body;
     const normalizedWhatsapp = normalizeWhatsapp(whatsapp);
 
     if (!password || !shopName || !normalizedWhatsapp)
-      return res.status(400).json({ error: 'Numéro WhatsApp, mot de passe et nom de boutique requis.' });
+      return res
+        .status(400)
+        .json({
+          error: "Numéro WhatsApp, mot de passe et nom de boutique requis.",
+        });
     if (password.length < 6)
-      return res.status(400).json({ error: 'Mot de passe minimum 6 caractères.' });
+      return res
+        .status(400)
+        .json({ error: "Mot de passe minimum 6 caractères." });
     if (!isValidWhatsapp(normalizedWhatsapp))
-      return res.status(400).json({ error: 'Numéro WhatsApp invalide.' });
+      return res.status(400).json({ error: "Numéro WhatsApp invalide." });
     if (!whatsappVerificationToken)
-      return res.status(400).json({ error: 'Vérification WhatsApp requise.' });
+      return res.status(400).json({ error: "Vérification WhatsApp requise." });
 
     const tokenOk = verifyWhatsappVerificationToken({
       token: whatsappVerificationToken,
       whatsapp: normalizedWhatsapp,
-      purpose: 'signup',
+      purpose: "signup",
     });
     if (!tokenOk) {
-      return res.status(400).json({ error: 'Vérification WhatsApp invalide ou expirée.' });
+      return res
+        .status(400)
+        .json({ error: "Vérification WhatsApp invalide ou expirée." });
     }
 
     const { data: existsWhatsapp } = await db
-      .from('users')
-      .select('id')
-      .eq('whatsapp', normalizedWhatsapp)
+      .from("users")
+      .select("id")
+      .eq("whatsapp", normalizedWhatsapp)
       .maybeSingle();
-    if (existsWhatsapp) return res.status(409).json({ error: 'Ce numéro WhatsApp est déjà utilisé.' });
+    if (existsWhatsapp)
+      return res
+        .status(409)
+        .json({ error: "Ce numéro WhatsApp est déjà utilisé." });
 
     let slug = toSlug(shopName);
     const { data: slugExists } = await db
@@ -287,47 +248,42 @@ exports.signup = async (req, res) => {
 
     const hashed = await bcrypt.hash(password, 10);
 
-    const verifyToken = crypto.randomBytes(32).toString("hex");
-
     const trialExpires = new Date();
     trialExpires.setDate(trialExpires.getDate() + 7);
 
     const { data: user, error } = await db
-      .from('users')
-      .insert([{
-        email, password: hashed,
-        shop_name: shopName, shop_slug: slug,
-        whatsapp: normalizedWhatsapp,
-        plan: 'trial',
-        plan_expires_at: trialExpires.toISOString()
-      }])
-      .select('id, email, shop_name, shop_slug, plan, plan_expires_at')
+      .from("users")
+      .insert([
+        {
+          email,
+          password: hashed,
+          shop_name: shopName,
+          shop_slug: slug,
+          whatsapp: normalizedWhatsapp,
+          plan: "trial",
+          plan_expires_at: trialExpires.toISOString(),
+          is_verified: true,
+          verify_token: null,
+        },
+      ])
+      .select("id, email, shop_name, shop_slug, plan, plan_expires_at")
       .single();
 
     if (error) throw error;
 
-    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verifyToken}`;
-
-    try {
-      await sendWhatsappMessage(
-        normalizedWhatsapp,
-        `Bienvenue sur Tsenabe ! Veuillez vérifier votre compte en cliquant sur ce lien : ${verifyUrl}`
-      );
-    } catch (e) {
-      console.error("Erreur envoi WhatsApp verification", e);
-    }
-
-    // Ne pas retourner de token, l'utilisateur doit d'abord vérifier son compte
     return res.status(201).json({
-      message: 'Compte créé ! Un lien de vérification a été envoyé sur WhatsApp.',
+      message: "Compte créé !",
       token: generateToken(user),
       user: {
-        id: user.id, email: user.email,
-        shopName: user.shop_name, shopSlug: user.shop_slug,
+        id: user.id,
+        email: user.email,
+        shopName: user.shop_name,
+        shopSlug: user.shop_slug,
         whatsapp: normalizedWhatsapp,
         shopUrl: `${process.env.FRONTEND_URL}/${user.shop_slug}`,
-        plan: user.plan, planExpiresAt: user.plan_expires_at
-      }
+        plan: user.plan,
+        planExpiresAt: user.plan_expires_at,
+      },
     });
   } catch (err) {
     console.error(err);
@@ -339,15 +295,32 @@ exports.login = async (req, res) => {
   try {
     const whatsapp = normalizeWhatsapp(req.body?.whatsapp);
     const { password } = req.body;
-    if (!whatsapp || !password) return res.status(400).json({ error: 'Numéro WhatsApp et mot de passe requis.' });
-    if (!isValidWhatsapp(whatsapp)) return res.status(400).json({ error: 'Numéro WhatsApp invalide.' });
+    if (!whatsapp || !password)
+      return res
+        .status(400)
+        .json({ error: "Numéro WhatsApp et mot de passe requis." });
+    if (!isValidWhatsapp(whatsapp))
+      return res.status(400).json({ error: "Numéro WhatsApp invalide." });
 
-    const { data: user } = await db.from('users').select('*').eq('whatsapp', whatsapp).maybeSingle();
-    if (!user) return res.status(401).json({ error: 'Numéro WhatsApp ou mot de passe incorrect.' });
-    if (!user.is_active) return res.status(403).json({ error: 'Compte désactivé. Contactez le support.' });
+    const { data: user } = await db
+      .from("users")
+      .select("*")
+      .eq("whatsapp", whatsapp)
+      .maybeSingle();
+    if (!user)
+      return res
+        .status(401)
+        .json({ error: "Numéro WhatsApp ou mot de passe incorrect." });
+    if (!user.is_active)
+      return res
+        .status(403)
+        .json({ error: "Compte désactivé. Contactez le support." });
 
     const ok = await bcrypt.compare(password, user.password);
-    if (!ok) return res.status(401).json({ error: 'Numéro WhatsApp ou mot de passe incorrect.' });
+    if (!ok)
+      return res
+        .status(401)
+        .json({ error: "Numéro WhatsApp ou mot de passe incorrect." });
 
     return res.json({
       message: "Connexion réussie !",
@@ -392,47 +365,64 @@ exports.getMe = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const { shopName, description, whatsapp, facebookUrl, profileImageUrl, whatsappVerificationToken } = req.body;
-    const normalizedWhatsapp = whatsapp !== undefined ? normalizeWhatsapp(whatsapp) : undefined;
+    const {
+      shopName,
+      description,
+      whatsapp,
+      facebookUrl,
+      profileImageUrl,
+      whatsappVerificationToken,
+    } = req.body;
+    const normalizedWhatsapp =
+      whatsapp !== undefined ? normalizeWhatsapp(whatsapp) : undefined;
 
     const { data: currentUser } = await db
-      .from('users')
-      .select('id, whatsapp')
-      .eq('id', req.user.id)
+      .from("users")
+      .select("id, whatsapp")
+      .eq("id", req.user.id)
       .single();
 
     if (!currentUser) {
-      return res.status(404).json({ error: 'Utilisateur introuvable.' });
+      return res.status(404).json({ error: "Utilisateur introuvable." });
     }
 
     const whatsappChanged =
       normalizedWhatsapp !== undefined &&
-      normalizedWhatsapp !== normalizeWhatsapp(currentUser.whatsapp || '');
+      normalizedWhatsapp !== normalizeWhatsapp(currentUser.whatsapp || "");
 
     if (whatsappChanged) {
       if (!isValidWhatsapp(normalizedWhatsapp)) {
-        return res.status(400).json({ error: 'Numéro WhatsApp invalide.' });
+        return res.status(400).json({ error: "Numéro WhatsApp invalide." });
       }
       if (!whatsappVerificationToken) {
-        return res.status(400).json({ error: 'Veuillez vérifier le nouveau numéro WhatsApp avant de sauvegarder.' });
+        return res
+          .status(400)
+          .json({
+            error:
+              "Veuillez vérifier le nouveau numéro WhatsApp avant de sauvegarder.",
+          });
       }
       const tokenOk = verifyWhatsappVerificationToken({
         token: whatsappVerificationToken,
         whatsapp: normalizedWhatsapp,
-        purpose: 'change',
+        purpose: "change",
       });
       if (!tokenOk) {
-        return res.status(400).json({ error: 'Vérification WhatsApp invalide ou expirée.' });
+        return res
+          .status(400)
+          .json({ error: "Vérification WhatsApp invalide ou expirée." });
       }
 
       const { data: existingWhatsapp } = await db
-        .from('users')
-        .select('id')
-        .eq('whatsapp', normalizedWhatsapp)
-        .neq('id', req.user.id)
+        .from("users")
+        .select("id")
+        .eq("whatsapp", normalizedWhatsapp)
+        .neq("id", req.user.id)
         .maybeSingle();
       if (existingWhatsapp) {
-        return res.status(409).json({ error: 'Ce numéro WhatsApp est déjà utilisé.' });
+        return res
+          .status(409)
+          .json({ error: "Ce numéro WhatsApp est déjà utilisé." });
       }
     }
 
@@ -495,17 +485,18 @@ exports.verifyEmail = async (req, res) => {
 
 exports.forgotPassword = async (req, res) => {
   try {
-    const rawWhatsapp = req.body?.whatsapp;
-    if (!rawWhatsapp) return res.status(400).json({ error: "Numéro WhatsApp requis." });
-    
-    const whatsapp = rawWhatsapp.replace(/\D/g, '');
+    const whatsapp = normalizeWhatsapp(req.body?.whatsapp);
+    if (!whatsapp)
+      return res.status(400).json({ error: "Numéro WhatsApp requis." });
+    if (!isValidWhatsapp(whatsapp))
+      return res.status(400).json({ error: "Numéro WhatsApp invalide." });
 
     const { data: user } = await db
       .from("users")
       .select("id, whatsapp")
       .eq("whatsapp", whatsapp)
       .maybeSingle();
-    if (!user) return res.status(404).json({ error: "Compte introuvable avec ce numéro WhatsApp." });
+    if (!user) return res.status(404).json({ error: "Compte introuvable." });
 
     const resetToken = crypto.randomBytes(32).toString("hex");
     const resetExpires = new Date();
@@ -521,10 +512,17 @@ exports.forgotPassword = async (req, res) => {
 
     const resetUrl = `${process.env.FRONTEND_URL}/login/reset-password?token=${resetToken}`;
 
-    await sendWhatsappMessage(
-      user.whatsapp,
-      `Vous avez demandé une réinitialisation de mot de passe. Cliquez sur ce lien pour choisir un nouveau mot de passe : ${resetUrl}\n(Ce lien expire dans 1 heure)`
-    );
+    const sendResult = await sendWhatsappMessage({
+      to: user.whatsapp,
+      message: `Réinitialisation de mot de passe Tsen@be:\n${resetUrl}\nCe lien expire dans 1 heure.`,
+    });
+
+    if (!sendResult.sent) {
+      return res.status(503).json({
+        error:
+          "Service WhatsApp non configuré. Ajoutez META_API_KEY et votre Phone Number ID dans le backend.",
+      });
+    }
 
     res.json({ message: "Lien de réinitialisation envoyé sur WhatsApp." });
   } catch (err) {

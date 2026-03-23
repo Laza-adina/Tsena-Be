@@ -16,7 +16,7 @@ const C = {
 };
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
@@ -32,8 +32,8 @@ export default function ForgotPasswordPage() {
     setSuccess("");
     setLoading(true);
     try {
-      const { data } = await api.post("/auth/forgot-password", { email });
-      setSuccess(data.message || "Email envoyé.");
+      const { data } = await api.post("/auth/forgot-password", { whatsapp });
+      setSuccess(data.message || "Message WhatsApp envoyé.");
     } catch (err) {
       setError(err.response?.data?.error || "Erreur de connexion.");
     } finally {
@@ -212,13 +212,13 @@ export default function ForgotPasswordPage() {
                   letterSpacing: "1px",
                 }}
               >
-                E-mail
+                Numéro WhatsApp
               </label>
               <input
-                type="email"
-                placeholder="Votre adresse e-mail"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                placeholder="261341234567"
+                value={whatsapp}
+                onChange={(e) => setWhatsapp(e.target.value)}
                 style={inputStyle}
               />
             </div>
@@ -226,7 +226,7 @@ export default function ForgotPasswordPage() {
             <button
               className="btn-submit"
               onClick={handleSubmit}
-              disabled={loading || !email}
+              disabled={loading || !whatsapp}
               style={{
                 marginTop: "10px",
                 width: "100%",
@@ -237,9 +237,9 @@ export default function ForgotPasswordPage() {
                 borderRadius: "8px",
                 fontSize: "15px",
                 fontWeight: "600",
-                cursor: loading || !email ? "not-allowed" : "pointer",
+                cursor: loading || !whatsapp ? "not-allowed" : "pointer",
                 fontFamily: "'DM Sans', sans-serif",
-                opacity: loading || !email ? 0.7 : 1,
+                opacity: loading || !whatsapp ? 0.7 : 1,
               }}
             >
               {loading ? "Envoi..." : "Envoyer le lien"}
