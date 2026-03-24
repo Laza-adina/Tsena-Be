@@ -41,7 +41,7 @@ exports.getMyProducts = async (req, res) => {
 // ─── POST /api/products ────────────────────────────────────
 exports.createProduct = async (req, res) => {
   try {
-    const { name, description, price, imageUrl, reference, displayOrder } = req.body;
+    const { name, description, price, imageUrl, reference, displayOrder, isFeatured, isPromo, promoPrice, promoStartDate, promoEndDate } = req.body;
 
     if (!name) return res.status(400).json({ error: 'Le nom du produit est requis.' });
     if (price === undefined || price === null)
@@ -83,6 +83,15 @@ exports.createProduct = async (req, res) => {
     if (refExists)
       return res.status(409).json({ error: `La référence "${finalRef}" existe déjà dans votre boutique.` });
 
+    // Valider dates promo
+    if (isPromo && promoStartDate && promoEndDate) {
+      const start = new Date(promoStartDate);
+      const end = new Date(promoEndDate);
+      if (start > end) {
+        return res.status(400).json({ error: 'La date de fin de promo doit être après la date de début.' });
+      }
+    }
+
     const { data: product, error } = await db
       .from('products')
       .insert([{
@@ -93,7 +102,12 @@ exports.createProduct = async (req, res) => {
         price:         parseInt(price),
         image_url:     imageUrl || null,
         is_available:  true,
-        display_order: displayOrder || 0
+        display_order: displayOrder || 0,
+        is_featured:   isFeatured || false,
+        is_promo:      isPromo || false,
+        promo_price:   promoPrice ? parseInt(promoPrice) : null,
+        promo_start_date: promoStartDate || null,
+        promo_end_date:   promoEndDate || null
       }])
       .select('*')
       .single();
@@ -111,7 +125,7 @@ exports.createProduct = async (req, res) => {
 exports.updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, price, imageUrl, reference, isAvailable, displayOrder } = req.body;
+    const { name, description, price, imageUrl, reference, isAvailable, displayOrder, isFeatured, isPromo, promoPrice, promoStartDate, promoEndDate } = req.body;
 
     // Vérifier ownership
     const { data: existing } = await db
@@ -129,6 +143,15 @@ exports.updateProduct = async (req, res) => {
         return res.status(409).json({ error: `La référence "${reference}" existe déjà.` });
     }
 
+    // Valider dates promo
+    if (isPromo && promoStartDate && promoEndDate) {
+      const start = new Date(promoStartDate);
+      const end = new Date(promoEndDate);
+      if (start > end) {
+        return res.status(400).json({ error: 'La date de fin de promo doit être après la date de début.' });
+      }
+    }
+
     const updates = {};
     if (name !== undefined)         updates.name = name;
     if (description !== undefined)  updates.description = description;
@@ -137,6 +160,11 @@ exports.updateProduct = async (req, res) => {
     if (reference !== undefined)    updates.reference = reference;
     if (isAvailable !== undefined)  updates.is_available = isAvailable;
     if (displayOrder !== undefined) updates.display_order = displayOrder;
+    if (isFeatured !== undefined)   updates.is_featured = isFeatured;
+    if (isPromo !== undefined)      updates.is_promo = isPromo;
+    if (promoPrice !== undefined)   updates.promo_price = promoPrice ? parseInt(promoPrice) : null;
+    if (promoStartDate !== undefined) updates.promo_start_date = promoStartDate;
+    if (promoEndDate !== undefined)   updates.promo_end_date = promoEndDate;
 
     const { data: product, error } = await db
       .from('products').update(updates).eq('id', id).select('*').single();
@@ -182,23 +210,54 @@ exports.getPublicShop = async (req, res) => {
     if (!vendor) return res.status(404).json({ error: 'Boutique introuvable.' });
 
     const { search } = req.query;
+    const now = new Date();
 
-let productsQuery = db
-  .from('products')
-  .select('id, reference, name, description, price, image_url, display_order')
-  .eq('user_id', vendor.id)
-  .eq('is_available', true)
-  .order('display_order', { ascending: true });
+    // Récupérer les produits mis en avant (featured)
+    let featuredQuery = db
+      .from('products')
+      .select('id, reference, name, description, price, image_url, display_order, is_featured, is_promo, promo_price, promo_start_date, promo_end_date')
+      .eq('user_id', vendor.id)
+      .eq('is_available', true)
+      .eq('is_featured', true)
+      .order('display_order', { ascending: true });
 
-if (search) {
-  productsQuery = productsQuery.or(`name.ilike.%${search}%,reference.ilike.%${search}%`);
-}
+    const { data: featuredProducts } = await featuredQuery;
 
-const { data: products } = await productsQuery;
+    // Récupérer les produits normaux
+    let productsQuery = db
+      .from('products')
+      .select('id, reference, name, description, price, image_url, display_order, is_featured, is_promo, promo_price, promo_start_date, promo_end_date')
+      .eq('user_id', vendor.id)
+      .eq('is_available', true)
+      .order('display_order', { ascending: true });
 
-    // Ajouter le lien WhatsApp pré-rempli sur chaque produit
+    if (search) {
+      productsQuery = productsQuery.or(`name.ilike.%${search}%,reference.ilike.%${search}%`);
+    }
+
+    const { data: products } = await productsQuery;
+
+    // Fonction pour vérifier si promo est active
+    const isPromoActive = (p) => {
+      if (!p.is_promo) return false;
+      if (!p.promo_start_date || !p.promo_end_date) return false;
+      const start = new Date(p.promo_start_date);
+      const end = new Date(p.promo_end_date);
+      return now >= start && now <= end;
+    };
+
+    // Ajouter le lien WhatsApp pré-rempli et le statut promo
     const productsWithLinks = (products || []).map(p => ({
       ...p,
+      isPromoActive: isPromoActive(p),
+      whatsappLink: vendor.whatsapp
+        ? buildWhatsappLink(vendor.whatsapp, p.reference, p.name)
+        : null
+    }));
+
+    const featuredWithLinks = (featuredProducts || []).map(p => ({
+      ...p,
+      isPromoActive: isPromoActive(p),
       whatsappLink: vendor.whatsapp
         ? buildWhatsappLink(vendor.whatsapp, p.reference, p.name)
         : null
@@ -221,8 +280,9 @@ const { data: products } = await productsQuery;
           theme:           vendor.theme || 'dark_premium',
           displayCurrency: vendor.display_currency || 'MGA'
         },
-      products: productsWithLinks
-    });
+        featured: featuredWithLinks,
+        products: productsWithLinks
+      });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Erreur serveur.' });

@@ -1676,4 +1676,4 @@ export const THEMES = {
   },
 };
 
-export const DEFAULT_THEME = "minimal_dark_soft";
+export const DEFAULT_THEME = "pistachio_soft";

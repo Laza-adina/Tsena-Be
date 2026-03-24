@@ -220,9 +220,34 @@ const Modal = ({ product, theme, onClose, handleWhatsapp, formatPrice }) => {
                   margin: "0 0 22px",
                   lineHeight: 1,
                   fontFamily: `${fontDisplay}system-ui, sans-serif`,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "14px",
                 }}
               >
-               {formatPrice ? formatPrice(product.price) : `${product.price.toLocaleString()} Ar`}
+                {product.isPromoActive && product.promo_price ? (
+                  <>
+                    <span style={{
+                      textDecoration: "line-through",
+                      color: c.textMuted,
+                      fontSize: "18px",
+                      opacity: 0.5,
+                      fontWeight: "400",
+                    }}>
+                      {formatPrice ? formatPrice(product.price) : `${product.price.toLocaleString()} Ar`}
+                    </span>
+                    <span style={{
+                      color: "#FCD34D",
+                      fontSize: "28px",
+                    }}>
+                      {formatPrice ? formatPrice(product.promo_price) : `${product.promo_price.toLocaleString()} Ar`}
+                    </span>
+                  </>
+                ) : (
+                  <span>
+                    {formatPrice ? formatPrice(product.price) : `${product.price.toLocaleString()} Ar`}
+                  </span>
+                )}
               </p>
 
               {product.description && (
@@ -326,7 +351,7 @@ const Modal = ({ product, theme, onClose, handleWhatsapp, formatPrice }) => {
 /* ══════════════════════════════════════════════════════════
    PRODUCT CARD
 ══════════════════════════════════════════════════════════ */
-const ProductCard = ({ product, theme, onTrack, formatPrice }) => {
+const ProductCard = ({ product, theme, onTrack, formatPrice, onClose, onOpen, isModal }) => {
   const [modalOpen, setModalOpen] = useState(false);
 
   const c = theme?.colors ?? {};
@@ -342,10 +367,41 @@ const ProductCard = ({ product, theme, onTrack, formatPrice }) => {
     [onTrack, product.whatsappLink],
   );
 
+  const handleClose = useCallback(() => {
+    if (isModal) {
+      // Si modal est contrôlée par parent (isModal=true), juste appeler onClose
+      if (onClose) onClose();
+    } else {
+      // Sinon, gérer le state local
+      setModalOpen(false);
+      if (onClose) onClose();
+    }
+  }, [isModal, onClose]);
+
+  const handleOpen = () => {
+    if (!isModal) {
+      setModalOpen(true);
+      if (onOpen) onOpen();
+    }
+  };
+
+  // Si isModal=true, affiche directement la modal (contrôlée par parent)
+  if (isModal) {
+    return (
+      <Modal
+        product={product}
+        theme={theme}
+        onClose={handleClose}
+        handleWhatsapp={handleWhatsapp}
+        formatPrice={formatPrice}
+      />
+    );
+  }
+
   return (
     <>
       <div
-        onClick={() => setModalOpen(true)}
+        onClick={handleOpen}
         style={{
           width: "100%",
           position: "relative",
@@ -428,6 +484,31 @@ const ProductCard = ({ product, theme, onTrack, formatPrice }) => {
           </div>
         )}
 
+        {/* Promo Badge */}
+        {product.isPromoActive && (
+          <div
+            style={{
+              position: "absolute",
+              top: "8px",
+              right: "8px",
+              background: "#EF4444",
+              color: "white",
+              padding: "6px 10px",
+              borderRadius: "8px",
+              fontSize: "10px",
+              fontWeight: "700",
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+              zIndex: 4,
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+            }}
+          >
+            <span></span> Promo
+          </div>
+        )}
+
         {/* Body */}
         <div
           style={{ padding: "13px 14px 16px", position: "relative", zIndex: 3 }}
@@ -480,9 +561,34 @@ const ProductCard = ({ product, theme, onTrack, formatPrice }) => {
               color: c.text,
               margin: "0 0 12px",
               lineHeight: 1,
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
             }}
           >
-          {formatPrice ? formatPrice(product.price) : `${product.price.toLocaleString()} Ar`}
+            {product.isPromoActive && product.promo_price ? (
+              <>
+                <span style={{
+                  textDecoration: "line-through",
+                  color: c.textMuted,
+                  fontSize: "14px",
+                  opacity: 0.6,
+                  fontWeight: "400",
+                }}>
+                  {formatPrice ? formatPrice(product.price) : `${product.price.toLocaleString()} Ar`}
+                </span>
+                <span style={{
+                  color: "#FCD34D",
+                  fontSize: "18px",
+                }}>
+                  {formatPrice ? formatPrice(product.promo_price) : `${product.promo_price.toLocaleString()} Ar`}
+                </span>
+              </>
+            ) : (
+              <span>
+                {formatPrice ? formatPrice(product.price) : `${product.price.toLocaleString()} Ar`}
+              </span>
+            )}
           </p>
 
           <button
@@ -527,11 +633,11 @@ const ProductCard = ({ product, theme, onTrack, formatPrice }) => {
         </div>
       </div>
 
-      {modalOpen && (
+        {modalOpen && (
   <Modal
     product={product}
     theme={theme}
-    onClose={() => setModalOpen(false)}
+    onClose={handleClose}
     handleWhatsapp={handleWhatsapp}
     formatPrice={formatPrice}
   />

@@ -37,21 +37,16 @@ function FeaturedCarousel({ featured, theme, formatPrice, onProductClick }) {
       <style>{`
         .sp-featured-carousel {
           width: 100%;
-          max-width: 1280px;
-          margin: 0 auto;
-          padding: 0 24px;
-          background: transparent;
+          background: var(--c-surface);
           position: relative;
           overflow: hidden;
         }
 
         .sp-carousel-slide {
           width: 100%;
-          height: clamp(300px, 60vh, 500px);
+          aspect-ratio: 16/6;
           position: relative;
           cursor: pointer;
-          border-radius: 20px;
-          overflow: hidden;
         }
 
         .sp-carousel-img {
@@ -90,37 +85,6 @@ function FeaturedCarousel({ featured, theme, formatPrice, onProductClick }) {
           font-weight: 600;
           color: rgba(255, 255, 255, 0.95);
           margin-bottom: 4px;
-        }
-
-        .sp-carousel-price-promo {
-          display: flex;
-          gap: 12px;
-          align-items: center;
-          margin-bottom: 8px;
-        }
-
-        .sp-carousel-price-original {
-          font-size: 14px;
-          color: rgba(255, 255, 255, 0.6);
-          text-decoration: line-through;
-        }
-
-        .sp-carousel-price-reduced {
-          font-size: 18px;
-          font-weight: 700;
-          color: #FCD34D;
-        }
-
-        .sp-carousel-description {
-          font-size: 14px;
-          color: rgba(255, 255, 255, 0.85);
-          line-height: 1.5;
-          max-width: 500px;
-          margin-bottom: 12px;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
         }
 
         .sp-carousel-promo-badge {
@@ -207,12 +171,8 @@ function FeaturedCarousel({ featured, theme, formatPrice, onProductClick }) {
         }
 
         @media (max-width: 640px) {
-          .sp-featured-carousel {
-            padding: 0 16px;
-          }
           .sp-carousel-slide {
-            height: clamp(250px, 50vh, 400px);
-            border-radius: 16px;
+            aspect-ratio: 1/1;
           }
           .sp-carousel-overlay {
             padding: 20px 16px;
@@ -222,10 +182,6 @@ function FeaturedCarousel({ featured, theme, formatPrice, onProductClick }) {
           }
           .sp-carousel-price {
             font-size: 14px;
-          }
-          .sp-carousel-btn {
-            width: 36px;
-            height: 36px;
           }
         }
       `}</style>
@@ -264,19 +220,9 @@ function FeaturedCarousel({ featured, theme, formatPrice, onProductClick }) {
         <div className="sp-carousel-overlay">
           <div className="sp-carousel-content">
             <div className="sp-carousel-name">{current.name}</div>
-            {current.isPromoActive && current.promo_price ? (
-              <div className="sp-carousel-price-promo">
-                <span className="sp-carousel-price-original">{formatPrice(current.price)}</span>
-                <span className="sp-carousel-price-reduced">{formatPrice(current.promo_price)}</span>
-              </div>
-            ) : (
-              <div className="sp-carousel-price">{formatPrice(current.price)}</div>
-            )}
-            {current.description && (
-              <div className="sp-carousel-description">{current.description}</div>
-            )}
+            <div className="sp-carousel-price">{formatPrice(current.price)}</div>
             {current.isPromoActive && (
-              <div className="sp-carousel-promo-badge">Promo</div>
+              <div className="sp-carousel-promo-badge">🔥 Promo</div>
             )}
           </div>
         </div>
@@ -837,6 +783,18 @@ export default function PublicShopPage() {
       `}</style>
 
       <div className={`sp-page${pageReady ? " ready" : ""}`}>
+        {/* Featured Carousel - Full Width */}
+        {featured.length > 0 && (
+          <div className="sp-anim sp-anim-1">
+            <FeaturedCarousel 
+              featured={featured} 
+              theme={theme}
+              formatPrice={formatPrice}
+              onProductClick={setSelectedProduct}
+            />
+          </div>
+        )}
+
         {/* Cover */}
         <div className="sp-anim sp-anim-2">
           {hasCover ? (
@@ -944,20 +902,7 @@ export default function PublicShopPage() {
           <div className="sp-divider-inner" />
         </div>
 
-        {/* Featured Carousel - Full Width */}
-        {featured.length > 0 && (
-          <div className="sp-anim sp-anim-1">
-            <FeaturedCarousel 
-              featured={featured} 
-              theme={theme}
-              formatPrice={formatPrice}
-              onProductClick={setSelectedProduct}
-            />
-          </div>
-        )}
-
         {/* Produits */}
-        <br></br>
         <main className="sp-main sp-anim sp-anim-4">
           <div className="sp-search-wrap">
             <div className="sp-search-inner">

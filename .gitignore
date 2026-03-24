@@ -1,2 +1,5 @@
 /backend/node_modules
 /Keyros-frontend/.next
+IMPLEMENTATION_SUMMARY.md
+MIGRATION_SUPABASE.sql
+UPDATES_CHANGELOG.md

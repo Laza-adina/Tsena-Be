@@ -35,6 +35,11 @@ export default function ProduitsPage() {
     price: "",
     description: "",
     imageUrl: "",
+    isFeatured: false,
+    isPromo: false,
+    promoPrice: "",
+    promoStartDate: "",
+    promoEndDate: "",
   });
 
   const fetchProducts = useCallback(async (searchTerm = "") => {
@@ -76,6 +81,11 @@ export default function ProduitsPage() {
       price: "",
       description: "",
       imageUrl: "",
+      isFeatured: false,
+      isPromo: false,
+      promoPrice: "",
+      promoStartDate: "",
+      promoEndDate: "",
     });
     setEditing(null);
     setError("");
@@ -92,6 +102,11 @@ export default function ProduitsPage() {
       price: p.price,
       description: p.description || "",
       imageUrl: p.image_url || "",
+      isFeatured: p.is_featured || false,
+      isPromo: p.is_promo || false,
+      promoPrice: p.promo_price || "",
+      promoStartDate: p.promo_start_date ? p.promo_start_date.split('T')[0] : "",
+      promoEndDate: p.promo_end_date ? p.promo_end_date.split('T')[0] : "",
     });
     setEditing(p.id);
     setShowForm(true);
@@ -111,6 +126,11 @@ export default function ProduitsPage() {
         price: parseInt(form.price),
         description: form.description,
         imageUrl: form.imageUrl,
+        isFeatured: form.isFeatured,
+        isPromo: form.isPromo,
+        promoPrice: form.promoPrice ? parseInt(form.promoPrice) : null,
+        promoStartDate: form.promoStartDate ? new Date(form.promoStartDate).toISOString() : null,
+        promoEndDate: form.promoEndDate ? new Date(form.promoEndDate).toISOString() : null,
       };
       if (editing) await api.put(`/products/${editing}`, payload);
       else await api.post("/products", payload);
@@ -733,6 +753,106 @@ export default function ProduitsPage() {
                       </div>
                     )}
                   </div>
+                </div>
+
+                {/* Mise en avant et Promo */}
+                <div style={{ 
+                  borderTop: `1px solid ${C.light}`, 
+                  paddingTop: "20px", 
+                  marginTop: "20px"
+                }}>
+                  <div style={{ marginBottom: "16px" }}>
+                    <label style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      cursor: "pointer",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      color: C.dark
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={form.isFeatured}
+                        onChange={(e) =>
+                          setForm({ ...form, isFeatured: e.target.checked })
+                        }
+                        style={{
+                          width: "18px",
+                          height: "18px",
+                          cursor: "pointer",
+                          accentColor: C.caramel
+                        }}
+                      />
+                      Mettre en avant dans la carousel
+                    </label>
+                  </div>
+
+                  <div style={{ marginBottom: "16px" }}>
+                    <label style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      cursor: "pointer",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      color: C.dark
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={form.isPromo}
+                        onChange={(e) =>
+                          setForm({ ...form, isPromo: e.target.checked })
+                        }
+                        style={{
+                          width: "18px",
+                          height: "18px",
+                          cursor: "pointer",
+                          accentColor: C.caramel
+                        }}
+                      />
+                      Mettre en promotion
+                    </label>
+                  </div>
+
+                  {form.isPromo && (
+                    <div className="pr-form-grid">
+                      <div className="pr-field">
+                        <label className="pr-label">Prix réduit</label>
+                        <input
+                          type="number"
+                          className="pr-input"
+                          value={form.promoPrice}
+                          onChange={(e) =>
+                            setForm({ ...form, promoPrice: e.target.value })
+                          }
+                          placeholder="Prix pendant la promo"
+                        />
+                      </div>
+                      <div className="pr-field">
+                        <label className="pr-label">Début de la promo</label>
+                        <input
+                          type="date"
+                          className="pr-input"
+                          value={form.promoStartDate}
+                          onChange={(e) =>
+                            setForm({ ...form, promoStartDate: e.target.value })
+                          }
+                        />
+                      </div>
+                      <div className="pr-field">
+                        <label className="pr-label">Fin de la promo</label>
+                        <input
+                          type="date"
+                          className="pr-input"
+                          value={form.promoEndDate}
+                          onChange={(e) =>
+                            setForm({ ...form, promoEndDate: e.target.value })
+                          }
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="pr-form-actions">
