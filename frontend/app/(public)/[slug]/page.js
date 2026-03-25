@@ -18,20 +18,53 @@ const hexToRgb = (hex) => {
 ══════════════════════════════════════════════════════════ */
 function FeaturedCarousel({ featured, theme, formatPrice, onProductClick }) {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [prevSlide, setPrevSlide] = useState(null);
+  const [direction, setDirection] = useState(1);
+  const [animating, setAnimating] = useState(false);
+  const [paused, setPaused] = useState(false);
   const c = theme?.colors ?? {};
+
+
+  useEffect(() => {
+    if (!featured || featured.length <= 1 || paused) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => {
+        const next = prev === featured.length - 1 ? 0 : prev + 1;
+        setDirection(1);
+        setPrevSlide(prev);
+        setAnimating(true);
+        setTimeout(() => { setPrevSlide(null); setAnimating(false); }, 650);
+        return next;
+      });
+    }, 3000);
+    return () => clearInterval(timer);
+  }, [featured, paused]);
 
   if (!featured || featured.length === 0) return null;
 
   const handlePrev = () => {
-    setCurrentSlide((prev) => (prev === 0 ? featured.length - 1 : prev - 1));
+    const next = currentSlide === 0 ? featured.length - 1 : currentSlide - 1;
+    if (animating) return;
+    setDirection(-1);
+    setPrevSlide(currentSlide);
+    setCurrentSlide(next);
+    setAnimating(true);
+    setTimeout(() => { setPrevSlide(null); setAnimating(false); }, 650);
+    setPaused(true);
   };
 
   const handleNext = () => {
-    setCurrentSlide((prev) => (prev === featured.length - 1 ? 0 : prev + 1));
+    const next = currentSlide === featured.length - 1 ? 0 : currentSlide + 1;
+    if (animating) return;
+    setDirection(1);
+    setPrevSlide(currentSlide);
+    setCurrentSlide(next);
+    setAnimating(true);
+    setTimeout(() => { setPrevSlide(null); setAnimating(false); }, 650);
+    setPaused(true);
   };
 
   const current = featured[currentSlide];
-
   return (
     <div className="sp-featured-carousel">
       <style>{`
@@ -60,6 +93,24 @@ function FeaturedCarousel({ featured, theme, formatPrice, onProductClick }) {
         .sp-carousel-slide:hover .sp-carousel-img {
           filter: brightness(0.95);
           transform: scale(1.02);
+        }
+
+
+        @keyframes swipeInRight {
+          from { transform: translateX(100%); }
+          to   { transform: translateX(0); }
+        }
+        @keyframes swipeInLeft {
+          from { transform: translateX(-100%); }
+          to   { transform: translateX(0); }
+        }
+        @keyframes swipeOutLeft {
+          from { transform: translateX(0); }
+          to   { transform: translateX(-100%); }
+        }
+        @keyframes swipeOutRight {
+          from { transform: translateX(0); }
+          to   { transform: translateX(100%); }
         }
 
         .sp-carousel-overlay {
@@ -233,56 +284,81 @@ function FeaturedCarousel({ featured, theme, formatPrice, onProductClick }) {
       <div 
         className="sp-carousel-slide"
         onClick={() => onProductClick(current)}
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
       >
-        {current.image_url ? (
-          <Image
-            src={current.image_url}
-            alt={current.name}
-            fill
-            className="sp-carousel-img"
-            style={{ objectFit: "cover", objectPosition: "center" }}
-            sizes="100vw"
-            unoptimized
-            priority
-          />
-        ) : (
-          <div style={{
-            width: "100%",
-            height: "100%",
-            background: "var(--c-surface)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center"
-          }}>
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--c-muted)" strokeWidth="1.5">
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-              <path d="M3 12l5-5 5 5 6-6 3 3v9" />
-            </svg>
-          </div>
-        )}
-        <div className="sp-carousel-overlay">
-          <div className="sp-carousel-content">
-            <div className="sp-carousel-name">{current.name}</div>
-            {current.isPromoActive && current.promo_price ? (
-              <div className="sp-carousel-price-promo">
-                <span className="sp-carousel-price-original">{formatPrice(current.price)}</span>
-                <span className="sp-carousel-price-reduced">{formatPrice(current.promo_price)}</span>
+        {/* Slides: swipe */}
+        {[
+          prevSlide !== null ? { item: featured[prevSlide], key: `prev-${prevSlide}`, isLeaving: true } : null,
+          { item: featured[currentSlide], key: `cur-${currentSlide}`, isLeaving: false },
+        ].filter(Boolean).map(({ item, key, isLeaving }) => {
+          const inAnim  = direction === 1 ? "swipeInRight" : "swipeInLeft";
+          const outAnim = direction === 1 ? "swipeOutLeft" : "swipeOutRight";
+          return (
+            <div
+              key={key}
+              style={{
+                position: "absolute",
+                inset: 0,
+                animation: `${isLeaving ? outAnim : inAnim} 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94) both`,
+                pointerEvents: "none",
+                willChange: "transform",
+              }}
+            >
+              {item.image_url ? (
+                <Image
+                  src={item.image_url}
+                  alt={item.name}
+                  fill
+                  className="sp-carousel-img"
+                  style={{ objectFit: "cover", objectPosition: "center" }}
+                  sizes="100vw"
+                  unoptimized
+                />
+              ) : (
+                <div style={{
+                  width: "100%", height: "100%", background: "var(--c-surface)",
+                  display: "flex", alignItems: "center", justifyContent: "center"
+                }}>
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--c-muted)" strokeWidth="1.5">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <path d="M3 12l5-5 5 5 6-6 3 3v9" />
+                  </svg>
+                </div>
+              )}
+              <div className="sp-carousel-overlay">
+                <div
+                  className="sp-carousel-content"
+                  style={{
+                    opacity: isLeaving ? 0 : 1,
+                    transform: isLeaving ? "translateY(0)" : "translateY(0)",
+                    transition: "opacity 0.2s ease",
+                  }}
+                >
+                  <div className="sp-carousel-name">{item.name}</div>
+                  {item.isPromoActive && item.promo_price ? (
+                    <div className="sp-carousel-price-promo">
+                      <span className="sp-carousel-price-original">{formatPrice(item.price)}</span>
+                      <span className="sp-carousel-price-reduced">{formatPrice(item.promo_price)}</span>
+                    </div>
+                  ) : (
+                    <div className="sp-carousel-price">{formatPrice(item.price)}</div>
+                  )}
+                  {item.description && (
+                    <div className="sp-carousel-description">{item.description}</div>
+                  )}
+                  {item.isPromoActive && (
+                    <div className="sp-carousel-promo-badge">Promo</div>
+                  )}
+                </div>
               </div>
-            ) : (
-              <div className="sp-carousel-price">{formatPrice(current.price)}</div>
-            )}
-            {current.description && (
-              <div className="sp-carousel-description">{current.description}</div>
-            )}
-            {current.isPromoActive && (
-              <div className="sp-carousel-promo-badge">Promo</div>
-            )}
-          </div>
-        </div>
+            </div>
+          );
+        })}
 
         {/* Navigation */}
-        <div className="sp-carousel-nav sp-carousel-nav-prev">
+        <div className="sp-carousel-nav sp-carousel-nav-prev" style={{ zIndex: 10 }}>
           <button className="sp-carousel-btn" onClick={(e) => { e.stopPropagation(); handlePrev(); }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M15 18l-6-6 6-6" />
@@ -290,7 +366,7 @@ function FeaturedCarousel({ featured, theme, formatPrice, onProductClick }) {
           </button>
         </div>
 
-        <div className="sp-carousel-nav sp-carousel-nav-next">
+        <div className="sp-carousel-nav sp-carousel-nav-next" style={{ zIndex: 10 }}>
           <button className="sp-carousel-btn" onClick={(e) => { e.stopPropagation(); handleNext(); }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M9 18l6-6-6-6" />
@@ -299,12 +375,12 @@ function FeaturedCarousel({ featured, theme, formatPrice, onProductClick }) {
         </div>
 
         {/* Dots */}
-        <div className="sp-carousel-dots">
+        <div className="sp-carousel-dots" style={{ zIndex: 10 }}>
           {featured.map((_, i) => (
             <button
               key={i}
               className={`sp-carousel-dot ${i === currentSlide ? "active" : ""}`}
-              onClick={(e) => { e.stopPropagation(); setCurrentSlide(i); }}
+              onClick={(e) => { e.stopPropagation(); setCurrentSlide(i); setPaused(true); }}
             />
           ))}
         </div>

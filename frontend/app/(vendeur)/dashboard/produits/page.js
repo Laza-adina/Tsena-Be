@@ -766,25 +766,45 @@ export default function ProduitsPage() {
                       display: "flex",
                       alignItems: "center",
                       gap: "8px",
-                      cursor: "pointer",
+                      cursor: form.isPromo ? "not-allowed" : "pointer",
                       fontSize: "14px",
                       fontWeight: 500,
-                      color: C.dark
-                    }}>
+                      color: form.isPromo ? C.muted : C.dark,
+                      opacity: form.isPromo ? 0.6 : 1,
+                      transition: "all 0.2s"
+                    }}
+                    title={form.isPromo ? "Automatiquement activé pour les produits en promotion" : ""}
+                    >
                       <input
                         type="checkbox"
-                        checked={form.isFeatured}
-                        onChange={(e) =>
-                          setForm({ ...form, isFeatured: e.target.checked })
-                        }
+                        checked={form.isFeatured || form.isPromo}
+                        onChange={(e) => {
+                          if (!form.isPromo) {
+                            setForm({ ...form, isFeatured: e.target.checked })
+                          }
+                        }}
+                        disabled={form.isPromo}
                         style={{
                           width: "18px",
                           height: "18px",
-                          cursor: "pointer",
-                          accentColor: C.caramel
+                          cursor: form.isPromo ? "not-allowed" : "pointer",
+                          accentColor: C.caramel,
+                          opacity: form.isPromo ? 0.6 : 1
                         }}
                       />
                       Mettre en avant dans la carousel
+                      {form.isPromo && (
+                        <span style={{
+                          marginLeft: "auto",
+                          fontSize: "11px",
+                          color: C.accent,
+                          fontWeight: 600,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px"
+                        }}>
+                          ✓ Auto
+                        </span>
+                      )}
                     </label>
                   </div>
 
@@ -801,9 +821,9 @@ export default function ProduitsPage() {
                       <input
                         type="checkbox"
                         checked={form.isPromo}
-                        onChange={(e) =>
-                          setForm({ ...form, isPromo: e.target.checked })
-                        }
+                        onChange={(e) => {
+                          setForm({ ...form, isPromo: e.target.checked, isFeatured: e.target.checked ? true : form.isFeatured })
+                        }}
                         style={{
                           width: "18px",
                           height: "18px",

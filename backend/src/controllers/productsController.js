@@ -103,7 +103,7 @@ exports.createProduct = async (req, res) => {
         image_url:     imageUrl || null,
         is_available:  true,
         display_order: displayOrder || 0,
-        is_featured:   isFeatured || false,
+        is_featured:   isPromo || isFeatured || false,
         is_promo:      isPromo || false,
         promo_price:   promoPrice ? parseInt(promoPrice) : null,
         promo_start_date: promoStartDate || null,
@@ -160,11 +160,18 @@ exports.updateProduct = async (req, res) => {
     if (reference !== undefined)    updates.reference = reference;
     if (isAvailable !== undefined)  updates.is_available = isAvailable;
     if (displayOrder !== undefined) updates.display_order = displayOrder;
-    if (isFeatured !== undefined)   updates.is_featured = isFeatured;
     if (isPromo !== undefined)      updates.is_promo = isPromo;
     if (promoPrice !== undefined)   updates.promo_price = promoPrice ? parseInt(promoPrice) : null;
     if (promoStartDate !== undefined) updates.promo_start_date = promoStartDate;
     if (promoEndDate !== undefined)   updates.promo_end_date = promoEndDate;
+
+    // Si isPromo est true, forcer is_featured à true
+    // Sinon, utiliser la valeur isFeatured si elle est définie
+    if (isPromo !== undefined) {
+      updates.is_featured = isPromo ? true : (isFeatured !== undefined ? isFeatured : undefined);
+    } else if (isFeatured !== undefined) {
+      updates.is_featured = isFeatured;
+    }
 
     const { data: product, error } = await db
       .from('products').update(updates).eq('id', id).select('*').single();
