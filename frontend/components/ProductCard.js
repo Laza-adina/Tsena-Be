@@ -31,19 +31,18 @@ const Modal = ({ product, theme, onClose, handleWhatsapp, formatPrice }) => {
   }, [onClose]);
 
   return createPortal(
-    <AnimatePresence mode="wait">
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "20px",
-          zIndex: 99999,
-          pointerEvents: "none",
-        }}
-      >
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "20px",
+        zIndex: 99999,
+        pointerEvents: "none",
+      }}
+    >
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -78,7 +77,10 @@ const Modal = ({ product, theme, onClose, handleWhatsapp, formatPrice }) => {
             border: `1px solid ${c.border}`,
             pointerEvents: "auto",
           }}
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+          }}
         >
           <div
             className="modal-inner"
@@ -153,7 +155,11 @@ const Modal = ({ product, theme, onClose, handleWhatsapp, formatPrice }) => {
             >
               {/* Fermer */}
               <button
-                onClick={onClose}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onClose();
+                }}
                 style={{
                   position: "absolute",
                   top: "20px",
@@ -169,6 +175,7 @@ const Modal = ({ product, theme, onClose, handleWhatsapp, formatPrice }) => {
                   cursor: "pointer",
                   color: c.textMuted,
                   transition: "background .15s, color .15s",
+                  zIndex: 10,
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = c.card;
@@ -342,8 +349,7 @@ const Modal = ({ product, theme, onClose, handleWhatsapp, formatPrice }) => {
             }}
           />
         </motion.div>
-      </div>
-    </AnimatePresence>,
+      </div>,
     document.body,
   );
 };
@@ -380,8 +386,12 @@ const ProductCard = ({ product, theme, onTrack, formatPrice, onClose, onOpen, is
 
   const handleOpen = () => {
     if (!isModal) {
-      setModalOpen(true);
-      if (onOpen) onOpen();
+      if (onOpen) {
+        // Le parent gère la modal — ne pas ouvrir la modal locale
+        onOpen();
+      } else {
+        setModalOpen(true);
+      }
     }
   };
 
@@ -633,15 +643,17 @@ const ProductCard = ({ product, theme, onTrack, formatPrice, onClose, onOpen, is
         </div>
       </div>
 
+      <AnimatePresence>
         {modalOpen && (
-  <Modal
-    product={product}
-    theme={theme}
-    onClose={handleClose}
-    handleWhatsapp={handleWhatsapp}
-    formatPrice={formatPrice}
-  />
-)}
+          <Modal
+            product={product}
+            theme={theme}
+            onClose={handleClose}
+            handleWhatsapp={handleWhatsapp}
+            formatPrice={formatPrice}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 };
