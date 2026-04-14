@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { THEMES, DEFAULT_THEME } from "../../../lib/themes";
@@ -13,58 +13,80 @@ const hexToRgb = (hex) => {
   return `${parseInt(c.slice(0, 2), 16)}, ${parseInt(c.slice(2, 4), 16)}, ${parseInt(c.slice(4, 6), 16)}`;
 };
 
+const PRODUCTS_PER_PAGE = 10;
+
 /* ══════════════════════════════════════════════════════════
    CAROUSEL MISE EN AVANT
 ══════════════════════════════════════════════════════════ */
-function FeaturedCarousel({ featured, theme, formatPrice, onProductClick }) {
+function FeaturedCarousel({ featured, formatPrice, onProductClick }) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [prevSlide, setPrevSlide] = useState(null);
   const [direction, setDirection] = useState(1);
   const [animating, setAnimating] = useState(false);
   const [paused, setPaused] = useState(false);
-  const c = theme?.colors ?? {};
-
+  const carouselItems = (featured || []).slice(0, 8);
+  const currentSlideIndex =
+    currentSlide < carouselItems.length ? currentSlide : 0;
+  const prevSlideIndex =
+    prevSlide !== null && prevSlide < carouselItems.length ? prevSlide : null;
 
   useEffect(() => {
-    if (!featured || featured.length <= 1 || paused) return;
+    if (!carouselItems || carouselItems.length <= 1 || paused) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => {
-        const next = prev === featured.length - 1 ? 0 : prev + 1;
+        const normalizedPrev = prev < carouselItems.length ? prev : 0;
+        const next =
+          normalizedPrev === carouselItems.length - 1 ? 0 : normalizedPrev + 1;
         setDirection(1);
-        setPrevSlide(prev);
+        setPrevSlide(normalizedPrev);
         setAnimating(true);
-        setTimeout(() => { setPrevSlide(null); setAnimating(false); }, 650);
+        setTimeout(() => {
+          setPrevSlide(null);
+          setAnimating(false);
+        }, 650);
         return next;
       });
     }, 3000);
     return () => clearInterval(timer);
-  }, [featured, paused]);
+  }, [carouselItems, paused]);
 
-  if (!featured || featured.length === 0) return null;
+  if (!carouselItems || carouselItems.length === 0) return null;
 
   const handlePrev = () => {
-    const next = currentSlide === 0 ? featured.length - 1 : currentSlide - 1;
+    const next =
+      currentSlideIndex === 0
+        ? carouselItems.length - 1
+        : currentSlideIndex - 1;
     if (animating) return;
     setDirection(-1);
-    setPrevSlide(currentSlide);
+    setPrevSlide(currentSlideIndex);
     setCurrentSlide(next);
     setAnimating(true);
-    setTimeout(() => { setPrevSlide(null); setAnimating(false); }, 650);
+    setTimeout(() => {
+      setPrevSlide(null);
+      setAnimating(false);
+    }, 650);
     setPaused(true);
   };
 
   const handleNext = () => {
-    const next = currentSlide === featured.length - 1 ? 0 : currentSlide + 1;
+    const next =
+      currentSlideIndex === carouselItems.length - 1
+        ? 0
+        : currentSlideIndex + 1;
     if (animating) return;
     setDirection(1);
-    setPrevSlide(currentSlide);
+    setPrevSlide(currentSlideIndex);
     setCurrentSlide(next);
     setAnimating(true);
-    setTimeout(() => { setPrevSlide(null); setAnimating(false); }, 650);
+    setTimeout(() => {
+      setPrevSlide(null);
+      setAnimating(false);
+    }, 650);
     setPaused(true);
   };
 
-  const current = featured[currentSlide];
+  const current = carouselItems[currentSlideIndex];
   return (
     <div className="sp-featured-carousel">
       <style>{`
@@ -186,7 +208,28 @@ function FeaturedCarousel({ featured, theme, formatPrice, onProductClick }) {
           font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.5px;
+        }
+
+        .sp-carousel-new-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: #0EA5E9;
+          color: white;
+          padding: 6px 12px;
+          border-radius: 8px;
+          font-size: 12px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .sp-carousel-badges {
+          display: flex;
+          align-items: center;
+          gap: 8px;
           margin-top: 8px;
+          flex-wrap: wrap;
         }
 
         .sp-carousel-nav {
@@ -281,7 +324,7 @@ function FeaturedCarousel({ featured, theme, formatPrice, onProductClick }) {
         }
       `}</style>
 
-      <div 
+      <div
         className="sp-carousel-slide"
         onClick={() => onProductClick(current)}
         onMouseEnter={() => setPaused(true)}
@@ -289,86 +332,158 @@ function FeaturedCarousel({ featured, theme, formatPrice, onProductClick }) {
       >
         {/* Slides: swipe */}
         {[
-          prevSlide !== null ? { item: featured[prevSlide], key: `prev-${prevSlide}`, isLeaving: true } : null,
-          { item: featured[currentSlide], key: `cur-${currentSlide}`, isLeaving: false },
-        ].filter(Boolean).map(({ item, key, isLeaving }) => {
-          const inAnim  = direction === 1 ? "swipeInRight" : "swipeInLeft";
-          const outAnim = direction === 1 ? "swipeOutLeft" : "swipeOutRight";
-          return (
-            <div
-              key={key}
-              style={{
-                position: "absolute",
-                inset: 0,
-                animation: `${isLeaving ? outAnim : inAnim} 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94) both`,
-                pointerEvents: "none",
-                willChange: "transform",
-              }}
-            >
-              {item.image_url ? (
-                <Image
-                  src={item.image_url}
-                  alt={item.name}
-                  fill
-                  className="sp-carousel-img"
-                  style={{ objectFit: "cover", objectPosition: "center" }}
-                  sizes="100vw"
-                  unoptimized
-                />
-              ) : (
-                <div style={{
-                  width: "100%", height: "100%", background: "var(--c-surface)",
-                  display: "flex", alignItems: "center", justifyContent: "center"
-                }}>
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--c-muted)" strokeWidth="1.5">
-                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                    <circle cx="8.5" cy="8.5" r="1.5" />
-                    <path d="M3 12l5-5 5 5 6-6 3 3v9" />
-                  </svg>
-                </div>
-              )}
-              <div className="sp-carousel-overlay">
-                <div
-                  className="sp-carousel-content"
-                  style={{
-                    opacity: isLeaving ? 0 : 1,
-                    transform: isLeaving ? "translateY(0)" : "translateY(0)",
-                    transition: "opacity 0.2s ease",
-                  }}
-                >
-                  <div className="sp-carousel-name">{item.name}</div>
-                  {item.isPromoActive && item.promo_price ? (
-                    <div className="sp-carousel-price-promo">
-                      <span className="sp-carousel-price-original">{formatPrice(item.price)}</span>
-                      <span className="sp-carousel-price-reduced">{formatPrice(item.promo_price)}</span>
-                    </div>
-                  ) : (
-                    <div className="sp-carousel-price">{formatPrice(item.price)}</div>
-                  )}
-                  {item.description && (
-                    <div className="sp-carousel-description">{item.description}</div>
-                  )}
-                  {item.isPromoActive && (
-                    <div className="sp-carousel-promo-badge">Promo</div>
-                  )}
+          prevSlideIndex !== null
+            ? {
+                item: carouselItems[prevSlideIndex],
+                key: `prev-${prevSlideIndex}`,
+                isLeaving: true,
+              }
+            : null,
+          {
+            item: carouselItems[currentSlideIndex],
+            key: `cur-${currentSlideIndex}`,
+            isLeaving: false,
+          },
+        ]
+          .filter(Boolean)
+          .map(({ item, key, isLeaving }) => {
+            const inAnim = direction === 1 ? "swipeInRight" : "swipeInLeft";
+            const outAnim = direction === 1 ? "swipeOutLeft" : "swipeOutRight";
+            return (
+              <div
+                key={key}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  animation: `${isLeaving ? outAnim : inAnim} 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94) both`,
+                  pointerEvents: "none",
+                  willChange: "transform",
+                }}
+              >
+                {item.image_url ? (
+                  <Image
+                    src={item.image_url}
+                    alt={item.name}
+                    fill
+                    className="sp-carousel-img"
+                    style={{ objectFit: "cover", objectPosition: "center" }}
+                    sizes="100vw"
+                    unoptimized
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      background: "var(--c-surface)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <svg
+                      width="48"
+                      height="48"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="var(--c-muted)"
+                      strokeWidth="1.5"
+                    >
+                      <rect x="3" y="3" width="18" height="18" rx="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <path d="M3 12l5-5 5 5 6-6 3 3v9" />
+                    </svg>
+                  </div>
+                )}
+                <div className="sp-carousel-overlay">
+                  <div
+                    className="sp-carousel-content"
+                    style={{
+                      opacity: isLeaving ? 0 : 1,
+                      transform: isLeaving ? "translateY(0)" : "translateY(0)",
+                      transition: "opacity 0.2s ease",
+                    }}
+                  >
+                    <div className="sp-carousel-name">{item.name}</div>
+                    {item.isPromoActive && item.promo_price ? (
+                      <div className="sp-carousel-price-promo">
+                        <span className="sp-carousel-price-original">
+                          {formatPrice(item.price)}
+                        </span>
+                        <span className="sp-carousel-price-reduced">
+                          {formatPrice(item.promo_price)}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="sp-carousel-price">
+                        {formatPrice(item.price)}
+                      </div>
+                    )}
+                    {item.description && (
+                      <div className="sp-carousel-description">
+                        {item.description}
+                      </div>
+                    )}
+                    {(item.isNewActive || item.isPromoActive) && (
+                      <div className="sp-carousel-badges">
+                        {item.isNewActive && (
+                          <div className="sp-carousel-new-badge">Nouveaute</div>
+                        )}
+                        {item.isPromoActive && (
+                          <div className="sp-carousel-promo-badge">Promo</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
 
         {/* Navigation */}
-        <div className="sp-carousel-nav sp-carousel-nav-prev" style={{ zIndex: 10 }}>
-          <button className="sp-carousel-btn" onClick={(e) => { e.stopPropagation(); handlePrev(); }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <div
+          className="sp-carousel-nav sp-carousel-nav-prev"
+          style={{ zIndex: 10 }}
+        >
+          <button
+            className="sp-carousel-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              handlePrev();
+            }}
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M15 18l-6-6 6-6" />
             </svg>
           </button>
         </div>
 
-        <div className="sp-carousel-nav sp-carousel-nav-next" style={{ zIndex: 10 }}>
-          <button className="sp-carousel-btn" onClick={(e) => { e.stopPropagation(); handleNext(); }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <div
+          className="sp-carousel-nav sp-carousel-nav-next"
+          style={{ zIndex: 10 }}
+        >
+          <button
+            className="sp-carousel-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleNext();
+            }}
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M9 18l6-6-6-6" />
             </svg>
           </button>
@@ -376,11 +491,15 @@ function FeaturedCarousel({ featured, theme, formatPrice, onProductClick }) {
 
         {/* Dots */}
         <div className="sp-carousel-dots" style={{ zIndex: 10 }}>
-          {featured.map((_, i) => (
+          {carouselItems.map((_, i) => (
             <button
               key={i}
-              className={`sp-carousel-dot ${i === currentSlide ? "active" : ""}`}
-              onClick={(e) => { e.stopPropagation(); setCurrentSlide(i); setPaused(true); }}
+              className={`sp-carousel-dot ${i === currentSlideIndex ? "active" : ""}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentSlide(i);
+                setPaused(true);
+              }}
             />
           ))}
         </div>
@@ -422,36 +541,102 @@ export default function PublicShopPage() {
   const [search, setSearch] = useState("");
   const [pageReady, setPageReady] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const loadMoreRef = useRef(null);
 
   const fetchShop = useCallback(
-    async (searchTerm = "") => {
-      try {
-        const params = searchTerm
-          ? `?search=${encodeURIComponent(searchTerm)}`
-          : "";
-        const { data } = await api.get(`/public/${slug}${params}`);
+    async ({ searchTerm = "", pageNumber = 1, append = false } = {}) => {
+      const params = new URLSearchParams();
+      params.set("page", String(pageNumber));
+      params.set("limit", String(PRODUCTS_PER_PAGE));
+      if (searchTerm) params.set("search", searchTerm);
+
+      const { data } = await api.get(`/public/${slug}?${params.toString()}`);
+
+      if (!append) {
         setVendor(data.vendor);
         setFeatured(data.featured || []);
-        setProducts(data.products || []);
-      } catch {
-        setNotFound(true);
-      } finally {
-        setLoading(false);
-        setTimeout(() => setPageReady(true), 60);
       }
+
+      const nextProducts = data.products || [];
+      setProducts((prev) =>
+        append ? [...prev, ...nextProducts] : nextProducts,
+      );
+
+      const pagination = data.pagination || {};
+      setCurrentPage(pagination.page || pageNumber);
+      setHasNextPage(Boolean(pagination.hasNextPage));
+      setTotalProducts(pagination.total ?? nextProducts.length);
+      setNotFound(false);
     },
     [slug],
   );
 
   useEffect(() => {
-    if (slug) fetchShop();
-  }, [slug, fetchShop]);
+    if (!slug) return;
+
+    let active = true;
+
+    const run = async () => {
+      setLoading(true);
+      setNotFound(false);
+      try {
+        await fetchShop({ searchTerm: search, pageNumber: 1, append: false });
+      } catch {
+        if (active) setNotFound(true);
+      } finally {
+        if (active) {
+          setLoading(false);
+          setLoadingMore(false);
+          setTimeout(() => setPageReady(true), 60);
+        }
+      }
+    };
+
+    const t = setTimeout(run, search ? 300 : 0);
+
+    return () => {
+      active = false;
+      clearTimeout(t);
+    };
+  }, [slug, search, fetchShop]);
+
+  const loadMoreProducts = useCallback(async () => {
+    if (loading || loadingMore || !hasNextPage) return;
+
+    setLoadingMore(true);
+    try {
+      await fetchShop({
+        searchTerm: search,
+        pageNumber: currentPage + 1,
+        append: true,
+      });
+    } catch {
+      // Keep current products visible if loading next page fails.
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loading, loadingMore, hasNextPage, fetchShop, search, currentPage]);
 
   useEffect(() => {
-    if (!slug || loading) return;
-    const t = setTimeout(() => fetchShop(search), 300);
-    return () => clearTimeout(t);
-  }, [search, slug, loading, fetchShop]);
+    if (!loadMoreRef.current || loading) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadMoreProducts();
+        }
+      },
+      { root: null, rootMargin: "300px 0px", threshold: 0 },
+    );
+
+    observer.observe(loadMoreRef.current);
+
+    return () => observer.disconnect();
+  }, [loading, loadMoreProducts]);
 
   const theme = THEMES[vendor?.theme] ?? THEMES[DEFAULT_THEME];
   const c = theme?.colors ?? THEMES[DEFAULT_THEME].colors;
@@ -910,6 +1095,18 @@ export default function PublicShopPage() {
           text-align: center; font-size: 11px; letter-spacing: .05em;
           color: var(--c-muted); opacity: 0.4; padding: 24px; margin-top: 16px;
         }
+
+        .sp-load-more {
+          text-align: center;
+          font-size: 13px;
+          color: var(--c-muted);
+          padding: 18px 0 12px;
+        }
+
+        .sp-scroll-sentinel {
+          width: 100%;
+          height: 1px;
+        }
       `}</style>
 
       <div className={`sp-page${pageReady ? " ready" : ""}`}>
@@ -1023,9 +1220,8 @@ export default function PublicShopPage() {
         {/* Featured Carousel - Full Width */}
         {featured.length > 0 && (
           <div className="sp-anim sp-anim-1">
-            <FeaturedCarousel 
-              featured={featured} 
-              theme={theme}
+            <FeaturedCarousel
+              featured={featured}
               formatPrice={formatPrice}
               onProductClick={setSelectedProduct}
             />
@@ -1063,7 +1259,9 @@ export default function PublicShopPage() {
           {products.length > 0 && (
             <div className="sp-section-title">
               <span className="sp-section-label">Tous les produits</span>
-              <span className="sp-section-count">{products.length}</span>
+              <span className="sp-section-count">
+                {totalProducts > 0 ? totalProducts : products.length}
+              </span>
             </div>
           )}
 
@@ -1074,22 +1272,32 @@ export default function PublicShopPage() {
                 : "Aucun produit disponible pour le moment."}
             </p>
           ) : (
-            <div className="sp-grid">
-              {products.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={{ 
-                    ...product, 
-                    whatsappLink: product.whatsappLink,
-                    isPromoActive: product.isPromoActive
-                  }}
-                  theme={theme}
-                  onTrack={() => trackWhatsapp(product.id)}
-                  onOpen={() => setSelectedProduct(product)}
-                  formatPrice={formatPrice}
-                />
-              ))}
-            </div>
+            <>
+              <div className="sp-grid">
+                {products.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={{
+                      ...product,
+                      whatsappLink: product.whatsappLink,
+                      isPromoActive: product.isPromoActive,
+                    }}
+                    theme={theme}
+                    onTrack={() => trackWhatsapp(product.id)}
+                    onOpen={() => setSelectedProduct(product)}
+                    formatPrice={formatPrice}
+                  />
+                ))}
+              </div>
+
+              {loadingMore && (
+                <div className="sp-load-more">Chargement des produits...</div>
+              )}
+
+              {!loadingMore && hasNextPage && (
+                <div ref={loadMoreRef} className="sp-scroll-sentinel" />
+              )}
+            </>
           )}
         </main>
 
@@ -1101,7 +1309,7 @@ export default function PublicShopPage() {
             product={{
               ...selectedProduct,
               whatsappLink: selectedProduct.whatsappLink,
-              isPromoActive: selectedProduct.isPromoActive
+              isPromoActive: selectedProduct.isPromoActive,
             }}
             theme={theme}
             onTrack={() => trackWhatsapp(selectedProduct.id)}
