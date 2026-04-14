@@ -29,6 +29,7 @@ export default function ProduitsPage() {
   const [saving, setSaving] = useState(false);
   const [currency, setCurrency] = useState("MGA");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [exportingType, setExportingType] = useState("");
   const [form, setForm] = useState({
     name: "",
     reference: "",
@@ -44,11 +45,35 @@ export default function ProduitsPage() {
 
   const fetchProducts = useCallback(async (searchTerm = "") => {
     try {
-      const params = searchTerm
-        ? `?search=${encodeURIComponent(searchTerm)}`
-        : "";
-      const { data } = await api.get(`/products${params}`);
-      setProducts(data.products);
+      setError("");
+      const limit = 100;
+      let page = 1;
+      let hasNextPage = true;
+      const allProducts = [];
+
+      while (hasNextPage) {
+        const params = new URLSearchParams();
+        params.set("page", String(page));
+        params.set("limit", String(limit));
+        if (searchTerm) params.set("search", searchTerm);
+
+        const { data } = await api.get(`/products?${params.toString()}`);
+        const batch = data?.products || [];
+
+        allProducts.push(...batch);
+        hasNextPage = Boolean(data?.pagination?.hasNextPage);
+        page += 1;
+
+        if (batch.length === 0 || page > 1000) break;
+      }
+
+      setProducts(allProducts);
+    } catch (err) {
+      setProducts([]);
+      setError(
+        err?.response?.data?.error ||
+          "Impossible de charger les produits. Verifiez la connexion avec le backend.",
+      );
     } finally {
       setLoading(false);
     }
@@ -105,8 +130,10 @@ export default function ProduitsPage() {
       isFeatured: p.is_featured || false,
       isPromo: p.is_promo || false,
       promoPrice: p.promo_price || "",
-      promoStartDate: p.promo_start_date ? p.promo_start_date.split('T')[0] : "",
-      promoEndDate: p.promo_end_date ? p.promo_end_date.split('T')[0] : "",
+      promoStartDate: p.promo_start_date
+        ? p.promo_start_date.split("T")[0]
+        : "",
+      promoEndDate: p.promo_end_date ? p.promo_end_date.split("T")[0] : "",
     });
     setEditing(p.id);
     setShowForm(true);
@@ -129,8 +156,12 @@ export default function ProduitsPage() {
         isFeatured: form.isFeatured,
         isPromo: form.isPromo,
         promoPrice: form.promoPrice ? parseInt(form.promoPrice) : null,
-        promoStartDate: form.promoStartDate ? new Date(form.promoStartDate).toISOString() : null,
-        promoEndDate: form.promoEndDate ? new Date(form.promoEndDate).toISOString() : null,
+        promoStartDate: form.promoStartDate
+          ? new Date(form.promoStartDate).toISOString()
+          : null,
+        promoEndDate: form.promoEndDate
+          ? new Date(form.promoEndDate).toISOString()
+          : null,
       };
       if (editing) await api.put(`/products/${editing}`, payload);
       else await api.post("/products", payload);
@@ -173,6 +204,230 @@ export default function ProduitsPage() {
     if (currency === "USD") return `$${price.toLocaleString()}`;
     if (currency === "EUR") return `€${price.toLocaleString()}`;
     return `${price.toLocaleString()} Ar`;
+  };
+
+  const fetchAllProductsForExport = useCallback(async () => {
+    const limit = 100;
+    let page = 1;
+    let hasNextPage = true;
+    const allProducts = [];
+
+    while (hasNextPage) {
+      const { data } = await api.get(`/products?page=${page}&limit=${limit}`);
+      const batch = data?.products || [];
+
+      allProducts.push(...batch);
+      hasNextPage = Boolean(data?.pagination?.hasNextPage);
+      page += 1;
+
+      if (batch.length === 0 || page > 1000) break;
+    }
+
+    return allProducts;
+  }, []);
+
+  const imageUrlToJpegDataUrl = async (url) => {
+    if (!url) return null;
+
+    try {
+      const response = await fetch(url);
+      if (!response.ok) return null;
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+
+      const img = await new Promise((resolve, reject) => {
+        const image = new window.Image();
+        image.onload = () => resolve(image);
+        image.onerror = reject;
+        image.src = objectUrl;
+      });
+
+      const size = 90;
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        URL.revokeObjectURL(objectUrl);
+        return null;
+      }
+
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(0, 0, size, size);
+
+      const ratio = Math.min(size / img.width, size / img.height);
+      const drawWidth = img.width * ratio;
+      const drawHeight = img.height * ratio;
+      const offsetX = (size - drawWidth) / 2;
+      const offsetY = (size - drawHeight) / 2;
+
+      ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+      URL.revokeObjectURL(objectUrl);
+
+      return canvas.toDataURL("image/jpeg", 0.9);
+    } catch {
+      return null;
+    }
+  };
+
+  const exportCatalogExcel = async () => {
+    setError("");
+    setExportingType("excel");
+
+    try {
+      const allProducts = await fetchAllProductsForExport();
+      if (allProducts.length === 0) {
+        setError("Aucun produit a exporter.");
+        return;
+      }
+
+      const excelJsModule = await import("exceljs");
+      const ExcelJS = excelJsModule.default || excelJsModule;
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Catalogue");
+
+      worksheet.columns = [
+        { header: "Produit", key: "name", width: 42 },
+        { header: "Prix", key: "price", width: 18 },
+        { header: "Image", key: "image", width: 16 },
+      ];
+
+      worksheet.getRow(1).font = { bold: true };
+
+      for (const product of allProducts) {
+        const row = worksheet.addRow({
+          name: product.name || "",
+          price: formatPrice(product.price || 0),
+          image: product.image_url ? "" : "-",
+        });
+
+        row.height = 46;
+        const rowNumber = row.number;
+
+        if (product.image_url) {
+          const dataUrl = await imageUrlToJpegDataUrl(product.image_url);
+          if (dataUrl) {
+            const base64 = dataUrl.replace(
+              /^data:image\/[a-zA-Z]+;base64,/,
+              "",
+            );
+            const imageId = workbook.addImage({
+              base64,
+              extension: "jpeg",
+            });
+
+            worksheet.addImage(imageId, {
+              tl: { col: 2.15, row: rowNumber - 1 + 0.12 },
+              ext: { width: 40, height: 40 },
+            });
+          }
+        }
+      }
+
+      worksheet.getColumn("name").alignment = { vertical: "middle" };
+      worksheet.getColumn("price").alignment = { vertical: "middle" };
+      worksheet.getColumn("image").alignment = {
+        vertical: "middle",
+        horizontal: "center",
+      };
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const downloadUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const stamp = new Date().toISOString().slice(0, 10);
+      link.href = downloadUrl;
+      link.download = `catalogue-produits-${stamp}.xlsx`;
+      link.click();
+      URL.revokeObjectURL(downloadUrl);
+    } catch {
+      setError("Erreur lors de l'export Excel.");
+    } finally {
+      setExportingType("");
+    }
+  };
+
+  const exportCatalogPdf = async () => {
+    setError("");
+    setExportingType("pdf");
+
+    try {
+      const allProducts = await fetchAllProductsForExport();
+      if (allProducts.length === 0) {
+        setError("Aucun produit a exporter.");
+        return;
+      }
+
+      const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+        import("jspdf"),
+        import("jspdf-autotable"),
+      ]);
+
+      const doc = new jsPDF({ unit: "pt", format: "a4" });
+      doc.setFontSize(16);
+      doc.text("Catalogue produits", 40, 42);
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`Date: ${new Date().toLocaleDateString("fr-FR")}`, 40, 60);
+
+      const imageByRow = {};
+      await Promise.all(
+        allProducts.map(async (product, idx) => {
+          if (!product.image_url) return;
+          const dataUrl = await imageUrlToJpegDataUrl(product.image_url);
+          if (dataUrl) imageByRow[idx] = dataUrl;
+        }),
+      );
+
+      autoTable(doc, {
+        startY: 74,
+        head: [["Image", "Produit", "Prix"]],
+        body: allProducts.map((p) => [
+          p.image_url ? "" : "-",
+          p.name || "",
+          formatPrice(p.price || 0),
+        ]),
+        styles: {
+          fontSize: 10,
+          cellPadding: 8,
+          valign: "middle",
+        },
+        headStyles: {
+          fillColor: [53, 53, 53],
+        },
+        columnStyles: {
+          0: { cellWidth: 72 },
+          1: { cellWidth: 300 },
+          2: { cellWidth: 120, halign: "right" },
+        },
+        didParseCell: (data) => {
+          if (data.section === "body" && data.column.index === 0) {
+            data.cell.styles.minCellHeight = 58;
+          }
+        },
+        didDrawCell: (data) => {
+          if (data.section !== "body" || data.column.index !== 0) return;
+          const imageData = imageByRow[data.row.index];
+          if (!imageData) return;
+
+          const size = 42;
+          const x = data.cell.x + (data.cell.width - size) / 2;
+          const y = data.cell.y + (data.cell.height - size) / 2;
+          doc.addImage(imageData, "JPEG", x, y, size, size);
+        },
+      });
+
+      const stamp = new Date().toISOString().slice(0, 10);
+      doc.save(`catalogue-produits-${stamp}.pdf`);
+    } catch {
+      setError("Erreur lors de l'export PDF.");
+    } finally {
+      setExportingType("");
+    }
   };
 
   if (loading)
@@ -279,6 +534,8 @@ export default function ProduitsPage() {
         }
         .pr-page-sub { font-size: 13px; color: ${C.muted}; margin-top: 4px; font-weight: 300; }
 
+        .pr-header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
         /* ── Btn primary ── */
         .pr-btn-primary {
           display: inline-flex; align-items: center; gap: 7px;
@@ -292,6 +549,35 @@ export default function ProduitsPage() {
         }
         .pr-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(53,53,53,.15); }
         .pr-btn-primary:disabled { background: ${C.muted}; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .pr-btn-secondary {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 7px;
+          padding: 11px 14px;
+          background: ${C.cream};
+          color: ${C.dark};
+          border: 1.5px solid ${C.light};
+          border-radius: 8px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: transform .2s, border-color .2s, box-shadow .2s;
+          white-space: nowrap;
+        }
+        .pr-btn-secondary:hover {
+          transform: translateY(-2px);
+          border-color: ${C.main};
+          box-shadow: 0 8px 24px rgba(53,53,53,.08);
+        }
+        .pr-btn-secondary:disabled {
+          opacity: .6;
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: none;
+        }
 
         /* ── Search ── */
         .pr-search-wrap { position: relative; margin-bottom: 20px; }
@@ -414,6 +700,8 @@ export default function ProduitsPage() {
           /* page header stack */
           .pr-page-header { flex-direction: column; align-items: flex-start; gap: 14px; }
           .pr-page-title { font-size: 26px; }
+          .pr-header-actions { width: 100%; flex-direction: column; align-items: stretch; }
+          .pr-btn-secondary { width: 100%; }
           .pr-btn-primary-full { width: 100%; justify-content: center; }
 
           /* product row → card layout on mobile */
@@ -556,25 +844,73 @@ export default function ProduitsPage() {
                 votre catalogue
               </p>
             </div>
-            <button
-              className="pr-btn-primary pr-btn-primary-full"
-              onClick={openAdd}
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+            <div className="pr-header-actions">
+              <button
+                className="pr-btn-secondary"
+                onClick={exportCatalogExcel}
+                disabled={exportingType !== ""}
               >
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-              Ajouter un produit
-            </button>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                {exportingType === "excel"
+                  ? "Export Excel..."
+                  : "Exporter Excel"}
+              </button>
+
+              <button
+                className="pr-btn-secondary"
+                onClick={exportCatalogPdf}
+                disabled={exportingType !== ""}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                {exportingType === "pdf" ? "Export PDF..." : "Exporter PDF"}
+              </button>
+
+              <button
+                className="pr-btn-primary pr-btn-primary-full"
+                onClick={openAdd}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Ajouter un produit
+              </button>
+            </div>
           </div>
 
           {/* Search */}
@@ -756,31 +1092,38 @@ export default function ProduitsPage() {
                 </div>
 
                 {/* Mise en avant et Promo */}
-                <div style={{ 
-                  borderTop: `1px solid ${C.light}`, 
-                  paddingTop: "20px", 
-                  marginTop: "20px"
-                }}>
+                <div
+                  style={{
+                    borderTop: `1px solid ${C.light}`,
+                    paddingTop: "20px",
+                    marginTop: "20px",
+                  }}
+                >
                   <div style={{ marginBottom: "16px" }}>
-                    <label style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      cursor: form.isPromo ? "not-allowed" : "pointer",
-                      fontSize: "14px",
-                      fontWeight: 500,
-                      color: form.isPromo ? C.muted : C.dark,
-                      opacity: form.isPromo ? 0.6 : 1,
-                      transition: "all 0.2s"
-                    }}
-                    title={form.isPromo ? "Automatiquement activé pour les produits en promotion" : ""}
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        cursor: form.isPromo ? "not-allowed" : "pointer",
+                        fontSize: "14px",
+                        fontWeight: 500,
+                        color: form.isPromo ? C.muted : C.dark,
+                        opacity: form.isPromo ? 0.6 : 1,
+                        transition: "all 0.2s",
+                      }}
+                      title={
+                        form.isPromo
+                          ? "Automatiquement activé pour les produits en promotion"
+                          : ""
+                      }
                     >
                       <input
                         type="checkbox"
                         checked={form.isFeatured || form.isPromo}
                         onChange={(e) => {
                           if (!form.isPromo) {
-                            setForm({ ...form, isFeatured: e.target.checked })
+                            setForm({ ...form, isFeatured: e.target.checked });
                           }
                         }}
                         disabled={form.isPromo}
@@ -789,19 +1132,21 @@ export default function ProduitsPage() {
                           height: "18px",
                           cursor: form.isPromo ? "not-allowed" : "pointer",
                           accentColor: C.caramel,
-                          opacity: form.isPromo ? 0.6 : 1
+                          opacity: form.isPromo ? 0.6 : 1,
                         }}
                       />
                       Mettre en avant dans la carousel
                       {form.isPromo && (
-                        <span style={{
-                          marginLeft: "auto",
-                          fontSize: "11px",
-                          color: C.accent,
-                          fontWeight: 600,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.5px"
-                        }}>
+                        <span
+                          style={{
+                            marginLeft: "auto",
+                            fontSize: "11px",
+                            color: C.accent,
+                            fontWeight: 600,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.5px",
+                          }}
+                        >
                           ✓ Auto
                         </span>
                       )}
@@ -809,26 +1154,34 @@ export default function ProduitsPage() {
                   </div>
 
                   <div style={{ marginBottom: "16px" }}>
-                    <label style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      fontWeight: 500,
-                      color: C.dark
-                    }}>
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        cursor: "pointer",
+                        fontSize: "14px",
+                        fontWeight: 500,
+                        color: C.dark,
+                      }}
+                    >
                       <input
                         type="checkbox"
                         checked={form.isPromo}
                         onChange={(e) => {
-                          setForm({ ...form, isPromo: e.target.checked, isFeatured: e.target.checked ? true : form.isFeatured })
+                          setForm({
+                            ...form,
+                            isPromo: e.target.checked,
+                            isFeatured: e.target.checked
+                              ? true
+                              : form.isFeatured,
+                          });
                         }}
                         style={{
                           width: "18px",
                           height: "18px",
                           cursor: "pointer",
-                          accentColor: C.caramel
+                          accentColor: C.caramel,
                         }}
                       />
                       Mettre en promotion

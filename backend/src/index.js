@@ -9,31 +9,51 @@ const PORT = process.env.PORT || 3001;
 
 // CORS sécurisé — autorise localhost + Vercel
 const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'https://tsenabe.app',
-  'https://www.tsenabe.app',
-    
-  process.env.FRONTEND_URL
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "https://tsenabe.app",
+  "https://www.tsenabe.app",
+  process.env.FRONTEND_URL,
 ].filter(Boolean);
 
-app.use(cors({
+const normalizeOrigin = (origin = "") => origin.replace(/\/$/, "");
+
+const normalizedAllowedOrigins = allowedOrigins.map((origin) =>
+  normalizeOrigin(origin),
+);
+
+const isAllowedOrigin = (origin) => {
+  const normalizedOrigin = normalizeOrigin(origin);
+  return (
+    normalizedAllowedOrigins.includes(normalizedOrigin) ||
+    /^https?:\/\/localhost(:\d+)?$/i.test(normalizedOrigin) ||
+    /^https?:\/\/127\.0\.0\.1(:\d+)?$/i.test(normalizedOrigin) ||
+    normalizedOrigin.endsWith(".vercel.app")
+  );
+};
+
+const corsOptions = {
   origin: (origin, callback) => {
     // Autoriser les requêtes sans origin (Postman, mobile, Railway health check)
     if (!origin) return callback(null, true);
-    // Autoriser tous les sous-domaines Vercel (previews inclus)
-    if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
+
+    if (isAllowedOrigin(origin)) {
       return callback(null, true);
     }
-    return callback(new Error(`CORS bloqué: ${origin}`));
+
+    console.warn(`CORS bloqué: ${origin}`);
+    return callback(null, false);
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
 
 // Preflight pour toutes les routes
-app.options('*', cors());
+app.options("*", cors(corsOptions));
 
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true }));
@@ -56,6 +76,6 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Erreur interne." });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Backend running on port ${PORT}`);
 });
