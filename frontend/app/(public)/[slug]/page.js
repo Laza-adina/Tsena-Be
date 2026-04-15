@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, memo } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { THEMES, DEFAULT_THEME } from "../../../lib/themes";
@@ -14,6 +14,31 @@ const hexToRgb = (hex) => {
 };
 
 const PRODUCTS_PER_PAGE = 10;
+
+const normalizeSearchTerm = (value) =>
+  (value || "").toString().trim().toLowerCase();
+
+const productMatchesSearch = (product, normalizedTerm) => {
+  if (!normalizedTerm) return true;
+
+  const haystacks = [product?.name, product?.reference, product?.description];
+  return haystacks.some((value) =>
+    (value || "").toString().toLowerCase().includes(normalizedTerm),
+  );
+};
+
+const mergeUniqueProductsById = (existing, incoming) => {
+  if (!incoming || incoming.length === 0) return existing || [];
+
+  const byId = new Map();
+
+  [...(existing || []), ...(incoming || [])].forEach((product) => {
+    if (product?.id === undefined || product?.id === null) return;
+    byId.set(product.id, product);
+  });
+
+  return Array.from(byId.values());
+};
 
 /* ══════════════════════════════════════════════════════════
    CAROUSEL MISE EN AVANT
@@ -531,46 +556,103 @@ function SkeletonCard() {
   );
 }
 
-export default function PublicShopPage() {
-  const { slug } = useParams();
-  const [vendor, setVendor] = useState(null);
-  const [featured, setFeatured] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+const ProductsSection = memo(function ProductsSection({
+  slug,
+  initialProducts,
+  initialPage,
+  initialHasNextPage,
+  initialTotalProducts,
+  theme,
+  formatPrice,
+  onTrackWhatsapp,
+  onOpenProduct,
+}) {
+  const [products, setProducts] = useState(initialProducts || []);
+  const [browseProducts, setBrowseProducts] = useState(initialProducts || []);
+  const [searchPool, setSearchPool] = useState(initialProducts || []);
+  const [productsLoading, setProductsLoading] = useState(false);
   const [search, setSearch] = useState("");
-  const [pageReady, setPageReady] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [searchSource, setSearchSource] = useState("browse");
   const [loadingMore, setLoadingMore] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [hasNextPage, setHasNextPage] = useState(false);
-  const [totalProducts, setTotalProducts] = useState(0);
-  const loadMoreRef = useRef(null);
+  const [currentPage, setCurrentPage] = useState(initialPage || 1);
+  const [hasNextPage, setHasNextPage] = useState(Boolean(initialHasNextPage));
+  const [totalProducts, setTotalProducts] = useState(
+    initialTotalProducts ?? (initialProducts || []).length,
+  );
+  const [browsePage, setBrowsePage] = useState(initialPage || 1);
+  const [browseHasNextPage, setBrowseHasNextPage] = useState(
+    Boolean(initialHasNextPage),
+  );
+  const [browseTotalProducts, setBrowseTotalProducts] = useState(
+    initialTotalProducts ?? (initialProducts || []).length,
+  );
 
-  const fetchShop = useCallback(
-    async ({ searchTerm = "", pageNumber = 1, append = false } = {}) => {
+  const loadMoreRef = useRef(null);
+  const searchRequestIdRef = useRef(0);
+  const browseSnapshotRef = useRef({
+    products: initialProducts || [],
+    page: initialPage || 1,
+    hasNextPage: Boolean(initialHasNextPage),
+    totalProducts: initialTotalProducts ?? (initialProducts || []).length,
+  });
+  const searchPoolRef = useRef(initialProducts || []);
+
+  useEffect(() => {
+    const safeInitialProducts = initialProducts || [];
+    const page = initialPage || 1;
+    const hasMore = Boolean(initialHasNextPage);
+    const total = initialTotalProducts ?? safeInitialProducts.length;
+
+    searchRequestIdRef.current += 1;
+    setSearch("");
+    setSearchSource("browse");
+    setProductsLoading(false);
+    setLoadingMore(false);
+
+    setProducts(safeInitialProducts);
+    setBrowseProducts(safeInitialProducts);
+    setSearchPool(safeInitialProducts);
+
+    setCurrentPage(page);
+    setHasNextPage(hasMore);
+    setTotalProducts(total);
+
+    setBrowsePage(page);
+    setBrowseHasNextPage(hasMore);
+    setBrowseTotalProducts(total);
+  }, [
+    slug,
+    initialProducts,
+    initialPage,
+    initialHasNextPage,
+    initialTotalProducts,
+  ]);
+
+  useEffect(() => {
+    browseSnapshotRef.current = {
+      products: browseProducts,
+      page: browsePage,
+      hasNextPage: browseHasNextPage,
+      totalProducts: browseTotalProducts,
+    };
+  }, [browseProducts, browsePage, browseHasNextPage, browseTotalProducts]);
+
+  useEffect(() => {
+    searchPoolRef.current = searchPool;
+  }, [searchPool]);
+
+  const requestProductsPage = useCallback(
+    async ({ searchTerm = "", pageNumber = 1 } = {}) => {
       const params = new URLSearchParams();
       params.set("page", String(pageNumber));
       params.set("limit", String(PRODUCTS_PER_PAGE));
       if (searchTerm) params.set("search", searchTerm);
 
       const { data } = await api.get(`/public/${slug}?${params.toString()}`);
-
-      if (!append) {
-        setVendor(data.vendor);
-        setFeatured(data.featured || []);
-      }
-
-      const nextProducts = data.products || [];
-      setProducts((prev) =>
-        append ? [...prev, ...nextProducts] : nextProducts,
-      );
-
-      const pagination = data.pagination || {};
-      setCurrentPage(pagination.page || pageNumber);
-      setHasNextPage(Boolean(pagination.hasNextPage));
-      setTotalProducts(pagination.total ?? nextProducts.length);
-      setNotFound(false);
+      return {
+        products: data.products || [],
+        pagination: data.pagination || {},
+      };
     },
     [slug],
   );
@@ -578,51 +660,126 @@ export default function PublicShopPage() {
   useEffect(() => {
     if (!slug) return;
 
-    let active = true;
+    const requestId = ++searchRequestIdRef.current;
+    const timer = setTimeout(async () => {
+      const normalizedTerm = normalizeSearchTerm(search);
+      const browseSnapshot = browseSnapshotRef.current;
 
-    const run = async () => {
-      setLoading(true);
-      setNotFound(false);
+      if (!normalizedTerm) {
+        if (requestId !== searchRequestIdRef.current) return;
+
+        setSearchSource("browse");
+        setProductsLoading(false);
+        setProducts(browseSnapshot.products);
+        setCurrentPage(browseSnapshot.page);
+        setHasNextPage(browseSnapshot.hasNextPage);
+        setTotalProducts(
+          browseSnapshot.totalProducts || browseSnapshot.products.length,
+        );
+        return;
+      }
+
+      setProductsLoading(true);
+
+      const localMatches = searchPoolRef.current.filter((product) =>
+        productMatchesSearch(product, normalizedTerm),
+      );
+
+      if (localMatches.length > 0) {
+        if (requestId !== searchRequestIdRef.current) return;
+
+        setSearchSource("local");
+        setProducts(localMatches);
+        setCurrentPage(1);
+        setHasNextPage(false);
+        setTotalProducts(localMatches.length);
+        setProductsLoading(false);
+        return;
+      }
+
       try {
-        await fetchShop({ searchTerm: search, pageNumber: 1, append: false });
+        const { products: remoteProducts, pagination } =
+          await requestProductsPage({
+            searchTerm: search,
+            pageNumber: 1,
+          });
+        if (requestId !== searchRequestIdRef.current) return;
+
+        setSearchSource("backend");
+        setProducts(remoteProducts);
+        setCurrentPage(pagination.page || 1);
+        setHasNextPage(Boolean(pagination.hasNextPage));
+        setTotalProducts(pagination.total ?? remoteProducts.length);
+
+        if (remoteProducts.length > 0) {
+          setSearchPool((prev) => mergeUniqueProductsById(prev, remoteProducts));
+        }
       } catch {
-        if (active) setNotFound(true);
+        if (requestId !== searchRequestIdRef.current) return;
+
+        setSearchSource("backend");
+        setProducts([]);
+        setCurrentPage(1);
+        setHasNextPage(false);
+        setTotalProducts(0);
       } finally {
-        if (active) {
-          setLoading(false);
-          setLoadingMore(false);
-          setTimeout(() => setPageReady(true), 60);
+        if (requestId === searchRequestIdRef.current) {
+          setProductsLoading(false);
         }
       }
-    };
+    }, 250);
 
-    const t = setTimeout(run, search ? 300 : 0);
-
-    return () => {
-      active = false;
-      clearTimeout(t);
-    };
-  }, [slug, search, fetchShop]);
+    return () => clearTimeout(timer);
+  }, [slug, search, requestProductsPage]);
 
   const loadMoreProducts = useCallback(async () => {
-    if (loading || loadingMore || !hasNextPage) return;
+    if (loadingMore || !hasNextPage) return;
+
+    const trimmedSearch = search.trim();
+    const backendSearchMode =
+      Boolean(trimmedSearch) && searchSource === "backend";
+    if (trimmedSearch && !backendSearchMode) return;
 
     setLoadingMore(true);
     try {
-      await fetchShop({
-        searchTerm: search,
+      const { products: nextProducts, pagination } = await requestProductsPage({
+        searchTerm: backendSearchMode ? trimmedSearch : "",
         pageNumber: currentPage + 1,
-        append: true,
       });
+
+      const nextPage = pagination.page || currentPage + 1;
+      const nextHasMore = Boolean(pagination.hasNextPage);
+      const nextTotal = pagination.total ?? totalProducts + nextProducts.length;
+
+      setProducts((prev) => [...prev, ...nextProducts]);
+      setCurrentPage(nextPage);
+      setHasNextPage(nextHasMore);
+      setTotalProducts(nextTotal);
+      setSearchPool((prev) => mergeUniqueProductsById(prev, nextProducts));
+
+      if (!backendSearchMode) {
+        setBrowseProducts((prev) => [...prev, ...nextProducts]);
+        setBrowsePage(nextPage);
+        setBrowseHasNextPage(nextHasMore);
+        setBrowseTotalProducts(nextTotal);
+      }
     } catch {
       // Keep current products visible if loading next page fails.
     } finally {
       setLoadingMore(false);
     }
-  }, [loading, loadingMore, hasNextPage, fetchShop, search, currentPage]);
+  }, [
+    loadingMore,
+    hasNextPage,
+    search,
+    searchSource,
+    requestProductsPage,
+    currentPage,
+    totalProducts,
+  ]);
 
   useEffect(() => {
-    if (!loadMoreRef.current || loading) return;
+    if (!loadMoreRef.current || !hasNextPage || loadingMore) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -636,7 +793,162 @@ export default function PublicShopPage() {
     observer.observe(loadMoreRef.current);
 
     return () => observer.disconnect();
-  }, [loading, loadMoreProducts]);
+  }, [hasNextPage, loadingMore, loadMoreProducts]);
+
+  return (
+    <>
+      {/* Produits */}
+      <br></br>
+      <main className="sp-main sp-anim sp-anim-4">
+        <div className="sp-search-wrap">
+          <div className="sp-search-inner">
+            <span className="sp-search-icon">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+            </span>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher un produit..."
+              className="sp-search-input"
+            />
+          </div>
+        </div>
+
+        {products.length > 0 && (
+          <div className="sp-section-title">
+            <span className="sp-section-label">Tous les produits</span>
+            <span className="sp-section-count">
+              {totalProducts > 0 ? totalProducts : products.length}
+            </span>
+          </div>
+        )}
+
+        {productsLoading && (
+          <div className="sp-load-more">Recherche des produits...</div>
+        )}
+
+        {!productsLoading && products.length === 0 ? (
+          <p className="sp-empty">
+            {search
+              ? `Aucun resultat pour "${search}"`
+              : "Aucun produit disponible pour le moment."}
+          </p>
+        ) : (
+          <>
+            <div className="sp-grid">
+              {products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={{
+                    ...product,
+                    whatsappLink: product.whatsappLink,
+                    isPromoActive: product.isPromoActive,
+                  }}
+                  theme={theme}
+                  onTrack={() => onTrackWhatsapp(product.id)}
+                  onOpen={() => onOpenProduct(product)}
+                  formatPrice={formatPrice}
+                />
+              ))}
+            </div>
+
+            {loadingMore && (
+              <div className="sp-load-more">Chargement des produits...</div>
+            )}
+
+            {!loadingMore && hasNextPage && (
+              <div ref={loadMoreRef} className="sp-scroll-sentinel" />
+            )}
+          </>
+        )}
+      </main>
+    </>
+  );
+});
+
+export default function PublicShopPage() {
+  const { slug } = useParams();
+  const [vendor, setVendor] = useState(null);
+  const [featured, setFeatured] = useState([]);
+  const [initialProducts, setInitialProducts] = useState([]);
+  const [initialPage, setInitialPage] = useState(1);
+  const [initialHasNextPage, setInitialHasNextPage] = useState(false);
+  const [initialTotalProducts, setInitialTotalProducts] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [pageReady, setPageReady] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  const requestShopPage = useCallback(
+    async ({ searchTerm = "", pageNumber = 1 } = {}) => {
+      const params = new URLSearchParams();
+      params.set("page", String(pageNumber));
+      params.set("limit", String(PRODUCTS_PER_PAGE));
+      if (searchTerm) params.set("search", searchTerm);
+
+      const { data } = await api.get(`/public/${slug}?${params.toString()}`);
+      return {
+        vendor: data.vendor,
+        featured: data.featured || [],
+        products: data.products || [],
+        pagination: data.pagination || {},
+      };
+    },
+    [slug],
+  );
+
+  useEffect(() => {
+    if (!slug) return;
+
+    let active = true;
+
+    const run = async () => {
+      setPageReady(false);
+      setLoading(true);
+      setNotFound(false);
+      try {
+        const { vendor, featured, products: firstProducts, pagination } =
+          await requestShopPage({ pageNumber: 1 });
+        if (!active) return;
+
+        const page = pagination.page || 1;
+        const hasNext = Boolean(pagination.hasNextPage);
+        const total = pagination.total ?? firstProducts.length;
+
+        setVendor(vendor);
+        setFeatured(featured);
+        setInitialProducts(firstProducts);
+        setInitialPage(page);
+        setInitialHasNextPage(hasNext);
+        setInitialTotalProducts(total);
+        setNotFound(false);
+      } catch {
+        if (active) setNotFound(true);
+      } finally {
+        if (active) {
+          setLoading(false);
+          setTimeout(() => setPageReady(true), 60);
+        }
+      }
+    };
+
+    run();
+
+    return () => {
+      active = false;
+    };
+  }, [slug, requestShopPage]);
 
   const theme = THEMES[vendor?.theme] ?? THEMES[DEFAULT_THEME];
   const c = theme?.colors ?? THEMES[DEFAULT_THEME].colors;
@@ -651,7 +963,7 @@ export default function PublicShopPage() {
     [slug],
   );
 
-  const formatPrice = (priceInMga) => {
+  const formatPrice = useCallback((priceInMga) => {
     if (!vendor?.displayCurrency || vendor.displayCurrency === "MGA")
       return `${priceInMga.toLocaleString()} Ar`;
     if (vendor.displayCurrency === "USD")
@@ -659,7 +971,7 @@ export default function PublicShopPage() {
     if (vendor.displayCurrency === "EUR")
       return `€${priceInMga.toLocaleString()}`;
     return `${priceInMga.toLocaleString()} Ar`;
-  };
+  }, [vendor?.displayCurrency]);
 
   /* ── Loading skeleton ── */
   if (loading) {
@@ -1228,78 +1540,17 @@ export default function PublicShopPage() {
           </div>
         )}
 
-        {/* Produits */}
-        <br></br>
-        <main className="sp-main sp-anim sp-anim-4">
-          <div className="sp-search-wrap">
-            <div className="sp-search-inner">
-              <span className="sp-search-icon">
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <circle cx="11" cy="11" r="8" />
-                  <path d="m21 21-4.35-4.35" />
-                </svg>
-              </span>
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Rechercher un produit..."
-                className="sp-search-input"
-              />
-            </div>
-          </div>
-
-          {products.length > 0 && (
-            <div className="sp-section-title">
-              <span className="sp-section-label">Tous les produits</span>
-              <span className="sp-section-count">
-                {totalProducts > 0 ? totalProducts : products.length}
-              </span>
-            </div>
-          )}
-
-          {products.length === 0 ? (
-            <p className="sp-empty">
-              {search
-                ? `Aucun resultat pour "${search}"`
-                : "Aucun produit disponible pour le moment."}
-            </p>
-          ) : (
-            <>
-              <div className="sp-grid">
-                {products.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={{
-                      ...product,
-                      whatsappLink: product.whatsappLink,
-                      isPromoActive: product.isPromoActive,
-                    }}
-                    theme={theme}
-                    onTrack={() => trackWhatsapp(product.id)}
-                    onOpen={() => setSelectedProduct(product)}
-                    formatPrice={formatPrice}
-                  />
-                ))}
-              </div>
-
-              {loadingMore && (
-                <div className="sp-load-more">Chargement des produits...</div>
-              )}
-
-              {!loadingMore && hasNextPage && (
-                <div ref={loadMoreRef} className="sp-scroll-sentinel" />
-              )}
-            </>
-          )}
-        </main>
+        <ProductsSection
+          slug={slug}
+          initialProducts={initialProducts}
+          initialPage={initialPage}
+          initialHasNextPage={initialHasNextPage}
+          initialTotalProducts={initialTotalProducts}
+          theme={theme}
+          formatPrice={formatPrice}
+          onTrackWhatsapp={trackWhatsapp}
+          onOpenProduct={setSelectedProduct}
+        />
 
         <p className="sp-footer">Powered by Keyros</p>
 

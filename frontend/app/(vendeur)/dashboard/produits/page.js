@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -30,6 +30,7 @@ export default function ProduitsPage() {
   const [currency, setCurrency] = useState("MGA");
   const [menuOpen, setMenuOpen] = useState(false);
   const [exportingType, setExportingType] = useState("");
+  const [referenceSort, setReferenceSort] = useState("none");
   const [form, setForm] = useState({
     name: "",
     reference: "",
@@ -225,6 +226,21 @@ export default function ProduitsPage() {
 
     return allProducts;
   }, []);
+
+  const displayedProducts = useMemo(() => {
+    if (referenceSort === "none") return products;
+
+    return [...products].sort((a, b) => {
+      const refA = (a.reference || "").toString().trim();
+      const refB = (b.reference || "").toString().trim();
+      const compare = refA.localeCompare(refB, "fr", {
+        sensitivity: "base",
+        numeric: true,
+      });
+
+      return referenceSort === "asc" ? compare : -compare;
+    });
+  }, [products, referenceSort]);
 
   const imageUrlToJpegDataUrl = async (url) => {
     if (!url) return null;
@@ -581,6 +597,12 @@ export default function ProduitsPage() {
 
         /* ── Search ── */
         .pr-search-wrap { position: relative; margin-bottom: 20px; }
+        .pr-search-tools {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 10px;
+          margin-bottom: 20px;
+        }
         .pr-search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: ${C.muted}; opacity: .55; pointer-events: none; display: flex; }
         .pr-search-input {
           width: 100%; padding: 12px 16px 12px 42px;
@@ -591,6 +613,24 @@ export default function ProduitsPage() {
         }
         .pr-search-input:focus { border-color: ${C.caramel}; box-shadow: 0 0 0 3px ${C.caramel}20; }
         .pr-search-input::placeholder { color: ${C.muted}; opacity: .5; }
+
+        .pr-sort-select {
+          width: 100%;
+          padding: 11px 14px;
+          border: 1.5px solid ${C.light};
+          border-radius: 10px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          font-weight: 500;
+          color: ${C.dark};
+          background: ${C.cream};
+          outline: none;
+          transition: border-color .15s, box-shadow .15s;
+        }
+        .pr-sort-select:focus {
+          border-color: ${C.caramel};
+          box-shadow: 0 0 0 3px ${C.caramel}20;
+        }
 
         /* ── Alert ── */
         .pr-alert { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; border-radius: 10px; font-size: 13px; font-weight: 500; margin-bottom: 20px; animation: pr-fade-in .2s ease; }
@@ -690,6 +730,7 @@ export default function ProduitsPage() {
         @media (min-width: 540px) {
           .pr-form-grid { grid-template-columns: 1fr 1fr; }
           .pr-body { padding: 40px 32px 80px; }
+          .pr-search-tools { grid-template-columns: 1fr 240px; align-items: center; }
         }
 
         @media (max-width: 639px) {
@@ -914,27 +955,39 @@ export default function ProduitsPage() {
           </div>
 
           {/* Search */}
-          <div className="pr-search-wrap">
-            <span className="pr-search-icon">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.35-4.35" />
-              </svg>
-            </span>
-            <input
-              type="text"
-              className="pr-search-input"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher par nom ou référence…"
-            />
+          <div className="pr-search-tools">
+            <div className="pr-search-wrap" style={{ marginBottom: 0 }}>
+              <span className="pr-search-icon">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" />
+                </svg>
+              </span>
+              <input
+                type="text"
+                className="pr-search-input"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Rechercher par nom ou référence…"
+              />
+            </div>
+            <select
+              className="pr-sort-select"
+              value={referenceSort}
+              onChange={(e) => setReferenceSort(e.target.value)}
+              aria-label="Trier par référence"
+            >
+              <option value="none">Référence</option>
+              <option value="asc">Croissante</option>
+              <option value="desc">Décroissante</option>
+            </select>
           </div>
 
           {/* Formulaire */}
@@ -1267,7 +1320,7 @@ export default function ProduitsPage() {
           )}
 
           {/* Liste */}
-          {products.length === 0 ? (
+          {displayedProducts.length === 0 ? (
             <div className="pr-empty">
               <div className="pr-empty-icon">
                 <svg
@@ -1312,7 +1365,7 @@ export default function ProduitsPage() {
             </div>
           ) : (
             <div className="pr-list">
-              {products.map((p) => (
+              {displayedProducts.map((p) => (
                 <div key={p.id} className="pr-product-row">
                   {p.image_url ? (
                     <div className="pr-product-img">
