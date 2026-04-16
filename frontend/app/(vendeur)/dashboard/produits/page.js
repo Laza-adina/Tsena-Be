@@ -31,6 +31,7 @@ export default function ProduitsPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [exportingType, setExportingType] = useState("");
   const [referenceSort, setReferenceSort] = useState("none");
+  const [referenceExactMode, setReferenceExactMode] = useState(false);
   const [form, setForm] = useState({
     name: "",
     reference: "",
@@ -44,7 +45,11 @@ export default function ProduitsPage() {
     promoEndDate: "",
   });
 
-  const fetchProducts = useCallback(async (searchTerm = "") => {
+  const fetchProducts = useCallback(async (searchTerm = "", options = {}) => {
+    const { referenceExact = false } = options;
+    const exactReference = (searchTerm || "").trim();
+    const shouldUseExactReference = referenceExact && exactReference !== "";
+
     try {
       setError("");
       const limit = 100;
@@ -56,7 +61,8 @@ export default function ProduitsPage() {
         const params = new URLSearchParams();
         params.set("page", String(page));
         params.set("limit", String(limit));
-        if (searchTerm) params.set("search", searchTerm);
+        if (searchTerm && !shouldUseExactReference)
+          params.set("search", searchTerm);
 
         const { data } = await api.get(`/products?${params.toString()}`);
         const batch = data?.products || [];
@@ -68,7 +74,14 @@ export default function ProduitsPage() {
         if (batch.length === 0 || page > 1000) break;
       }
 
-      setProducts(allProducts);
+      const nextProducts = shouldUseExactReference
+        ? allProducts.filter(
+            (product) =>
+              (product?.reference || "").toString().trim() === exactReference,
+          )
+        : allProducts;
+
+      setProducts(nextProducts);
     } catch (err) {
       setProducts([]);
       setError(
@@ -96,9 +109,12 @@ export default function ProduitsPage() {
   }, [router, fetchProducts]);
 
   useEffect(() => {
-    const t = setTimeout(() => fetchProducts(search), 300);
+    const t = setTimeout(
+      () => fetchProducts(search, { referenceExact: referenceExactMode }),
+      300,
+    );
     return () => clearTimeout(t);
-  }, [search, fetchProducts]);
+  }, [search, referenceExactMode, fetchProducts]);
 
   const resetForm = () => {
     setForm({
@@ -601,7 +617,38 @@ export default function ProduitsPage() {
           display: grid;
           grid-template-columns: 1fr;
           gap: 10px;
+          margin-bottom: 10px;
+        }
+        .pr-search-badges {
+          display: flex;
+          align-items: center;
+          gap: 8px;
           margin-bottom: 20px;
+          flex-wrap: wrap;
+        }
+        .pr-search-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          border: 1.5px solid ${C.light};
+          background: ${C.cream};
+          color: ${C.dark};
+          border-radius: 999px;
+          padding: 7px 12px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all .15s ease;
+        }
+        .pr-search-badge:hover {
+          border-color: ${C.main};
+          transform: translateY(-1px);
+        }
+        .pr-search-badge.active {
+          background: ${C.dark};
+          border-color: ${C.dark};
+          color: ${C.cream};
         }
         .pr-search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: ${C.muted}; opacity: .55; pointer-events: none; display: flex; }
         .pr-search-input {
@@ -975,7 +1022,11 @@ export default function ProduitsPage() {
                 className="pr-search-input"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Rechercher par nom ou référence…"
+                placeholder={
+                  referenceExactMode
+                    ? "Référence exacte (ex: REF-001)"
+                    : "Rechercher par nom ou référence…"
+                }
               />
             </div>
             <select
@@ -988,6 +1039,17 @@ export default function ProduitsPage() {
               <option value="asc">Croissante</option>
               <option value="desc">Décroissante</option>
             </select>
+          </div>
+          <div className="pr-search-badges">
+            <button
+              type="button"
+              className={`pr-search-badge ${referenceExactMode ? "active" : ""}`}
+              onClick={() => setReferenceExactMode((prev) => !prev)}
+              aria-pressed={referenceExactMode}
+              title="Quand activé, la recherche se fait uniquement sur une référence identique (===)."
+            >
+              {referenceExactMode ? "Référence exacte" : "Référence exacte"}
+            </button>
           </div>
 
           {/* Formulaire */}
