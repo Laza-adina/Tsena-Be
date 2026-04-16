@@ -321,6 +321,7 @@ export default function ProduitsPage() {
       const worksheet = workbook.addWorksheet("Catalogue");
 
       worksheet.columns = [
+        { header: "Référence", key: "reference", width: 24 },
         { header: "Produit", key: "name", width: 42 },
         { header: "Prix", key: "price", width: 18 },
         { header: "Image", key: "image", width: 16 },
@@ -331,6 +332,7 @@ export default function ProduitsPage() {
       for (const product of allProducts) {
         const row = worksheet.addRow({
           name: product.name || "",
+          reference: product.reference || "-",
           price: formatPrice(product.price || 0),
           image: product.image_url ? "" : "-",
         });
@@ -351,13 +353,14 @@ export default function ProduitsPage() {
             });
 
             worksheet.addImage(imageId, {
-              tl: { col: 2.15, row: rowNumber - 1 + 0.12 },
+              tl: { col: 3.15, row: rowNumber - 1 + 0.12 },
               ext: { width: 40, height: 40 },
             });
           }
         }
       }
 
+      worksheet.getColumn("reference").alignment = { vertical: "middle" };
       worksheet.getColumn("name").alignment = { vertical: "middle" };
       worksheet.getColumn("price").alignment = { vertical: "middle" };
       worksheet.getColumn("image").alignment = {
@@ -417,10 +420,11 @@ export default function ProduitsPage() {
 
       autoTable(doc, {
         startY: 74,
-        head: [["Image", "Produit", "Prix"]],
+        head: [["Image", "Produit", "Référence", "Prix"]],
         body: allProducts.map((p) => [
           p.image_url ? "" : "-",
           p.name || "",
+          p.reference || "-",
           formatPrice(p.price || 0),
         ]),
         styles: {
@@ -433,8 +437,9 @@ export default function ProduitsPage() {
         },
         columnStyles: {
           0: { cellWidth: 72 },
-          1: { cellWidth: 300 },
-          2: { cellWidth: 120, halign: "right" },
+          1: { cellWidth: 228 },
+          2: { cellWidth: 120 },
+          3: { cellWidth: 72, halign: "right" },
         },
         didParseCell: (data) => {
           if (data.section === "body" && data.column.index === 0) {
