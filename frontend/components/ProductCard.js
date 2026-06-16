@@ -1,20 +1,20 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ArrowRight } from "lucide-react";
+import { X, ArrowRight, Info } from "lucide-react";
+import styles from "./ProductCard.module.css";
 
 /* ══════════════════════════════════════════════════════════
-   MODAL
+   MODAL (Premium Cinematic View)
 ══════════════════════════════════════════════════════════ */
 const Modal = ({ product, theme, onClose, handleWhatsapp, formatPrice }) => {
   const c = theme?.colors ?? {};
   const fontDisplay = theme?.fonts?.display ? `'${theme.fonts.display}', ` : "";
   const fontBody = theme?.fonts?.body ? `'${theme.fonts.body}', ` : "";
 
-  // Overflow body + Escape — pas de setState ici
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => {
@@ -31,335 +31,140 @@ const Modal = ({ product, theme, onClose, handleWhatsapp, formatPrice }) => {
   }, [onClose]);
 
   return createPortal(
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "20px",
-        zIndex: 99999,
-        pointerEvents: "none",
-      }}
-    >
-      {/* Backdrop */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.22 }}
-        style={{
-          position: "fixed",
-          inset: 0,
-          background: "rgba(0,0,0,0.62)",
-          backdropFilter: "blur(8px)",
-        }}
+    <AnimatePresence>
+      <div
+        className={styles.modalBackdrop}
         onClick={onClose}
-      />
-
-      {/* Panel */}
-      <motion.div
-        initial={{ opacity: 0, y: 36, scale: 0.96 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.96, y: 28 }}
-        transition={{ type: "spring", damping: 28, stiffness: 340 }}
-        style={{
-          position: "relative",
-          background: c.card || c.background,
-          width: "100%",
-          maxWidth: "900px",
-          maxHeight: "88vh",
-          borderRadius: "24px",
-          overflow: "hidden",
-          display: "flex",
-          boxShadow: "0 32px 80px rgba(0,0,0,0.40)",
-          border: `1px solid ${c.border}`,
-          pointerEvents: "auto",
-        }}
-        onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-        }}
+        style={{ zIndex: 9999 }}
       >
-        <div
-          className="modal-inner"
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            width: "100%",
-            overflow: "hidden",
-          }}
-        >
-          {/* Image */}
-          <div
-            style={{
-              width: "44%",
-              position: "relative",
-              minHeight: "300px",
-              background: c.surface,
-              flexShrink: 0,
-            }}
-          >
-            {product.image_url ? (
-              <Image
-                src={product.image_url}
-                alt={product.name}
-                fill
-                style={{ objectFit: "cover" }}
-                sizes="(max-width: 700px) 100vw, 44vw"
-                unoptimized
-              />
-            ) : (
-              <div
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "8px",
-                  color: c.textMuted,
-                  fontSize: "13px",
-                  fontFamily: `${fontBody}system-ui, sans-serif`,
-                }}
-              >
-                <svg
-                  width="28"
-                  height="28"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.2"
-                >
-                  <rect x="3" y="3" width="18" height="18" rx="2" />
-                  <circle cx="8.5" cy="8.5" r="1.5" />
-                  <polyline points="21 15 16 10 5 21" />
-                </svg>
-                <span>Pas d&apos;image</span>
-              </div>
-            )}
-          </div>
+        <motion.div
+          className={styles.modalBackdropBg}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.4 }}
+        />
 
-          {/* Contenu */}
-          <div
+        <div className={styles.modalWrapper}>
+          <motion.div
+            className={styles.modalContent}
+            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
             style={{
-              flex: 1,
-              padding: "40px 36px",
-              display: "flex",
-              flexDirection: "column",
-              overflowY: "auto",
-              fontFamily: `${fontBody}system-ui, sans-serif`,
+              "--font-display": `${fontDisplay}system-ui, sans-serif`,
+              "--font-body": `${fontBody}system-ui, sans-serif`,
+              background: c.surface || "#ffffff",
+              color: c.text || "#111827",
             }}
           >
-            {/* Fermer */}
             <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onClose();
-              }}
-              style={{
-                position: "absolute",
-                top: "20px",
-                right: "20px",
-                background: c.surface,
-                border: `1px solid ${c.border}`,
-                width: "36px",
-                height: "36px",
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                color: c.textMuted,
-                transition: "background .15s, color .15s",
-                zIndex: 10,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = c.card;
-                e.currentTarget.style.color = c.text;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = c.surface;
-                e.currentTarget.style.color = c.textMuted;
-              }}
+              className={styles.modalCloseBtn}
+              onClick={onClose}
               aria-label="Fermer"
             >
-              <X size={16} />
+              <X size={20} strokeWidth={2.5} />
             </button>
 
-            {product.reference && (
-              <p
-                style={{
-                  fontSize: "11px",
-                  color: c.accent,
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                  margin: "0 0 8px",
-                  fontWeight: 600,
-                }}
-              >
-                {product.reference}
-              </p>
-            )}
-
-            <h2
-              style={{
-                fontFamily: `${fontDisplay}system-ui, sans-serif`,
-                fontSize: "clamp(20px, 2.5vw, 28px)",
-                fontWeight: "800",
-                color: c.text,
-                margin: "0 0 14px",
-                lineHeight: "1.15",
-                letterSpacing: "-0.02em",
-              }}
-            >
-              {product.name}
-            </h2>
-
-            <p
-              style={{
-                fontSize: "26px",
-                fontWeight: "700",
-                color: c.primary,
-                margin: "0 0 22px",
-                lineHeight: 1,
-                fontFamily: `${fontDisplay}system-ui, sans-serif`,
-                display: "flex",
-                alignItems: "center",
-                gap: "14px",
-              }}
-            >
-              {product.isPromoActive && product.promo_price ? (
-                <>
-                  <span
-                    style={{
-                      textDecoration: "line-through",
-                      color: c.textMuted,
-                      fontSize: "18px",
-                      opacity: 0.5,
-                      fontWeight: "400",
-                    }}
-                  >
-                    {formatPrice
-                      ? formatPrice(product.price)
-                      : `${product.price.toLocaleString()} Ar`}
-                  </span>
-                  <span
-                    style={{
-                      color: "#FCD34D",
-                      fontSize: "28px",
-                    }}
-                  >
-                    {formatPrice
-                      ? formatPrice(product.promo_price)
-                      : `${product.promo_price.toLocaleString()} Ar`}
-                  </span>
-                </>
-              ) : (
-                <span>
-                  {formatPrice
-                    ? formatPrice(product.price)
-                    : `${product.price.toLocaleString()} Ar`}
-                </span>
-              )}
-            </p>
-
-            {product.description && (
-              <div style={{ flex: 1, marginBottom: "24px" }}>
-                <h4
-                  style={{
-                    fontSize: "11px",
-                    fontWeight: "700",
-                    color: c.textMuted,
-                    marginBottom: "10px",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.07em",
-                  }}
-                >
-                  Description
-                </h4>
-                <p
-                  style={{
-                    fontSize: "14px",
-                    color: c.textMuted,
-                    lineHeight: "1.65",
-                    margin: 0,
-                    whiteSpace: "pre-wrap",
-                  }}
-                >
-                  {product.description}
-                </p>
+            <div className={styles.modalGrid}>
+              {/* Colonne Image */}
+              <div className={styles.modalImageCol}>
+                {product.image_url ? (
+                  <Image
+                    src={product.image_url}
+                    alt={product.name}
+                    fill
+                    className={styles.modalImage}
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    unoptimized
+                  />
+                ) : (
+                  <div className={styles.modalNoImage}>
+                    <Info
+                      size={48}
+                      strokeWidth={1}
+                      color={c.textMuted || "#9CA3AF"}
+                    />
+                    <span>Aucune image</span>
+                  </div>
+                )}
+                {/* Badges sur l'image */}
+                {(product.isNewActive || product.isPromoActive) && (
+                  <div className={styles.modalBadges}>
+                    {product.isNewActive && (
+                      <span className={`${styles.badge} ${styles.badgeNew}`}>
+                        Nouveau
+                      </span>
+                    )}
+                    {product.isPromoActive && (
+                      <span className={`${styles.badge} ${styles.badgePromo}`}>
+                        Promo
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
-            )}
 
-            <button
-              onClick={handleWhatsapp}
-              style={{
-                width: "100%",
-                marginTop: "auto",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-                padding: "15px 22px",
-                background: c.btn,
-                color: c.btnText,
-                border: "none",
-                borderRadius: "12px",
-                fontSize: "14px",
-                fontWeight: "600",
-                cursor: "pointer",
-                fontFamily: `${fontBody}system-ui, sans-serif`,
-                transition: "opacity .15s, transform .1s",
-                boxShadow: "0 8px 24px rgba(0,0,0,0.16)",
-                letterSpacing: ".01em",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.opacity = ".88";
-                e.currentTarget.style.transform = "translateY(-1px)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.opacity = "1";
-                e.currentTarget.style.transform = "none";
-              }}
-              onMouseDown={(e) => {
-                e.currentTarget.style.transform = "scale(0.98)";
-              }}
-              onMouseUp={(e) => {
-                e.currentTarget.style.transform = "translateY(-1px)";
-              }}
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
-                <path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.558 4.115 1.535 5.843L.057 24l6.305-1.654A11.954 11.954 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.823 9.823 0 0 1-5.001-1.366l-.359-.213-3.722.976.995-3.633-.234-.374A9.818 9.818 0 0 1 2.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z" />
-              </svg>
-              Commander via WhatsApp
-              <ArrowRight size={15} />
-            </button>
-          </div>
+              {/* Colonne Infos */}
+              <div className={styles.modalInfoCol}>
+                <div className={styles.modalHeader}>
+                  {product.reference && (
+                    <span className={styles.modalRef}>
+                      RÉF: {product.reference}
+                    </span>
+                  )}
+                  <h2 className={styles.modalTitle}>{product.name}</h2>
+
+                  <div className={styles.modalPriceWrap}>
+                    {product.isPromoActive && product.promo_price ? (
+                      <>
+                        <span className={styles.modalPriceOld}>
+                          {formatPrice(product.price)}
+                        </span>
+                        <span
+                          className={styles.modalPriceNew}
+                          style={{ color: c.primary || "#3B82F6" }}
+                        >
+                          {formatPrice(product.promo_price)}
+                        </span>
+                      </>
+                    ) : (
+                      <span className={styles.modalPrice}>
+                        {formatPrice(product.price)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className={styles.modalDescWrap}>
+                  <h3 className={styles.modalDescTitle}>Description</h3>
+                  <p className={styles.modalDesc}>
+                    {product.description ||
+                      "Aucune description disponible pour ce produit."}
+                  </p>
+                </div>
+
+                <div className={styles.modalAction}>
+                  <button
+                    className={styles.modalBtnWa}
+                    onClick={handleWhatsapp}
+                    style={{
+                      background: c.primary || "#10B981",
+                      color: "#ffffff",
+                    }}
+                  >
+                    <span>Commander via WhatsApp</span>
+                    <ArrowRight size={18} strokeWidth={2.5} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
-
-        <style
-          dangerouslySetInnerHTML={{
-            __html: `
-            @media (max-width: 700px) {
-              .modal-inner { flex-direction: column !important; }
-              .modal-inner > div:nth-child(1) { width: 100% !important; min-height: 220px !important; max-height: 280px; }
-              .modal-inner > div:nth-child(2) { width: 100% !important; padding: 22px 20px 24px !important; }
-            }
-          `,
-          }}
-        />
-      </motion.div>
-    </div>,
+      </div>
+    </AnimatePresence>,
     document.body,
   );
 };
@@ -367,59 +172,38 @@ const Modal = ({ product, theme, onClose, handleWhatsapp, formatPrice }) => {
 /* ══════════════════════════════════════════════════════════
    PRODUCT CARD
 ══════════════════════════════════════════════════════════ */
-const ProductCard = ({
+export default function ProductCard({
   product,
   theme,
   onTrack,
-  formatPrice,
   onClose,
-  onOpen,
-  isModal,
-}) => {
-  const [modalOpen, setModalOpen] = useState(false);
-
+  isModal = false,
+  formatPrice,
+}) {
+  const [showModal, setShowModal] = useState(isModal);
   const c = theme?.colors ?? {};
-  const fontDisp = theme?.fonts?.display ? `'${theme.fonts.display}', ` : "";
-  const fontBody = theme?.fonts?.body ? `'${theme.fonts.body}', ` : "";
 
-  const handleWhatsapp = useCallback(
-    (e) => {
-      e.stopPropagation();
-      if (onTrack) onTrack();
-      if (product.whatsappLink) window.open(product.whatsappLink, "_blank");
-    },
-    [onTrack, product.whatsappLink],
-  );
-
-  const handleClose = useCallback(() => {
-    if (isModal) {
-      // Si modal est contrôlée par parent (isModal=true), juste appeler onClose
-      if (onClose) onClose();
-    } else {
-      // Sinon, gérer le state local
-      setModalOpen(false);
-      if (onClose) onClose();
-    }
-  }, [isModal, onClose]);
-
-  const handleOpen = () => {
-    if (!isModal) {
-      if (onOpen) {
-        // Le parent gère la modal — ne pas ouvrir la modal locale
-        onOpen();
-      } else {
-        setModalOpen(true);
-      }
+  const handleWhatsapp = (e) => {
+    if (e) e.stopPropagation();
+    if (onTrack) onTrack();
+    if (product.whatsappLink) {
+      window.open(product.whatsappLink, "_blank", "noopener,noreferrer");
     }
   };
 
-  // Si isModal=true, affiche directement la modal (contrôlée par parent)
+  const currentPrice =
+    product.isPromoActive && product.promo_price
+      ? product.promo_price
+      : product.price;
+  const oldPrice =
+    product.isPromoActive && product.promo_price ? product.price : null;
+
   if (isModal) {
     return (
       <Modal
         product={product}
         theme={theme}
-        onClose={handleClose}
+        onClose={onClose}
         handleWhatsapp={handleWhatsapp}
         formatPrice={formatPrice}
       />
@@ -429,286 +213,96 @@ const ProductCard = ({
   return (
     <>
       <div
-        onClick={handleOpen}
+        className={styles.card}
+        onClick={() => setShowModal(true)}
         style={{
-          width: "100%",
-          position: "relative",
-          borderRadius: "16px",
-          overflow: "hidden",
-          cursor: "pointer",
-          isolation: "isolate",
-          fontFamily: `${fontBody}system-ui, sans-serif`,
-          background: c.card,
-          border: `1px solid ${c.border}`,
-          boxShadow: "0 2px 16px rgba(0,0,0,0.07)",
-          transition:
-            "transform .22s cubic-bezier(0.22,0.68,0,1.2), box-shadow .22s ease",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "translateY(-3px)";
-          e.currentTarget.style.boxShadow = "0 10px 32px rgba(0,0,0,0.13)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = "translateY(0)";
-          e.currentTarget.style.boxShadow = "0 2px 16px rgba(0,0,0,0.07)";
+          "--c-surface": c.surface || "#ffffff",
+          "--c-border": c.border || "rgba(128,128,128,0.1)",
+          "--c-text": c.text || "#111827",
+          "--c-muted": c.textMuted || "#6B7280",
+          "--c-primary": c.primary || "#3B82F6",
         }}
       >
-        {/* Image */}
-        {product.image_url ? (
-          <div
-            style={{
-              width: "100%",
-              aspectRatio: "1/1",
-              overflow: "hidden",
-              position: "relative",
-            }}
-          >
+        <div className={styles.cardShine} />
+
+        <div className={styles.imgWrap}>
+          {product.image_url ? (
             <Image
               src={product.image_url}
               alt={product.name}
               fill
-              style={{
-                objectFit: "cover",
-                transition: "transform .4s cubic-bezier(0.22,0.68,0,1.2)",
-              }}
-              sizes="(max-width: 480px) 50vw, (max-width: 1100px) 25vw, 20vw"
+              className={styles.img}
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
               unoptimized
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "scale(1.06)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "scale(1)";
-              }}
             />
-          </div>
-        ) : (
-          <div
-            style={{
-              width: "100%",
-              aspectRatio: "1/1",
-              background: c.surface,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "8px",
-              color: c.textMuted,
-              fontSize: "12px",
-            }}
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.2"
-            >
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-              <polyline points="21 15 16 10 5 21" />
-            </svg>
-            <span>Pas d&apos;image</span>
-          </div>
-        )}
-
-        {/* Promo Badge */}
-        {product.isPromoActive && (
-          <div
-            style={{
-              position: "absolute",
-              top: "8px",
-              right: "8px",
-              background: "#EF4444",
-              color: "white",
-              padding: "6px 10px",
-              borderRadius: "8px",
-              fontSize: "10px",
-              fontWeight: "700",
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-              zIndex: 4,
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-            }}
-          >
-            <span></span> Promo
-          </div>
-        )}
-
-        {/* New Badge */}
-        {product.isNewActive && (
-          <div
-            style={{
-              position: "absolute",
-              top: "8px",
-              left: "8px",
-              background: "#0EA5E9",
-              color: "white",
-              padding: "6px 10px",
-              borderRadius: "8px",
-              fontSize: "10px",
-              fontWeight: "700",
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-              zIndex: 4,
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-            }}
-          >
-            Nouveaute
-          </div>
-        )}
-
-        {/* Body */}
-        <div
-          style={{ padding: "13px 14px 16px", position: "relative", zIndex: 3 }}
-        >
-          {product.reference && (
-            <p
-              style={{
-                fontSize: "10px",
-                color: c.accent,
-                letterSpacing: "0.07em",
-                textTransform: "uppercase",
-                margin: "0 0 4px",
-                fontWeight: 600,
-              }}
-            >
-              {product.reference}
-            </p>
+          ) : (
+            <div className={styles.noImg}>
+              <Info size={32} strokeWidth={1.5} opacity={0.5} />
+            </div>
           )}
 
-          <h3
-            style={{
-              fontFamily: `${fontDisp}system-ui, sans-serif`,
-              fontSize: "14px",
-              fontWeight: "700",
-              color: c.text,
-              margin: "0 0 5px",
-              lineHeight: "1.3",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            {product.name}
-          </h3>
+          <div className={styles.imgOverlay} />
 
-          <p
-            style={{
-              fontSize: "11px",
-              color: c.textMuted,
-              margin: "0 0 8px",
-              opacity: 0.55,
-            }}
-          >
-            Voir les details
-          </p>
-
-          <p
-            style={{
-              fontFamily: `${fontDisp}system-ui, sans-serif`,
-              fontSize: "17px",
-              fontWeight: "700",
-              color: c.text,
-              margin: "0 0 12px",
-              lineHeight: 1,
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-            }}
-          >
-            {product.isPromoActive && product.promo_price ? (
-              <>
-                <span
-                  style={{
-                    textDecoration: "line-through",
-                    color: c.textMuted,
-                    fontSize: "14px",
-                    opacity: 0.6,
-                    fontWeight: "400",
-                  }}
-                >
-                  {formatPrice
-                    ? formatPrice(product.price)
-                    : `${product.price.toLocaleString()} Ar`}
-                </span>
-                <span
-                  style={{
-                    color: "#FCD34D",
-                    fontSize: "18px",
-                  }}
-                >
-                  {formatPrice
-                    ? formatPrice(product.promo_price)
-                    : `${product.promo_price.toLocaleString()} Ar`}
-                </span>
-              </>
-            ) : (
-              <span>
-                {formatPrice
-                  ? formatPrice(product.price)
-                  : `${product.price.toLocaleString()} Ar`}
+          <div className={styles.badges}>
+            {product.isNewActive && (
+              <span className={`${styles.badge} ${styles.badgeNew}`}>
+                Nouveau
               </span>
             )}
-          </p>
+            {product.isPromoActive && (
+              <span className={`${styles.badge} ${styles.badgePromo}`}>
+                Promo
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className={styles.cardBody}>
+          <div className={styles.cardHeader}>
+            {product.reference && (
+              <div className={styles.ref}>{product.reference}</div>
+            )}
+            <h3 className={styles.productName} title={product.name}>
+              {product.name}
+            </h3>
+          </div>
+
+          <div className={styles.priceWrap}>
+            {oldPrice && (
+              <span className={styles.oldPrice}>{formatPrice(oldPrice)}</span>
+            )}
+            <span
+              className={styles.price}
+              style={{ color: oldPrice ? "var(--c-primary)" : "var(--c-text)" }}
+            >
+              {formatPrice(currentPrice)}
+            </span>
+          </div>
 
           <button
+            className={styles.btnWa}
             onClick={handleWhatsapp}
-            style={{
-              width: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "6px",
-              padding: "10px 12px",
-              background: c.btn,
-              color: c.btnText,
-              border: "none",
-              borderRadius: "10px",
-              fontSize: "12px",
-              fontWeight: "600",
-              cursor: "pointer",
-              fontFamily: `${fontBody}system-ui, sans-serif`,
-              transition: "opacity .15s, transform .1s",
-              letterSpacing: ".01em",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.opacity = ".82";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.opacity = "1";
-            }}
-            onMouseDown={(e) => {
-              e.currentTarget.style.transform = "scale(0.98)";
-            }}
-            onMouseUp={(e) => {
-              e.currentTarget.style.transform = "scale(1)";
-            }}
+            style={{ background: "var(--c-primary)", color: "#ffffff" }}
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
-              <path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.558 4.115 1.535 5.843L.057 24l6.305-1.654A11.954 11.954 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.823 9.823 0 0 1-5.001-1.366l-.359-.213-3.722.976.995-3.633-.234-.374A9.818 9.818 0 0 1 2.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z" />
-            </svg>
             Commander
+            <ArrowRight
+              size={16}
+              strokeWidth={2.5}
+              className={styles.btnIcon}
+            />
           </button>
         </div>
       </div>
 
-      <AnimatePresence>
-        {modalOpen && (
-          <Modal
-            product={product}
-            theme={theme}
-            onClose={handleClose}
-            handleWhatsapp={handleWhatsapp}
-            formatPrice={formatPrice}
-          />
-        )}
-      </AnimatePresence>
+      {showModal && (
+        <Modal
+          product={product}
+          theme={theme}
+          onClose={() => setShowModal(false)}
+          handleWhatsapp={handleWhatsapp}
+          formatPrice={formatPrice}
+        />
+      )}
     </>
   );
-};
-
-export default ProductCard;
+}

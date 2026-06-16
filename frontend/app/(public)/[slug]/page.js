@@ -20,7 +20,6 @@ const normalizeSearchTerm = (value) =>
 
 const productMatchesSearch = (product, normalizedTerm) => {
   if (!normalizedTerm) return true;
-
   const haystacks = [product?.name, product?.reference, product?.description];
   return haystacks.some((value) =>
     (value || "").toString().toLowerCase().includes(normalizedTerm),
@@ -29,19 +28,16 @@ const productMatchesSearch = (product, normalizedTerm) => {
 
 const mergeUniqueProductsById = (existing, incoming) => {
   if (!incoming || incoming.length === 0) return existing || [];
-
   const byId = new Map();
-
   [...(existing || []), ...(incoming || [])].forEach((product) => {
     if (product?.id === undefined || product?.id === null) return;
     byId.set(product.id, product);
   });
-
   return Array.from(byId.values());
 };
 
 /* ══════════════════════════════════════════════════════════
-   CAROUSEL MISE EN AVANT
+   CAROUSEL MISE EN AVANT (PREMIUM)
 ══════════════════════════════════════════════════════════ */
 function FeaturedCarousel({ featured, formatPrice, onProductClick }) {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -68,10 +64,10 @@ function FeaturedCarousel({ featured, formatPrice, onProductClick }) {
         setTimeout(() => {
           setPrevSlide(null);
           setAnimating(false);
-        }, 650);
+        }, 750);
         return next;
       });
-    }, 3000);
+    }, 4000);
     return () => clearInterval(timer);
   }, [carouselItems, paused]);
 
@@ -90,7 +86,7 @@ function FeaturedCarousel({ featured, formatPrice, onProductClick }) {
     setTimeout(() => {
       setPrevSlide(null);
       setAnimating(false);
-    }, 650);
+    }, 750);
     setPaused(true);
   };
 
@@ -107,245 +103,126 @@ function FeaturedCarousel({ featured, formatPrice, onProductClick }) {
     setTimeout(() => {
       setPrevSlide(null);
       setAnimating(false);
-    }, 650);
+    }, 750);
     setPaused(true);
   };
 
   const current = carouselItems[currentSlideIndex];
+
   return (
     <div className="sp-featured-carousel">
       <style>{`
         .sp-featured-carousel {
-          width: 100%;
-          max-width: 1280px;
-          margin: 0 auto;
-          padding: 0 24px;
-          background: transparent;
-          position: relative;
-          overflow: hidden;
+          width: 100%; max-width: 1280px; margin: 0 auto;
+          padding: 0 24px; position: relative; overflow: hidden;
         }
 
         .sp-carousel-slide {
-          width: 100%;
-          height: clamp(300px, 60vh, 500px);
-          position: relative;
-          cursor: pointer;
-          border-radius: 20px;
-          overflow: hidden;
+          width: 100%; height: clamp(320px, 55vh, 480px);
+          position: relative; cursor: pointer;
+          border-radius: 28px; overflow: hidden;
+          box-shadow: 0 24px 48px rgba(0,0,0,0.08);
+          transform: translateZ(0); /* Hardware acceleration */
         }
 
         .sp-carousel-img {
-          transition: filter .3s ease, transform .3s ease;
+          transition: filter 0.5s ease, transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
         .sp-carousel-slide:hover .sp-carousel-img {
-          filter: brightness(0.95);
-          transform: scale(1.02);
+          filter: brightness(0.9); transform: scale(1.04);
         }
 
-
-        @keyframes swipeInRight {
-          from { transform: translateX(100%); }
-          to   { transform: translateX(0); }
-        }
-        @keyframes swipeInLeft {
-          from { transform: translateX(-100%); }
-          to   { transform: translateX(0); }
-        }
-        @keyframes swipeOutLeft {
-          from { transform: translateX(0); }
-          to   { transform: translateX(-100%); }
-        }
-        @keyframes swipeOutRight {
-          from { transform: translateX(0); }
-          to   { transform: translateX(100%); }
-        }
+        @keyframes swipeInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        @keyframes swipeInLeft  { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+        @keyframes swipeOutLeft { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+        @keyframes swipeOutRight{ from { transform: translateX(0); } to { transform: translateX(100%); } }
 
         .sp-carousel-overlay {
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.3) 100%);
-          display: flex;
-          align-items: flex-end;
-          padding: 32px 24px;
+          position: absolute; inset: 0;
+          background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 50%, transparent 100%);
+          display: flex; align-items: flex-end; padding: 40px 32px;
         }
 
-        .sp-carousel-content {
-          flex: 1;
-          min-width: 0;
-        }
+        .sp-carousel-content { flex: 1; min-width: 0; }
 
         .sp-carousel-name {
           font-family: var(--font-display);
-          font-size: clamp(18px, 3vw, 28px);
-          font-weight: 700;
-          color: white;
-          margin-bottom: 8px;
-          line-height: 1.2;
+          font-size: clamp(24px, 4vw, 36px);
+          font-weight: 800; color: white;
+          margin-bottom: 12px; line-height: 1.1;
+          letter-spacing: -0.02em;
         }
 
         .sp-carousel-price {
-          font-size: 16px;
-          font-weight: 600;
-          color: rgba(255, 255, 255, 0.95);
-          margin-bottom: 4px;
+          font-size: 18px; font-weight: 600;
+          color: rgba(255, 255, 255, 0.95); margin-bottom: 8px;
         }
 
         .sp-carousel-price-promo {
-          display: flex;
-          gap: 12px;
-          align-items: center;
-          margin-bottom: 8px;
+          display: flex; gap: 12px; align-items: center; margin-bottom: 12px;
         }
-
         .sp-carousel-price-original {
-          font-size: 14px;
-          color: rgba(255, 255, 255, 0.6);
-          text-decoration: line-through;
+          font-size: 15px; color: rgba(255, 255, 255, 0.6); text-decoration: line-through;
         }
-
         .sp-carousel-price-reduced {
-          font-size: 18px;
-          font-weight: 700;
-          color: #FCD34D;
+          font-size: 20px; font-weight: 700; color: #FCD34D;
         }
 
         .sp-carousel-description {
-          font-size: 14px;
-          color: rgba(255, 255, 255, 0.85);
-          line-height: 1.5;
-          max-width: 500px;
-          margin-bottom: 12px;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
+          font-size: 15px; color: rgba(255, 255, 255, 0.8);
+          line-height: 1.6; max-width: 540px; margin-bottom: 16px;
+          display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
         }
 
-        .sp-carousel-promo-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          background: #EF4444;
-          color: white;
-          padding: 6px 12px;
-          border-radius: 8px;
-          font-size: 12px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
+        .sp-badge {
+          display: inline-flex; align-items: center; gap: 6px;
+          padding: 6px 14px; border-radius: 99px;
+          font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+          backdrop-filter: blur(8px);
         }
-
-        .sp-carousel-new-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          background: #0EA5E9;
-          color: white;
-          padding: 6px 12px;
-          border-radius: 8px;
-          font-size: 12px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .sp-carousel-badges {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          margin-top: 8px;
-          flex-wrap: wrap;
-        }
+        .sp-carousel-promo-badge { background: rgba(239, 68, 68, 0.9); color: white; }
+        .sp-carousel-new-badge { background: rgba(14, 165, 233, 0.9); color: white; }
+        .sp-carousel-badges { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 
         .sp-carousel-nav {
-          position: absolute;
-          top: 50%;
-          transform: translateY(-50%);
-          display: flex;
-          gap: 8px;
-          padding: 16px;
-          z-index: 10;
+          position: absolute; top: 50%; transform: translateY(-50%);
+          display: flex; gap: 8px; padding: 24px; z-index: 10;
+          opacity: 0; transition: opacity 0.3s ease;
         }
+        .sp-carousel-slide:hover .sp-carousel-nav { opacity: 1; }
 
-        .sp-carousel-nav-prev {
-          left: 0;
-        }
-        .sp-carousel-nav-next {
-          right: 0;
-        }
+        .sp-carousel-nav-prev { left: 0; }
+        .sp-carousel-nav-next { right: 0; }
 
         .sp-carousel-btn {
-          background: rgba(255, 255, 255, 0.95);
-          border: none;
-          width: 44px;
-          height: 44px;
-          border-radius: 22px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--c-text);
-          transition: all .2s;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3);
+          backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+          width: 48px; height: 48px; border-radius: 50%;
+          cursor: pointer; display: flex; align-items: center; justify-content: center;
+          color: white; transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
-
-        .sp-carousel-btn:hover {
-          background: white;
-          transform: scale(1.1);
-          box-shadow: 0 6px 16px rgba(0,0,0,0.2);
-        }
+        .sp-carousel-btn:hover { background: white; color: black; transform: scale(1.1); }
 
         .sp-carousel-dots {
-          position: absolute;
-          bottom: 16px;
-          left: 50%;
-          transform: translateX(-50%);
-          display: flex;
-          gap: 8px;
-          z-index: 10;
+          position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+          display: flex; gap: 8px; z-index: 10;
         }
-
         .sp-carousel-dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.4);
-          border: none;
-          cursor: pointer;
-          transition: all .2s;
+          width: 8px; height: 8px; border-radius: 4px;
+          background: rgba(255, 255, 255, 0.3); border: none;
+          cursor: pointer; transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
-
-        .sp-carousel-dot.active {
-          background: white;
-          width: 24px;
-          border-radius: 4px;
-        }
-
-        .sp-carousel-dot:hover {
-          background: rgba(255, 255, 255, 0.7);
-        }
+        .sp-carousel-dot.active { background: white; width: 32px; }
+        .sp-carousel-dot:hover:not(.active) { background: rgba(255, 255, 255, 0.6); }
 
         @media (max-width: 640px) {
-          .sp-featured-carousel {
-            padding: 0 16px;
-          }
-          .sp-carousel-slide {
-            height: clamp(250px, 50vh, 400px);
-            border-radius: 16px;
-          }
-          .sp-carousel-overlay {
-            padding: 20px 16px;
-          }
-          .sp-carousel-name {
-            font-size: clamp(16px, 2.5vw, 22px);
-          }
-          .sp-carousel-price {
-            font-size: 14px;
-          }
-          .sp-carousel-btn {
-            width: 36px;
-            height: 36px;
-          }
+          .sp-featured-carousel { padding: 0 16px; }
+          .sp-carousel-slide { height: clamp(280px, 50vh, 400px); border-radius: 24px; }
+          .sp-carousel-overlay { padding: 32px 24px; }
+          .sp-carousel-name { font-size: clamp(20px, 3.5vw, 26px); }
+          .sp-carousel-description { font-size: 14px; }
+          .sp-carousel-nav { opacity: 1; padding: 12px; } /* Always show on mobile */
+          .sp-carousel-btn { width: 40px; height: 40px; background: rgba(255,255,255,0.25); }
         }
       `}</style>
 
@@ -355,7 +232,6 @@ function FeaturedCarousel({ featured, formatPrice, onProductClick }) {
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
-        {/* Slides: swipe */}
         {[
           prevSlideIndex !== null
             ? {
@@ -380,9 +256,9 @@ function FeaturedCarousel({ featured, formatPrice, onProductClick }) {
                 style={{
                   position: "absolute",
                   inset: 0,
-                  animation: `${isLeaving ? outAnim : inAnim} 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94) both`,
                   pointerEvents: "none",
                   willChange: "transform",
+                  animation: `${isLeaving ? outAnim : inAnim} 0.75s cubic-bezier(0.25, 1, 0.5, 1) both`,
                 }}
               >
                 {item.image_url ? (
@@ -425,8 +301,8 @@ function FeaturedCarousel({ featured, formatPrice, onProductClick }) {
                     className="sp-carousel-content"
                     style={{
                       opacity: isLeaving ? 0 : 1,
-                      transform: isLeaving ? "translateY(0)" : "translateY(0)",
-                      transition: "opacity 0.2s ease",
+                      transform: isLeaving ? "scale(0.98)" : "scale(1)",
+                      transition: "opacity 0.3s ease, transform 0.5s ease",
                     }}
                   >
                     <div className="sp-carousel-name">{item.name}</div>
@@ -452,10 +328,14 @@ function FeaturedCarousel({ featured, formatPrice, onProductClick }) {
                     {(item.isNewActive || item.isPromoActive) && (
                       <div className="sp-carousel-badges">
                         {item.isNewActive && (
-                          <div className="sp-carousel-new-badge">Nouveaute</div>
+                          <div className="sp-badge sp-carousel-new-badge">
+                            Nouveauté
+                          </div>
                         )}
                         {item.isPromoActive && (
-                          <div className="sp-carousel-promo-badge">Promo</div>
+                          <div className="sp-badge sp-carousel-promo-badge">
+                            Promo
+                          </div>
                         )}
                       </div>
                     )}
@@ -465,11 +345,7 @@ function FeaturedCarousel({ featured, formatPrice, onProductClick }) {
             );
           })}
 
-        {/* Navigation */}
-        <div
-          className="sp-carousel-nav sp-carousel-nav-prev"
-          style={{ zIndex: 10 }}
-        >
+        <div className="sp-carousel-nav sp-carousel-nav-prev">
           <button
             className="sp-carousel-btn"
             onClick={(e) => {
@@ -478,22 +354,18 @@ function FeaturedCarousel({ featured, formatPrice, onProductClick }) {
             }}
           >
             <svg
-              width="20"
-              height="20"
+              width="24"
+              height="24"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="2.5"
             >
               <path d="M15 18l-6-6 6-6" />
             </svg>
           </button>
         </div>
-
-        <div
-          className="sp-carousel-nav sp-carousel-nav-next"
-          style={{ zIndex: 10 }}
-        >
+        <div className="sp-carousel-nav sp-carousel-nav-next">
           <button
             className="sp-carousel-btn"
             onClick={(e) => {
@@ -502,20 +374,18 @@ function FeaturedCarousel({ featured, formatPrice, onProductClick }) {
             }}
           >
             <svg
-              width="20"
-              height="20"
+              width="24"
+              height="24"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2"
+              strokeWidth="2.5"
             >
               <path d="M9 18l6-6-6-6" />
             </svg>
           </button>
         </div>
-
-        {/* Dots */}
-        <div className="sp-carousel-dots" style={{ zIndex: 10 }}>
+        <div className="sp-carousel-dots">
           {carouselItems.map((_, i) => (
             <button
               key={i}
@@ -541,15 +411,15 @@ function SkeletonCard() {
       <div className="sk-body">
         <div
           className="sk-line sk-pulse"
-          style={{ width: "60%", height: "10px", marginBottom: "8px" }}
+          style={{ width: "40%", height: "12px", marginBottom: "12px" }}
         />
         <div
           className="sk-line sk-pulse"
-          style={{ width: "40%", height: "10px", marginBottom: "14px" }}
+          style={{ width: "80%", height: "18px", marginBottom: "16px" }}
         />
         <div
           className="sk-line sk-pulse"
-          style={{ width: "100%", height: "32px", borderRadius: "8px" }}
+          style={{ width: "100%", height: "40px", borderRadius: "12px" }}
         />
       </div>
     </div>
@@ -608,15 +478,12 @@ const ProductsSection = memo(function ProductsSection({
     setSearchSource("browse");
     setProductsLoading(false);
     setLoadingMore(false);
-
     setProducts(safeInitialProducts);
     setBrowseProducts(safeInitialProducts);
     setSearchPool(safeInitialProducts);
-
     setCurrentPage(page);
     setHasNextPage(hasMore);
     setTotalProducts(total);
-
     setBrowsePage(page);
     setBrowseHasNextPage(hasMore);
     setBrowseTotalProducts(total);
@@ -647,7 +514,6 @@ const ProductsSection = memo(function ProductsSection({
       params.set("page", String(pageNumber));
       params.set("limit", String(PRODUCTS_PER_PAGE));
       if (searchTerm) params.set("search", searchTerm);
-
       const { data } = await api.get(`/public/${slug}?${params.toString()}`);
       return {
         products: data.products || [],
@@ -659,7 +525,6 @@ const ProductsSection = memo(function ProductsSection({
 
   useEffect(() => {
     if (!slug) return;
-
     const requestId = ++searchRequestIdRef.current;
     const timer = setTimeout(async () => {
       const normalizedTerm = normalizeSearchTerm(search);
@@ -667,7 +532,6 @@ const ProductsSection = memo(function ProductsSection({
 
       if (!normalizedTerm) {
         if (requestId !== searchRequestIdRef.current) return;
-
         setSearchSource("browse");
         setProductsLoading(false);
         setProducts(browseSnapshot.products);
@@ -678,16 +542,13 @@ const ProductsSection = memo(function ProductsSection({
         );
         return;
       }
-
       setProductsLoading(true);
-
       const localMatches = searchPoolRef.current.filter((product) =>
         productMatchesSearch(product, normalizedTerm),
       );
 
       if (localMatches.length > 0) {
         if (requestId !== searchRequestIdRef.current) return;
-
         setSearchSource("local");
         setProducts(localMatches);
         setCurrentPage(1);
@@ -699,54 +560,43 @@ const ProductsSection = memo(function ProductsSection({
 
       try {
         const { products: remoteProducts, pagination } =
-          await requestProductsPage({
-            searchTerm: search,
-            pageNumber: 1,
-          });
+          await requestProductsPage({ searchTerm: search, pageNumber: 1 });
         if (requestId !== searchRequestIdRef.current) return;
-
         setSearchSource("backend");
         setProducts(remoteProducts);
         setCurrentPage(pagination.page || 1);
         setHasNextPage(Boolean(pagination.hasNextPage));
         setTotalProducts(pagination.total ?? remoteProducts.length);
-
-        if (remoteProducts.length > 0) {
-          setSearchPool((prev) => mergeUniqueProductsById(prev, remoteProducts));
-        }
+        if (remoteProducts.length > 0)
+          setSearchPool((prev) =>
+            mergeUniqueProductsById(prev, remoteProducts),
+          );
       } catch {
         if (requestId !== searchRequestIdRef.current) return;
-
         setSearchSource("backend");
         setProducts([]);
         setCurrentPage(1);
         setHasNextPage(false);
         setTotalProducts(0);
       } finally {
-        if (requestId === searchRequestIdRef.current) {
-          setProductsLoading(false);
-        }
+        if (requestId === searchRequestIdRef.current) setProductsLoading(false);
       }
-    }, 250);
-
+    }, 300);
     return () => clearTimeout(timer);
   }, [slug, search, requestProductsPage]);
 
   const loadMoreProducts = useCallback(async () => {
     if (loadingMore || !hasNextPage) return;
-
     const trimmedSearch = search.trim();
     const backendSearchMode =
       Boolean(trimmedSearch) && searchSource === "backend";
     if (trimmedSearch && !backendSearchMode) return;
-
     setLoadingMore(true);
     try {
       const { products: nextProducts, pagination } = await requestProductsPage({
         searchTerm: backendSearchMode ? trimmedSearch : "",
         pageNumber: currentPage + 1,
       });
-
       const nextPage = pagination.page || currentPage + 1;
       const nextHasMore = Boolean(pagination.hasNextPage);
       const nextTotal = pagination.total ?? totalProducts + nextProducts.length;
@@ -756,7 +606,6 @@ const ProductsSection = memo(function ProductsSection({
       setHasNextPage(nextHasMore);
       setTotalProducts(nextTotal);
       setSearchPool((prev) => mergeUniqueProductsById(prev, nextProducts));
-
       if (!backendSearchMode) {
         setBrowseProducts((prev) => [...prev, ...nextProducts]);
         setBrowsePage(nextPage);
@@ -764,7 +613,6 @@ const ProductsSection = memo(function ProductsSection({
         setBrowseTotalProducts(nextTotal);
       }
     } catch {
-      // Keep current products visible if loading next page fails.
     } finally {
       setLoadingMore(false);
     }
@@ -780,100 +628,126 @@ const ProductsSection = memo(function ProductsSection({
 
   useEffect(() => {
     if (!loadMoreRef.current || !hasNextPage || loadingMore) return;
-
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) {
-          loadMoreProducts();
-        }
+        if (entries[0]?.isIntersecting) loadMoreProducts();
       },
       { root: null, rootMargin: "300px 0px", threshold: 0 },
     );
-
     observer.observe(loadMoreRef.current);
-
     return () => observer.disconnect();
   }, [hasNextPage, loadingMore, loadMoreProducts]);
 
   return (
-    <>
-      {/* Produits */}
-      <br></br>
-      <main className="sp-main sp-anim sp-anim-4">
-        <div className="sp-search-wrap">
-          <div className="sp-search-inner">
-            <span className="sp-search-icon">
+    <main className="sp-main sp-anim sp-anim-4">
+      <div className="sp-search-wrap">
+        <div className="sp-search-island">
+          <span className="sp-search-icon">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+          </span>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Rechercher un produit, une référence..."
+            className="sp-search-input"
+          />
+          {search && (
+            <button
+              className="sp-search-clear"
+              onClick={() => setSearch("")}
+              aria-label="Effacer"
+            >
               <svg
                 width="16"
                 height="16"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2"
+                strokeWidth="2.5"
               >
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.35-4.35" />
+                <path d="M18 6L6 18M6 6l12 12" />
               </svg>
-            </span>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Rechercher un produit..."
-              className="sp-search-input"
-            />
-          </div>
+            </button>
+          )}
         </div>
+      </div>
 
-        {products.length > 0 && (
-          <div className="sp-section-title">
-            <span className="sp-section-label">Tous les produits</span>
-            <span className="sp-section-count">
-              {totalProducts > 0 ? totalProducts : products.length}
-            </span>
+      <div className="sp-section-title">
+        <span className="sp-section-label">
+          {search ? "Résultats de recherche" : "Tous les produits"}
+        </span>
+        <span className="sp-section-count">
+          {totalProducts > 0 ? totalProducts : products.length}
+        </span>
+      </div>
+
+      {productsLoading && (
+        <div className="sp-load-more">
+          <div className="sk-spinner small" />
+        </div>
+      )}
+
+      {!productsLoading && products.length === 0 ? (
+        <div className="sp-empty">
+          <div className="sp-empty-icon">
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
           </div>
-        )}
-
-        {productsLoading && (
-          <div className="sp-load-more">Recherche des produits...</div>
-        )}
-
-        {!productsLoading && products.length === 0 ? (
-          <p className="sp-empty">
+          <p>
             {search
-              ? `Aucun resultat pour "${search}"`
+              ? `Aucun résultat pour "${search}"`
               : "Aucun produit disponible pour le moment."}
           </p>
-        ) : (
-          <>
-            <div className="sp-grid">
-              {products.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={{
-                    ...product,
-                    whatsappLink: product.whatsappLink,
-                    isPromoActive: product.isPromoActive,
-                  }}
-                  theme={theme}
-                  onTrack={() => onTrackWhatsapp(product.id)}
-                  onOpen={() => onOpenProduct(product)}
-                  formatPrice={formatPrice}
-                />
-              ))}
+        </div>
+      ) : (
+        <>
+          <div className="sp-grid">
+            {products.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={{
+                  ...product,
+                  whatsappLink: product.whatsappLink,
+                  isPromoActive: product.isPromoActive,
+                }}
+                theme={theme}
+                onTrack={() => onTrackWhatsapp(product.id)}
+                onOpen={() => onOpenProduct(product)}
+                formatPrice={formatPrice}
+              />
+            ))}
+          </div>
+          {loadingMore && (
+            <div className="sp-load-more">
+              <div className="sk-spinner small" />
             </div>
-
-            {loadingMore && (
-              <div className="sp-load-more">Chargement des produits...</div>
-            )}
-
-            {!loadingMore && hasNextPage && (
-              <div ref={loadMoreRef} className="sp-scroll-sentinel" />
-            )}
-          </>
-        )}
-      </main>
-    </>
+          )}
+          {!loadingMore && hasNextPage && (
+            <div ref={loadMoreRef} className="sp-scroll-sentinel" />
+          )}
+        </>
+      )}
+    </main>
   );
 });
 
@@ -896,7 +770,6 @@ export default function PublicShopPage() {
       params.set("page", String(pageNumber));
       params.set("limit", String(PRODUCTS_PER_PAGE));
       if (searchTerm) params.set("search", searchTerm);
-
       const { data } = await api.get(`/public/${slug}?${params.toString()}`);
       return {
         vendor: data.vendor,
@@ -910,28 +783,25 @@ export default function PublicShopPage() {
 
   useEffect(() => {
     if (!slug) return;
-
     let active = true;
-
     const run = async () => {
       setPageReady(false);
       setLoading(true);
       setNotFound(false);
       try {
-        const { vendor, featured, products: firstProducts, pagination } =
-          await requestShopPage({ pageNumber: 1 });
+        const {
+          vendor,
+          featured,
+          products: firstProducts,
+          pagination,
+        } = await requestShopPage({ pageNumber: 1 });
         if (!active) return;
-
-        const page = pagination.page || 1;
-        const hasNext = Boolean(pagination.hasNextPage);
-        const total = pagination.total ?? firstProducts.length;
-
         setVendor(vendor);
         setFeatured(featured);
         setInitialProducts(firstProducts);
-        setInitialPage(page);
-        setInitialHasNextPage(hasNext);
-        setInitialTotalProducts(total);
+        setInitialPage(pagination.page || 1);
+        setInitialHasNextPage(Boolean(pagination.hasNextPage));
+        setInitialTotalProducts(pagination.total ?? firstProducts.length);
         setNotFound(false);
       } catch {
         if (active) setNotFound(true);
@@ -942,9 +812,7 @@ export default function PublicShopPage() {
         }
       }
     };
-
     run();
-
     return () => {
       active = false;
     };
@@ -963,160 +831,78 @@ export default function PublicShopPage() {
     [slug],
   );
 
-  const formatPrice = useCallback((priceInMga) => {
-    if (!vendor?.displayCurrency || vendor.displayCurrency === "MGA")
+  const formatPrice = useCallback(
+    (priceInMga) => {
+      if (!vendor?.displayCurrency || vendor.displayCurrency === "MGA")
+        return `${priceInMga.toLocaleString()} Ar`;
+      if (vendor.displayCurrency === "USD")
+        return `$${priceInMga.toLocaleString()}`;
+      if (vendor.displayCurrency === "EUR")
+        return `€${priceInMga.toLocaleString()}`;
       return `${priceInMga.toLocaleString()} Ar`;
-    if (vendor.displayCurrency === "USD")
-      return `$${priceInMga.toLocaleString()}`;
-    if (vendor.displayCurrency === "EUR")
-      return `€${priceInMga.toLocaleString()}`;
-    return `${priceInMga.toLocaleString()} Ar`;
-  }, [vendor?.displayCurrency]);
+    },
+    [vendor?.displayCurrency],
+  );
 
-  /* ── Loading skeleton ── */
   if (loading) {
     const defC = THEMES[DEFAULT_THEME].colors;
     return (
       <>
         <style>{`
           *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-          @keyframes sp  { to { transform: rotate(360deg) } }
-          @keyframes shimmer {
-            0%   { background-position: -600px 0; }
-            100% { background-position:  600px 0; }
-          }
-          @keyframes sk-fade-in {
-            from { opacity: 0; transform: translateY(16px); }
-            to   { opacity: 1; transform: translateY(0); }
-          }
+          @keyframes sp { to { transform: rotate(360deg) } }
+          @keyframes shimmer { 0% { background-position: -600px 0; } 100% { background-position: 600px 0; } }
+          @keyframes sk-fade-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 
           body { background: ${defC.background}; margin: 0; }
 
-          .sk-page {
-            min-height: 100vh;
-            background: ${defC.background};
-            font-family: system-ui, sans-serif;
-            animation: sk-fade-in .8s ease forwards;
-          }
+          .sk-page { min-height: 100vh; background: ${defC.background}; font-family: system-ui, sans-serif; animation: sk-fade-in .8s ease forwards; }
+          .sk-cover { width: 100%; height: 320px; background: ${defC.surface}; border-radius: 0 0 32px 32px; position: relative; overflow: hidden; }
+          .sk-hero { max-width: 1280px; margin: 0 auto; padding: 0 24px; display: flex; align-items: flex-end; gap: 24px; transform: translateY(-56px); margin-bottom: -32px; }
+          @media (max-width: 640px) { .sk-hero { flex-direction: column; align-items: center; transform: translateY(-64px); gap: 16px; } }
 
-          /* Carousel skeleton */
-          .sk-carousel {
-            width: 100%; aspect-ratio: 16/6; background: ${defC.surface};
-            position: relative; overflow: hidden;
-          }
-          @media (max-width: 640px) { .sk-carousel { aspect-ratio: 1/1; } }
-
-          /* Cover skeleton */
-          .sk-cover {
-            width: 100%; height: 220px;
-            background: ${defC.surface};
-            position: relative; overflow: hidden;
-          }
-          @media (min-width: 900px) { .sk-cover { height: 300px; } }
-
-          /* Hero skeleton */
-          .sk-hero {
-            max-width: 1280px; margin: 0 auto; padding: 0 24px;
-            display: flex; align-items: flex-end; gap: 20px;
-            transform: translateY(-44px); margin-bottom: -24px;
-          }
-          @media (max-width: 640px) {
-            .sk-hero { flex-direction: column; align-items: center; transform: translateY(-48px); }
-          }
-
-          .sk-avatar {
-            width: 96px; height: 96px; border-radius: 50%;
-            border: 3px solid ${defC.background};
-            flex-shrink: 0;
-          }
-          @media (min-width: 640px) { .sk-avatar { width: 112px; height: 112px; } }
-
+          .sk-avatar { width: 112px; height: 112px; border-radius: 50%; border: 6px solid ${defC.background}; flex-shrink: 0; box-shadow: 0 8px 32px rgba(0,0,0,0.06); }
           .sk-meta { padding-bottom: 8px; flex: 1; }
-          .sk-line { border-radius: 6px; }
+          @media (max-width: 640px) { .sk-meta { display: flex; flex-direction: column; align-items: center; } }
+          .sk-line { border-radius: 8px; }
 
-          .sk-body-section {
-            max-width: 1280px; margin: 40px auto 0; padding: 0 24px;
-          }
+          .sk-body-section { max-width: 1280px; margin: 48px auto 0; padding: 0 24px; }
+          .sk-search { height: 52px; border-radius: 99px; margin: 0 auto 32px; max-width: 640px; box-shadow: 0 8px 24px rgba(0,0,0,0.04); }
 
-          /* Search bar skeleton */
-          .sk-search {
-            height: 44px; border-radius: 12px; margin-bottom: 28px;
-            max-width: 560px;
-          }
-
-          /* Grid */
-          .sk-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-          }
-          @media (min-width: 640px)  { .sk-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; } }
+          .sk-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+          @media (min-width: 640px) { .sk-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
           @media (min-width: 1100px) { .sk-grid { grid-template-columns: repeat(4, 1fr); } }
 
-          .sk-card {
-            border-radius: 16px; overflow: hidden;
-            border: 1px solid rgba(128,128,128,.12);
-          }
+          .sk-card { border-radius: 20px; overflow: hidden; border: 1px solid rgba(128,128,128,.1); background: ${defC.surface}; }
           .sk-img { width: 100%; aspect-ratio: 1/1; }
-          .sk-body-inner { padding: 13px 14px 16px; }
+          .sk-body { padding: 16px; }
 
-          /* Shimmer pulse */
-          .sk-pulse {
-            background: linear-gradient(
-              90deg,
-              ${defC.surface} 0%,
-              rgba(${hexToRgb(defC.primary)}, 0.08) 40%,
-              ${defC.surface} 80%
-            );
-            background-size: 600px 100%;
-            animation: shimmer 2.2s ease-in-out infinite;
-          }
-
-          /* Spinner centré */
-          .sk-spinner-wrap {
-            display: flex; flex-direction: column; align-items: center;
-            justify-content: center; padding: 60px 0 80px; gap: 14px;
-          }
-          .sk-spinner {
-            width: 32px; height: 32px; border-radius: 50%;
-            border: 3px solid rgba(${hexToRgb(defC.primary)}, 0.18);
-            border-top-color: ${defC.primary};
-            animation: sp .75s linear infinite;
-          }
-          .sk-spinner-label {
-            font-size: 13px; color: ${defC.textMuted};
-            opacity: .7; letter-spacing: .03em;
-          }
+          .sk-pulse { background: linear-gradient(90deg, ${defC.surface} 0%, rgba(${hexToRgb(defC.primary)}, 0.08) 40%, ${defC.surface} 80%); background-size: 600px 100%; animation: shimmer 2s infinite linear; }
+          
+          .sk-spinner-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 0 80px; gap: 16px; }
+          .sk-spinner { width: 36px; height: 36px; border-radius: 50%; border: 3px solid rgba(${hexToRgb(defC.primary)}, 0.15); border-top-color: ${defC.primary}; animation: sp .8s linear infinite; }
+          .sk-spinner.small { width: 24px; height: 24px; border-width: 2px; }
+          .sk-spinner-label { font-size: 14px; color: ${defC.textMuted}; font-weight: 500; letter-spacing: .02em; }
         `}</style>
-
         <div className="sk-page">
-          {/* Carousel skeleton */}
-          <div className="sk-carousel sk-pulse" />
-
-          {/* Cover */}
           <div className="sk-cover sk-pulse" />
-
-          {/* Hero */}
           <div className="sk-hero">
             <div className="sk-avatar sk-pulse" />
             <div className="sk-meta">
               <div
                 className="sk-line sk-pulse"
-                style={{ width: "200px", height: "28px", marginBottom: "10px" }}
+                style={{ width: "240px", height: "32px", marginBottom: "12px" }}
               />
               <div
                 className="sk-line sk-pulse"
-                style={{ width: "280px", height: "14px", marginBottom: "6px" }}
+                style={{ width: "320px", height: "16px", marginBottom: "8px" }}
               />
               <div
                 className="sk-line sk-pulse"
-                style={{ width: "160px", height: "14px" }}
+                style={{ width: "200px", height: "16px" }}
               />
             </div>
           </div>
-
-          {/* Body */}
           <div className="sk-body-section">
             <div className="sk-search sk-pulse" />
             <div className="sk-grid">
@@ -1124,7 +910,6 @@ export default function PublicShopPage() {
                 <SkeletonCard key={i} />
               ))}
             </div>
-
             <div className="sk-spinner-wrap">
               <div className="sk-spinner" />
               <span className="sk-spinner-label">
@@ -1145,11 +930,18 @@ export default function PublicShopPage() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#F5F5F3",
+          background: "#F9FAFB",
         }}
       >
-        <p style={{ fontSize: "14px", color: "#999", fontFamily: "system-ui" }}>
-          Boutique introuvable.
+        <p
+          style={{
+            fontSize: "16px",
+            color: "#6B7280",
+            fontFamily: "system-ui",
+            fontWeight: 500,
+          }}
+        >
+          Cette boutique est introuvable.
         </p>
       </div>
     );
@@ -1166,263 +958,185 @@ export default function PublicShopPage() {
         :root {
           --font-display: ${fonts.display ? `'${fonts.display}'` : "system-ui"}, system-ui, sans-serif;
           --font-body:    ${fonts.body ? `'${fonts.body}'` : "system-ui"}, system-ui, sans-serif;
-          --c-bg:      ${c.background};
-          --c-primary: ${c.primary};
+          --c-bg:      ${c.background}; --c-bg-rgb: ${hexToRgb(c.background)};
+          --c-primary: ${c.primary}; --c-primary-rgb: ${hexToRgb(c.primary)};
           --c-accent:  ${c.accent};
           --c-text:    ${c.text};
           --c-muted:   ${c.textMuted};
-          --c-surface: ${c.surface};
+          --c-surface: ${c.surface}; --c-surface-rgb: ${hexToRgb(c.surface)};
           --c-card:    ${c.card};
           --c-border:  ${c.border};
         }
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: var(--c-bg); }
+        body { background: var(--c-bg); color: var(--c-text); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
 
-        /* ── Skeleton dans le body normal (shimmer réutilisé) ── */
-        @keyframes shimmer {
-          0%   { background-position: -600px 0; }
-          100% { background-position:  600px 0; }
-        }
+        @keyframes shimmer { 0% { background-position: -600px 0; } 100% { background-position: 600px 0; } }
         .sk-pulse {
-          background: linear-gradient(
-            90deg,
-            var(--c-surface) 0%,
-            rgba(${hexToRgb(c.primary)}, 0.08) 40%,
-            var(--c-surface) 80%
-          );
-          background-size: 600px 100%;
-          animation: shimmer 2.2s ease-in-out infinite;
-          border-radius: 6px;
+          background: linear-gradient(90deg, var(--c-surface) 0%, rgba(var(--c-primary-rgb), 0.06) 40%, var(--c-surface) 80%);
+          background-size: 600px 100%; animation: shimmer 2s infinite linear; border-radius: 8px;
         }
-        .sk-card {
-          border-radius: 16px; overflow: hidden;
-          border: 1px solid rgba(128,128,128,.12);
-        }
+        .sk-card { border-radius: 20px; overflow: hidden; border: 1px solid rgba(128,128,128,.1); background: var(--c-surface); }
         .sk-img { width: 100%; aspect-ratio: 1/1; }
-        .sk-body { padding: 13px 14px 16px; }
+        .sk-body { padding: 16px; }
 
-        /* ── Fade-in page ── */
-        @keyframes page-in {
-          from { opacity: 0; transform: translateY(20px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .sp-page {
-          min-height: 100vh;
-          background: var(--c-bg);
-          font-family: var(--font-body);
-          color: var(--c-text);
-          opacity: 0;
-          animation: page-in .9s ease forwards;
-        }
+        @keyframes page-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        .sp-page { min-height: 100vh; opacity: 0; animation: page-in .8s cubic-bezier(0.16,1,0.3,1) forwards; }
         .sp-page.ready { opacity: 1; }
 
-        /* ── Stagger children ── */
-        @keyframes child-in {
-          from { opacity: 0; transform: translateY(24px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .sp-anim { animation: child-in .8s ease both; }
-        .sp-anim-1 { animation-delay: .05s; }
-        .sp-anim-2 { animation-delay: .15s; }
-        .sp-anim-3 { animation-delay: .27s; }
-        .sp-anim-4 { animation-delay: .39s; }
+        @keyframes child-in { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .sp-anim { animation: child-in .8s cubic-bezier(0.16,1,0.3,1) both; }
+        .sp-anim-1 { animation-delay: .05s; } .sp-anim-2 { animation-delay: .12s; }
+        .sp-anim-3 { animation-delay: .20s; } .sp-anim-4 { animation-delay: .28s; }
 
-        /* ── Product cards stagger ── */
-        .sp-grid > * { animation: child-in .7s ease both; }
-        .sp-grid > *:nth-child(1)  { animation-delay: .30s; }
-        .sp-grid > *:nth-child(2)  { animation-delay: .36s; }
-        .sp-grid > *:nth-child(3)  { animation-delay: .42s; }
-        .sp-grid > *:nth-child(4)  { animation-delay: .48s; }
-        .sp-grid > *:nth-child(5)  { animation-delay: .54s; }
-        .sp-grid > *:nth-child(6)  { animation-delay: .60s; }
-        .sp-grid > *:nth-child(7)  { animation-delay: .66s; }
-        .sp-grid > *:nth-child(8)  { animation-delay: .72s; }
-        .sp-grid > *:nth-child(n+9){ animation-delay: .78s; }
-
-        /* ── Carousel ── */
-        .sp-featured-carousel {
-          animation: child-in .8s ease both;
-          animation-delay: 0s;
-        }
+        .sp-grid > * { animation: child-in .7s cubic-bezier(0.16,1,0.3,1) both; }
+        .sp-grid > *:nth-child(1) { animation-delay: .2s; } .sp-grid > *:nth-child(2) { animation-delay: .26s; }
+        .sp-grid > *:nth-child(3) { animation-delay: .32s; } .sp-grid > *:nth-child(4) { animation-delay: .38s; }
+        .sp-grid > *:nth-child(5) { animation-delay: .44s; } .sp-grid > *:nth-child(n+6) { animation-delay: .5s; }
 
         /* ── Cover ── */
         .sp-cover {
-          position: relative; width: 100%; height: 280px; overflow: hidden;
+          position: relative; width: 100%; height: 260px; overflow: hidden;
+          border-radius: 0 0 32px 32px; box-shadow: 0 4px 24px rgba(0,0,0,0.06);
         }
-        @media (min-width: 900px) { .sp-cover { height: 340px; } }
-
-        .sp-cover-img {
-          transition: filter .6s ease, opacity .6s ease;
-        }
-        .sp-cover-overlay {
-          position: absolute; inset: 0;
-          background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0.55) 100%);
-        }
-
+        @media (min-width: 900px) { .sp-cover { height: 340px; border-radius: 0 0 48px 48px; } }
+        .sp-cover-img { transition: filter .8s ease, transform .8s ease; }
+        .sp-cover:hover .sp-cover-img { transform: scale(1.02); }
+        .sp-cover-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.6) 100%); }
         .sp-no-cover {
-          width: 100%; height: 180px;
-          background: var(--c-surface);
-          border-bottom: 1px solid var(--c-border);
-          position: relative; overflow: hidden;
+          width: 100%; height: 200px; background: var(--c-surface);
+          border-bottom: 1px solid var(--c-border); border-radius: 0 0 32px 32px; position: relative; overflow: hidden;
         }
         .sp-no-cover-pattern {
-          position: absolute; inset: 0; opacity: 0.04;
-          background-image: repeating-linear-gradient(45deg, var(--c-primary) 0, var(--c-primary) 1px, transparent 0, transparent 50%);
-          background-size: 24px 24px;
+          position: absolute; inset: 0; opacity: 0.05;
+          background-image: repeating-linear-gradient(45deg, var(--c-primary) 0, var(--c-primary) 1px, transparent 0, transparent 50%); background-size: 24px 24px;
         }
 
         /* ── Hero ── */
         .sp-hero { position: relative; max-width: 1280px; margin: 0 auto; padding: 0 24px; }
-
         .sp-profile-anchor {
-          display: flex; align-items: flex-end; gap: 20px;
-          transform: translateY(-40px); margin-bottom: -20px;
+          display: flex; align-items: flex-end; gap: 24px;
+          transform: translateY(-56px); margin-bottom: -16px;
         }
         @media (max-width: 640px) {
           .sp-profile-anchor {
             flex-direction: column; align-items: center;
-            transform: translateY(-48px); margin-bottom: -28px; gap: 12px;
+            transform: translateY(-64px); margin-bottom: -24px; gap: 16px;
           }
         }
 
         .sp-avatar-ring {
-          width: 96px; height: 96px; border-radius: 50%;
-          border: 3px solid var(--c-bg);
-          box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-          overflow: hidden; flex-shrink: 0;
-          background: var(--c-surface);
-          display: flex; align-items: center; justify-content: center;
-          position: relative;
-          transition: transform .3s cubic-bezier(0.16,1,0.3,1), box-shadow .3s ease;
+          width: 112px; height: 112px; border-radius: 50%;
+          border: 6px solid var(--c-bg);
+          box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+          overflow: hidden; flex-shrink: 0; background: var(--c-surface);
+          display: flex; align-items: center; justify-content: center; position: relative;
+          transition: transform .4s cubic-bezier(0.16,1,0.3,1), box-shadow .4s ease;
         }
-        .sp-avatar-ring:hover { transform: scale(1.04); box-shadow: 0 8px 28px rgba(0,0,0,0.30); }
-        @media (min-width: 640px) { .sp-avatar-ring { width: 112px; height: 112px; border-width: 4px; } }
+        .sp-avatar-ring:hover { transform: scale(1.05) translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.18); }
+        @media (min-width: 640px) { .sp-avatar-ring { width: 128px; height: 128px; border-width: 6px; } }
 
         .sp-shop-meta { padding-bottom: 8px; flex: 1; min-width: 0; }
-        @media (max-width: 640px) { .sp-shop-meta { text-align: center; } }
+        @media (max-width: 640px) { .sp-shop-meta { text-align: center; display: flex; flex-direction: column; align-items: center; } }
 
         .sp-shop-name {
-          font-family: var(--font-display);
-          font-size: clamp(22px, 4vw, 34px);
-          font-weight: 800; line-height: 1.1;
-          letter-spacing: -0.03em; color: var(--c-text);
-          margin-bottom: 4px;
+          font-family: var(--font-display); font-size: clamp(26px, 4vw, 40px);
+          font-weight: 800; line-height: 1.1; letter-spacing: -0.03em;
+          color: var(--c-text); margin-bottom: 8px;
         }
         .sp-shop-desc {
-          font-size: 14px; color: var(--c-muted); line-height: 1.5;
-          max-width: 480px;
+          font-size: 15px; color: var(--c-muted); line-height: 1.6; max-width: 540px;
           display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
         }
-        .sp-contacts { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-        @media (max-width: 640px) { .sp-contacts { justify-content: center; } }
 
+        .sp-contacts { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
         .sp-contact-pill {
           display: inline-flex; align-items: center; gap: 8px;
-          padding: 8px 16px; border-radius: 999px;
-          background: var(--c-surface); border: 1px solid var(--c-border);
-          font-family: var(--font-body); font-size: 13px; font-weight: 500;
+          padding: 10px 20px; border-radius: 99px;
+          background: rgba(var(--c-surface-rgb), 0.7); border: 1px solid rgba(var(--c-primary-rgb), 0.15);
+          font-family: var(--font-body); font-size: 14px; font-weight: 600;
           color: var(--c-text); cursor: pointer; text-decoration: none;
-          transition: border-color .18s, transform .18s, box-shadow .18s;
-          backdrop-filter: blur(10px);
+          transition: all .2s cubic-bezier(0.16,1,0.3,1); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.03);
         }
         .sp-contact-pill:hover {
-          border-color: var(--c-primary);
-          transform: translateY(-2px);
-          box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+          background: var(--c-surface); border-color: var(--c-primary);
+          transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08);
         }
-        .sp-wa-pill { color: #25D366; }
-        .sp-fb-pill { color: #1877F2; }
+        .sp-wa-pill { color: #16a34a; } .sp-fb-pill { color: #2563eb; }
 
         /* ── Divider ── */
-        .sp-divider { max-width: 1280px; margin: 0 auto 32px; padding: 0 24px; }
-        .sp-divider-inner { height: 1px; background: var(--c-border); }
+        .sp-divider { max-width: 1280px; margin: 0 auto 40px; padding: 0 24px; }
+        .sp-divider-inner { height: 1px; background: linear-gradient(90deg, transparent, var(--c-border), transparent); opacity: 0.6; }
 
         /* ── Main ── */
         .sp-main { max-width: 1280px; margin: 0 auto; padding: 0 24px 80px; }
 
-        /* ── Search ── */
+        /* ── Search Island (Premium) ── */
         .sp-search-wrap {
-          position: sticky; top: 0; z-index: 20;
-          padding: 16px 0 24px; background: var(--c-bg);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
+          position: sticky; top: 24px; z-index: 20;
+          display: flex; justify-content: center; margin-bottom: 40px;
+          pointer-events: none; /* Let clicks pass through margins */
         }
-        @media (min-width: 900px) { .sp-search-wrap { padding-top: 0; } }
+        @media (max-width: 640px) { .sp-search-wrap { top: 16px; margin-bottom: 24px; } }
 
-        .sp-search-inner { position: relative; max-width: 560px; }
-        .sp-search-icon {
-          position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-          color: var(--c-muted); opacity: 0.6; pointer-events: none; display: flex;
-          transition: opacity .2s;
+        .sp-search-island {
+          position: relative; width: 100%; max-width: 600px;
+          background: rgba(var(--c-bg-rgb), 0.75);
+          backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+          border: 1px solid rgba(128,128,128,0.15);
+          border-radius: 99px; padding: 6px;
+          box-shadow: 0 12px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.03);
+          display: flex; align-items: center; pointer-events: auto;
+          transition: box-shadow 0.3s ease, border-color 0.3s ease;
         }
-        .sp-search-input:focus ~ .sp-search-icon,
-        .sp-search-wrap:focus-within .sp-search-icon { opacity: 1; }
+        .sp-search-island:focus-within {
+          border-color: rgba(var(--c-primary-rgb), 0.4);
+          box-shadow: 0 16px 48px rgba(0,0,0,0.12), 0 0 0 4px rgba(var(--c-primary-rgb), 0.1);
+        }
+
+        .sp-search-icon {
+          padding-left: 16px; color: var(--c-muted); opacity: 0.7; display: flex;
+          transition: color 0.3s ease;
+        }
+        .sp-search-island:focus-within .sp-search-icon { color: var(--c-primary); opacity: 1; }
 
         .sp-search-input {
-          width: 100%; padding: 12px 16px 12px 42px;
-          background: var(--c-surface); border: 1.5px solid var(--c-border);
-          border-radius: 12px; font-family: var(--font-body);
-          font-size: 14px; color: var(--c-text); outline: none;
-          backdrop-filter: blur(12px);
-          transition: border-color .2s, box-shadow .2s, background .2s;
+          flex: 1; padding: 12px 16px; background: transparent; border: none;
+          font-family: var(--font-body); font-size: 15px; color: var(--c-text); outline: none;
         }
-        .sp-search-input:focus {
-          border-color: var(--c-primary);
-          box-shadow: 0 0 0 3px rgba(${hexToRgb(c.primary)}, 0.12);
+        .sp-search-input::placeholder { color: var(--c-muted); opacity: 0.6; }
+
+        .sp-search-clear {
+          background: rgba(128,128,128,0.1); border: none; width: 32px; height: 32px; border-radius: 50%;
+          display: flex; align-items: center; justify-content: center; margin-right: 6px;
+          color: var(--c-text); cursor: pointer; transition: all 0.2s;
         }
-        .sp-search-input::placeholder { color: var(--c-muted); opacity: 0.55; }
+        .sp-search-clear:hover { background: rgba(128,128,128,0.2); transform: scale(1.05); }
 
         /* ── Section title ── */
-        .sp-section-title { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; margin-top: 40px; }
-        .sp-section-label {
-          font-family: var(--font-display); font-size: 13px; font-weight: 700;
-          letter-spacing: .1em; text-transform: uppercase; color: var(--c-text);
-        }
-        .sp-section-count {
-          font-size: 12px; font-weight: 500; color: var(--c-muted);
-          background: var(--c-surface); border: 1px solid var(--c-border);
-          border-radius: 999px; padding: 2px 10px;
-          transition: background .2s;
-        }
+        .sp-section-title { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+        .sp-section-label { font-family: var(--font-display); font-size: 14px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--c-text); }
+        .sp-section-count { font-size: 13px; font-weight: 600; color: var(--c-text); background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 99px; padding: 4px 12px; box-shadow: inset 0 1px 2px rgba(255,255,255,0.5); }
 
         /* ── Grid ── */
-        .sp-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 12px;
-        }
-        @media (min-width: 640px)  { .sp-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; } }
-        @media (min-width: 900px)  { .sp-grid { grid-template-columns: repeat(3, 1fr); gap: 18px; } }
+        .sp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        @media (min-width: 640px)  { .sp-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; } }
+        @media (min-width: 900px)  { .sp-grid { grid-template-columns: repeat(3, 1fr); gap: 24px; } }
         @media (min-width: 1100px) { .sp-grid { grid-template-columns: repeat(4, 1fr); } }
-        @media (min-width: 1280px) { .sp-grid { grid-template-columns: repeat(5, 1fr); } }
 
-        .sp-empty {
-          text-align: center; padding: 80px 0;
-          font-size: 14px; color: var(--c-muted); opacity: 0.7;
-          animation: child-in .8s ease both;
-        }
+        .sp-empty { text-align: center; padding: 80px 0; display: flex; flex-direction: column; align-items: center; gap: 16px; color: var(--c-muted); animation: child-in .8s ease both; }
+        .sp-empty-icon { width: 80px; height: 80px; border-radius: 50%; background: var(--c-surface); display: flex; align-items: center; justify-content: center; opacity: 0.5; }
+        
+        .sp-footer { text-align: center; font-size: 12px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--c-muted); opacity: 0.5; padding: 32px; margin-top: 32px; }
+        .sp-load-more { display: flex; justify-content: center; padding: 32px 0; }
+        .sp-scroll-sentinel { width: 100%; height: 1px; }
 
-        .sp-footer {
-          text-align: center; font-size: 11px; letter-spacing: .05em;
-          color: var(--c-muted); opacity: 0.4; padding: 24px; margin-top: 16px;
-        }
-
-        .sp-load-more {
-          text-align: center;
-          font-size: 13px;
-          color: var(--c-muted);
-          padding: 18px 0 12px;
-        }
-
-        .sp-scroll-sentinel {
-          width: 100%;
-          height: 1px;
-        }
+        @keyframes sp { to { transform: rotate(360deg) } }
+        .sk-spinner.small { width: 28px; height: 28px; border-radius: 50%; border: 3px solid rgba(var(--c-primary-rgb), 0.15); border-top-color: var(--c-primary); animation: sp .8s linear infinite; }
       `}</style>
 
       <div className={`sp-page${pageReady ? " ready" : ""}`}>
-        {/* Cover */}
         <div className="sp-anim sp-anim-2">
           {hasCover ? (
             <div className="sp-cover">
@@ -1445,7 +1159,6 @@ export default function PublicShopPage() {
           )}
         </div>
 
-        {/* Profile anchor */}
         <div className="sp-hero sp-anim sp-anim-3">
           <div className="sp-profile-anchor">
             <div className="sp-avatar-ring">
@@ -1455,13 +1168,13 @@ export default function PublicShopPage() {
                   alt={vendor.shopName || "Avatar"}
                   fill
                   style={{ objectFit: "cover" }}
-                  sizes="112px"
+                  sizes="128px"
                   unoptimized
                 />
               ) : (
                 <svg
-                  width="36"
-                  height="36"
+                  width="40"
+                  height="40"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke={c.textMuted}
@@ -1472,7 +1185,6 @@ export default function PublicShopPage() {
                 </svg>
               )}
             </div>
-
             <div className="sp-shop-meta">
               <h1 className="sp-shop-name">{vendor.shopName || "Boutique"}</h1>
               {vendor.description && (
@@ -1487,8 +1199,8 @@ export default function PublicShopPage() {
                     }
                   >
                     <svg
-                      width="15"
-                      height="15"
+                      width="18"
+                      height="18"
                       viewBox="0 0 24 24"
                       fill="currentColor"
                     >
@@ -1509,8 +1221,8 @@ export default function PublicShopPage() {
                     }
                   >
                     <svg
-                      width="15"
-                      height="15"
+                      width="18"
+                      height="18"
                       viewBox="0 0 24 24"
                       fill="currentColor"
                     >
@@ -1524,14 +1236,12 @@ export default function PublicShopPage() {
           </div>
         </div>
 
-        {/* Divider */}
         <div className="sp-divider sp-anim sp-anim-4">
           <div className="sp-divider-inner" />
         </div>
 
-        {/* Featured Carousel - Full Width */}
         {featured.length > 0 && (
-          <div className="sp-anim sp-anim-1">
+          <div className="sp-anim sp-anim-1" style={{ marginBottom: "40px" }}>
             <FeaturedCarousel
               featured={featured}
               formatPrice={formatPrice}
@@ -1554,7 +1264,6 @@ export default function PublicShopPage() {
 
         <p className="sp-footer">Powered by Keyros</p>
 
-        {/* Modal Produit */}
         {selectedProduct && (
           <ProductCard
             product={{
