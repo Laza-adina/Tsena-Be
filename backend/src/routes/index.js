@@ -9,6 +9,7 @@ const upload_ctrl = require("../controllers/uploadController");
 const { upload, uploadCover } = require("../middleware/upload");
 const qrcode = require("../controllers/qrcodeController");
 const subs = require("../controllers/subscriptionsController");
+const ranking = require("../controllers/rankingController");
 // ════════════════════════════════
 // PUBLIC — pas de token requis
 // ════════════════════════════════
@@ -18,6 +19,8 @@ router.post("/auth/login", auth.login);
 router.post("/auth/forgot-password", auth.forgotPassword);
 router.post("/auth/reset-password", auth.resetPassword);
 router.get("/auth/verify-email", auth.verifyEmail);
+
+router.get("/ranking/shops", ranking.getShopRanking);
 
 // Page publique boutique
 router.get("/public/:slug", shop.getPublicShop);
